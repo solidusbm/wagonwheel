@@ -29,10 +29,17 @@ async function init() {
   document.getElementById("checkOut").min = today;
 
   state.config = await fetch("/api/config").then((r) => r.json());
-  await loadSquareSdk(state.config.squareEnvironment);
 
   availabilityForm.addEventListener("submit", onCheckAvailability);
   bookingForm.addEventListener("submit", onSubmitBooking);
+
+  // Browsing/availability doesn't depend on Square, so a slow or failed SDK
+  // load shouldn't block the rest of the page -- only checkout needs it,
+  // and mountCard() reports that failure on its own.
+  state.squareSdkReady = loadSquareSdk(state.config.squareEnvironment).catch((err) => {
+    console.error("Square SDK failed to load", err);
+    return null;
+  });
 }
 
 function loadSquareSdk(environment) {
@@ -170,6 +177,13 @@ async function mountCard() {
   if (!state.config.squareApplicationId || !state.config.squareLocationId) {
     container.innerHTML = '<p class="form-error">Square is not configured yet (missing application/location ID). Payment is disabled until SQUARE_APPLICATION_ID and SQUARE_LOCATION_ID are set.</p>';
     payBtn.disabled = true;
+    return;
+  }
+
+  payBtn.disabled = true;
+  await state.squareSdkReady;
+  if (!window.Square) {
+    container.innerHTML = '<p class="form-error">Payment form failed to load. Check your connection and try again.</p>';
     return;
   }
 
