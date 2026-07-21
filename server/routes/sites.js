@@ -33,13 +33,29 @@ router.get("/availability", async (req, res, next) => {
                 WHERE r.site_id = s.id
                   AND r.status IN ('pending', 'confirmed')
                   AND r.stay_range && daterange($1::date, $2::date, '[)')
-              ) AS available
+              ) AS available,
+              COALESCE(br.ranges, '[]'::json) AS booked_ranges
        FROM sites s
+       LEFT JOIN LATERAL (
+         SELECT json_agg(json_build_object('checkIn', sub.check_in, 'checkOut', sub.check_out) ORDER BY sub.check_in) AS ranges
+         FROM (
+           SELECT check_in, check_out FROM reservations
+           WHERE site_id = s.id AND status IN ('pending', 'confirmed') AND check_out >= CURRENT_DATE
+           ORDER BY check_in
+           LIMIT 12
+         ) sub
+       ) br ON true
        WHERE s.active = true
        ORDER BY s.sort_order`,
       [checkIn, checkOut]
     );
-    res.json(rows);
+    res.json(
+      rows.map((row) => ({
+        ...row,
+        bookedRanges: row.booked_ranges.map((r) => ({ checkIn: r.checkIn, checkOut: r.checkOut })),
+        booked_ranges: undefined,
+      }))
+    );
   } catch (err) {
     next(err);
   }

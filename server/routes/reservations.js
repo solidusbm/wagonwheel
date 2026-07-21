@@ -1,13 +1,12 @@
 import { Router } from "express";
-import { customAlphabet } from "nanoid";
 import { pool } from "../db.js";
 import { quote } from "../lib/pricing.js";
 import { chargeCard, SquareError } from "../lib/square.js";
+import { notifyAdminOfBooking } from "../lib/email.js";
+import { generateReservationCode } from "../lib/reservationCode.js";
 
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-// No 0/O/1/I, so codes are easy to read back over the phone.
-const generateCode = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 7);
 
 router.post("/", async (req, res, next) => {
   const { siteId, checkIn, checkOut, guest, sourceId, idempotencyKey } = req.body ?? {};
@@ -45,7 +44,7 @@ router.post("/", async (req, res, next) => {
       return res.status(400).json({ error: "Stay must be at least 1 night" });
     }
 
-    const reservationCode = generateCode();
+    const reservationCode = generateReservationCode();
     let reservationId;
 
     try {
@@ -96,7 +95,7 @@ router.post("/", async (req, res, next) => {
         [paymentId, reservationId]
       );
 
-      return res.status(201).json({
+      const confirmedReservation = {
         reservationCode,
         status: "confirmed",
         site: { id: site.id, name: site.name, area: site.area },
@@ -107,7 +106,11 @@ router.post("/", async (req, res, next) => {
         subtotalCents,
         bookingFeeCents,
         totalCents,
-      });
+      };
+
+      await notifyAdminOfBooking(confirmedReservation);
+
+      return res.status(201).json(confirmedReservation);
     } catch (paymentErr) {
       // Freeing the row (status != pending/confirmed) releases the exclusion-constraint hold
       // on this date range so someone else can book it.

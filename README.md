@@ -7,9 +7,12 @@ Node/Express backend, PostgreSQL for reservations, Square for payments. This rep
 ## Status / what's real vs. placeholder
 
 - **Real:** address, phone, office hours, hookup type (30/50 amp, full hook-up), pet-friendly — pulled from what's publicly listed for the park.
-- **Placeholder, needs your input:** the 14 sites (names, "Inner Ring"/"Rim Row" grouping, nightly rates in `db/seed.sql`). Nobody publishes the actual site list or rates — swap in the real ones before this goes live.
+- **Placeholder, needs your input:** the 12 sites (names, layout, "Inner Ring"/"Rim Row" grouping, nightly rates in `db/seed.sql`). Nobody publishes the actual site list, layout, or rates — swap in the real ones before this goes live. The booking page's site picker also carries a visible note to this effect.
 - **Payments:** wired to Square's real Payments API (not a mock), but requires your Square **sandbox** credentials to actually run a charge. See setup below.
-- **Not built yet:** email confirmations, an admin view for the park to manage reservations/cancellations. The confirmation screen and lookup-by-code (`GET /api/reservations/:code`) are the receipt for now.
+- **Admin notifications:** when a booking is confirmed, an email fires to `ADMIN_EMAIL`. Without SMTP credentials configured it logs to the server console instead of sending, so it works out of the box in dev.
+- **Admin view:** `/admin` lists pending/confirmed reservations and lets the office create, reschedule/reassign, or cancel a booking directly (phone-ins, walk-ins, corrections — no card is charged through this path). Protected by HTTP Basic Auth via `ADMIN_USERNAME`/`ADMIN_PASSWORD` — the route returns 503 until both are set. Reschedules and cancellations go through the same database exclusion constraint as guest bookings, so they can't create a double-booking either. **The `.env` in this repo ships with `admin`/`admin` for local dev only — change it before deploying anywhere public; the server warns on startup if it's still a weak placeholder.**
+- **Site listings show upcoming booked dates:** each site card on the booking page lists its other upcoming reservations (`GET /api/availability` returns a `bookedRanges` array per site), not just a yes/no flag for the dates you searched.
+- **Not built yet:** guest email confirmations (only the admin gets notified so far), and refunds — cancelling a booking in `/admin` releases the site but does not call Square to refund a card that was actually charged. The guest-facing confirmation screen and lookup-by-code (`GET /api/reservations/:code`) are the receipt for now.
 
 ## Stack
 
@@ -48,7 +51,7 @@ Without these three set, the site still runs — availability and browsing work 
 ```bash
 npm install
 npm run migrate   # applies db/schema.sql
-npm run seed       # loads the 14 placeholder sites
+npm run seed       # loads the 12 placeholder sites
 ```
 
 ### 4. Run
@@ -75,5 +78,5 @@ From the original planning conversation, still open:
 2. Production Square credentials + going live with `SQUARE_ENVIRONMENT=production`
 3. Hosting (backend: Render/Railway/Fly/VPS; this app serves its own frontend, so one deploy target is enough) + DNS pointed at the park's domain + SSL (automatic on most of those hosts)
 4. Transactional email for confirmations (Postmark/SendGrid, or Square's own receipt emails)
-5. A cancellation/refund flow (Square supports refunds via API or dashboard; nothing in this app calls it yet)
-6. Some way for the park to see upcoming reservations (currently only queryable by reservation code or directly in the database)
+5. A refund flow (cancelling in `/admin` releases the site but does not call Square to refund; nothing in this app calls Square's refund API yet)
+6. ~~Some way for the park to see upcoming reservations~~ — done, see `/admin`. **Before launch: change `ADMIN_PASSWORD` from the local-dev placeholder to a strong, unique value.** The server prints a startup warning if it's left as `admin`/`password`/`changeme`/`wagonwheel`.
