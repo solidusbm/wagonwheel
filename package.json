@@ -1,0 +1,23 @@
+{
+  "name": "wagonwheel-rv-park",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Booking and payments site for Bandera Wagon Wheel RV Park",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "migrate": "psql \"$DATABASE_URL\" -f db/schema.sql",
+    "seed": "psql \"$DATABASE_URL\" -f db/seed.sql"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "nanoid": "^6.0.0",
+    "pg": "^8.22.0",
+    "square": "^45.0.1"
+  }
+}

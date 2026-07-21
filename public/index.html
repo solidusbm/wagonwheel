@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wagon Wheel RV Park — Bandera, TX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=Zilla+Slab:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/">
+      <svg class="brand-wheel" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="5"/>
+        <circle cx="50" cy="50" r="10" fill="currentColor"/>
+        <g stroke="currentColor" stroke-width="5">
+          <line x1="50" y1="4" x2="50" y2="96"/>
+          <line x1="4" y1="50" x2="96" y2="50"/>
+          <line x1="16.6" y1="16.6" x2="83.4" y2="83.4"/>
+          <line x1="83.4" y1="16.6" x2="16.6" y2="83.4"/>
+        </g>
+      </svg>
+      <span>Wagon Wheel<small>RV Park</small></span>
+    </a>
+    <div class="header-contact">
+      <a href="tel:+18308500805">(830) 850-0805</a>
+      <span>325 Polly Peak Dr, Bandera, TX 78003</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <h1>Full hook-ups, seven minutes from downtown Bandera</h1>
+      <p class="hero-sub">Pet-friendly, family-run sites with 30/50 amp electric, water, and wastewater — right along the Medina River near the Cowboy Capital of the World.</p>
+
+      <form id="availability-form" class="availability-form">
+        <div class="field">
+          <label for="checkIn">Check-in</label>
+          <input type="date" id="checkIn" name="checkIn" required />
+        </div>
+        <div class="field">
+          <label for="checkOut">Check-out</label>
+          <input type="date" id="checkOut" name="checkOut" required />
+        </div>
+        <div class="field">
+          <label for="numGuests">Guests</label>
+          <input type="number" id="numGuests" name="numGuests" min="1" max="8" value="2" />
+        </div>
+        <button type="submit" class="btn btn-primary">Check availability</button>
+      </form>
+      <p id="availability-error" class="form-error" hidden></p>
+    </div>
+  </section>
+
+  <section id="sites-section" class="sites-section" hidden>
+    <div class="wrap">
+      <h2>Available sites</h2>
+      <p id="stay-summary" class="stay-summary"></p>
+      <div id="site-groups"></div>
+    </div>
+  </section>
+
+  <section id="booking-section" class="booking-section" hidden>
+    <div class="wrap">
+      <h2>Guest details &amp; payment</h2>
+      <div class="booking-grid">
+        <form id="booking-form" class="booking-form">
+          <div class="field">
+            <label for="guestName">Full name</label>
+            <input type="text" id="guestName" required />
+          </div>
+          <div class="field">
+            <label for="guestEmail">Email</label>
+            <input type="email" id="guestEmail" required />
+          </div>
+          <div class="field">
+            <label for="guestPhone">Phone</label>
+            <input type="tel" id="guestPhone" />
+          </div>
+          <div class="field">
+            <label for="guestNotes">Notes for the office (optional)</label>
+            <textarea id="guestNotes" rows="3"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="card-container">Card details (Square sandbox)</label>
+            <div id="card-container"></div>
+          </div>
+
+          <p id="booking-error" class="form-error" hidden></p>
+          <button type="submit" class="btn btn-primary" id="pay-btn">Pay &amp; reserve</button>
+          <p class="fine-print">Payments are processed by Square. This site is running against Square's <strong>sandbox</strong> environment until real API keys are configured — no real card will be charged.</p>
+        </form>
+
+        <aside class="order-summary" id="order-summary"></aside>
+      </div>
+    </div>
+  </section>
+
+  <section id="confirmation-section" class="confirmation-section" hidden>
+    <div class="wrap">
+      <div class="confirmation-card">
+        <h2>Reservation confirmed</h2>
+        <p class="reservation-code" id="confirmation-code"></p>
+        <div id="confirmation-details"></div>
+        <p class="fine-print">Save this code — it's how the office looks up your reservation. Automated email confirmations aren't wired up yet, so this screen is your receipt for now.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div>
+      <strong>Wagon Wheel RV Park</strong><br />
+      325 Polly Peak Dr, Bandera, TX 78003<br />
+      (830) 850-0805
+    </div>
+    <div>
+      <strong>Office hours</strong><br />
+      Sun 1–5pm &middot; Mon–Fri 8am–5pm &middot; Sat 9am–3pm
+    </div>
+    <div class="footer-note">
+      Site count, layout, and rates shown here are placeholders pending the park's real site list and pricing.
+    </div>
+  </div>
+</footer>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>
