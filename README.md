@@ -16,17 +16,25 @@ This is the **static** variant of this site: plain HTML/CSS, no server, no datab
   1. Create a RoverPass account → replace the `.widget-placeholder` block for "Book direct" in `index.html` with their real embed code.
   2. Create a Hipcamp listing → replace the `.widget-placeholder` block for "Book via Hipcamp" with their real button code/link.
 
+## Style/layout variants
+
+The root `index.html` is a small comparison hub linking to each design variant, kept live side by side rather than replacing one another:
+
+- **`v1/`** — Dark Cowboy: dark parchment-on-charcoal, night-sky hero. The original design.
+- **`v2/`** — Light Rustic: same HTML/content, flipped to a warm cream/tan daytime palette and sunlit hero.
+
+Both variants share identical markup and copy — only `css/style.css` (and the hero illustration's CSS-variable colors) differ — so it's a clean visual A/B, not a content diff. To add another variant: copy a `vN/` folder, redesign its `css/style.css`, add a card to the root `index.html`.
+
 ## Stack
 
-Just static files:
-- `index.html`
-- `css/style.css`
-
-No build step, no dependencies, no server.
+Just static files — no build step, no dependencies, no server:
+- `index.html` (comparison hub)
+- `v1/index.html`, `v1/css/style.css`
+- `v2/index.html`, `v2/css/style.css`
 
 ## Local preview
 
-Open `index.html` directly in a browser, or serve the folder with any static file server, e.g.:
+Open any `index.html` directly in a browser, or serve the whole folder with any static file server, e.g.:
 
 ```bash
 npx serve .
