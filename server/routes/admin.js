@@ -213,4 +213,39 @@ router.patch("/reservations/:code", async (req, res, next) => {
   }
 });
 
+router.get("/push/vapid-public-key", (req, res) => {
+  res.json({ publicKey: process.env.VAPID_PUBLIC_KEY ?? null });
+});
+
+router.post("/push/subscribe", async (req, res, next) => {
+  const { endpoint, keys } = req.body?.subscription ?? {};
+  if (!endpoint || !keys?.p256dh || !keys?.auth) {
+    return res.status(400).json({ error: "Invalid push subscription" });
+  }
+  try {
+    await pool.query(
+      `INSERT INTO push_subscriptions (endpoint, p256dh, auth)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (endpoint) DO UPDATE SET p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth`,
+      [endpoint, keys.p256dh, keys.auth]
+    );
+    res.status(201).json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/push/unsubscribe", async (req, res, next) => {
+  const { endpoint } = req.body ?? {};
+  if (!endpoint) {
+    return res.status(400).json({ error: "endpoint is required" });
+  }
+  try {
+    await pool.query("DELETE FROM push_subscriptions WHERE endpoint = $1", [endpoint]);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

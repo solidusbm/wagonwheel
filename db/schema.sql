@@ -42,3 +42,15 @@ CREATE TABLE IF NOT EXISTS reservations (
 
 CREATE INDEX IF NOT EXISTS idx_reservations_site ON reservations(site_id);
 CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);
+
+-- One row per admin device/browser subscribed to push notifications (a park
+-- manager checking bookings from a Windows desktop, an Android phone, and an
+-- iPhone all gets three rows). Invalid/expired subscriptions are pruned when
+-- a push send comes back 404/410 from the browser's push service.
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id SERIAL PRIMARY KEY,
+  endpoint TEXT NOT NULL UNIQUE,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

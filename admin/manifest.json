@@ -1,0 +1,9 @@
+{
+  "name": "Wagon Wheel RV Park — Admin",
+  "short_name": "WW Admin",
+  "start_url": "/admin/",
+  "scope": "/admin/",
+  "display": "standalone",
+  "background_color": "#1c140d",
+  "theme_color": "#1c140d"
+}
