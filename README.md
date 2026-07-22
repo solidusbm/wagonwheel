@@ -1,82 +1,41 @@
-# Wagon Wheel RV Park
+# Wagon Wheel RV Park (static)
 
-Booking + payments site for **Bandera Wagon Wheel RV Park** (325 Polly Peak Dr, Bandera, TX 78003).
+Marketing + booking-entry site for **Bandera Wagon Wheel RV Park** (325 Polly Peak Dr, Bandera, TX 78003).
 
-Node/Express backend, PostgreSQL for reservations, Square for payments. This replaces the earlier chat prototype (static HTML, browser-storage "availability," a mocked checkout) with a real app: a database that actually prevents double-booking, and a server that talks to Square instead of faking it.
+This is the **static** variant of this site: plain HTML/CSS, no server, no database, no payment integration of its own. It exists on the `static-site` branch alongside the full custom-built version (Express + PostgreSQL + Square, live on `claude/rv-booking-project-6pigax`) as an alternative that trades a custom booking flow for effectively free, zero-maintenance hosting.
 
-## Status / what's real vs. placeholder
+## What's here vs. what's not
 
-- **Real:** address, phone, office hours, hookup type (30/50 amp, full hook-up), pet-friendly — pulled from what's publicly listed for the park.
-- **Placeholder, needs your input:** the 12 sites (names, layout, "Inner Ring"/"Rim Row" grouping, nightly rates in `db/seed.sql`). Nobody publishes the actual site list, layout, or rates — swap in the real ones before this goes live. The booking page's site picker also carries a visible note to this effect.
-- **Payments:** wired to Square's real Payments API (not a mock), but requires your Square **sandbox** credentials to actually run a charge. See setup below.
-- **Admin notifications:** when a booking is confirmed, an email fires to `ADMIN_EMAIL`. Without SMTP credentials configured it logs to the server console instead of sending, so it works out of the box in dev.
-- **Admin view:** `/admin` lists pending/confirmed reservations and lets the office create, reschedule/reassign, or cancel a booking directly (phone-ins, walk-ins, corrections — no card is charged through this path). Protected by HTTP Basic Auth via `ADMIN_USERNAME`/`ADMIN_PASSWORD` — the route returns 503 until both are set. Reschedules and cancellations go through the same database exclusion constraint as guest bookings, so they can't create a double-booking either. **The `.env` in this repo ships with `admin`/`admin` for local dev only — change it before deploying anywhere public; the server warns on startup if it's still a weak placeholder.**
-- **Site listings show upcoming booked dates:** each site card on the booking page lists its other upcoming reservations (`GET /api/availability` returns a `bookedRanges` array per site), not just a yes/no flag for the dates you searched.
-- **Not built yet:** guest email confirmations (only the admin gets notified so far), and refunds — cancelling a booking in `/admin` releases the site but does not call Square to refund a card that was actually charged. The guest-facing confirmation screen and lookup-by-code (`GET /api/reservations/:code`) are the receipt for now.
+- **Real:** address, phone, office hours, hookup type (30/50 amp, full hook-up), pet-friendly.
+- **Placeholder, needs your input:** the 12 sites (names, layout, nightly rates) — same caveat as the full version, nobody publishes the actual list.
+- **Booking is fully outsourced.** Instead of a custom database and payment flow, this page has two placeholder booking cards:
+  - **Book direct**, meant for a [RoverPass](https://www.roverpass.com/) embedded widget (~$99/mo for a small park, or pay-per-reservation above ~28 bookings/month — see their [pricing](https://software.roverpass.com/pricing))
+  - **Book via Hipcamp**, meant for a Hipcamp ["Book on Hipcamp" button](https://support.hipcamp.com/hc/en-us/articles/360024823212-How-can-I-add-a-Book-on-Hipcamp-button-to-my-website) (free to list, 15% commission, 12.5% if PMS-integrated)
+  - RoverPass has a native, no-extra-cost integration with Hipcamp that syncs availability both ways and blocks double-booking between the two channels — so running both simultaneously is a supported setup, not something to build yourself.
+- **No accounts exist yet for either service** — both booking cards are visibly marked "Placeholder" and link to `#`. Setting them up is two separate, independent steps:
+  1. Create a RoverPass account → replace the `.widget-placeholder` block for "Book direct" in `index.html` with their real embed code.
+  2. Create a Hipcamp listing → replace the `.widget-placeholder` block for "Book via Hipcamp" with their real button code/link.
 
 ## Stack
 
-- Node.js + Express (`server/`)
-- PostgreSQL, with an **exclusion constraint** on `(site_id, date range)` that makes double-booking a site impossible at the database level, not just something the app tries to check
-- Vanilla HTML/CSS/JS frontend (`public/`), Square Web Payments SDK loaded client-side
-- Square Payments API for the actual charge (sandbox until you flip `SQUARE_ENVIRONMENT=production`)
+Just static files:
+- `index.html`
+- `css/style.css`
 
-## Local setup
+No build step, no dependencies, no server.
 
-### 1. Database
+## Local preview
 
-You need a Postgres instance reachable via `DATABASE_URL`. Locally:
-
-```bash
-createuser wagonwheel --pwprompt --createdb   # or use an existing role
-createdb -O wagonwheel wagonwheel
-```
-
-### 2. Environment
+Open `index.html` directly in a browser, or serve the folder with any static file server, e.g.:
 
 ```bash
-cp .env.example .env
+npx serve .
 ```
 
-Fill in `DATABASE_URL` and, when you have them, your Square sandbox values from the [Square Developer Dashboard](https://developer.squareup.com/apps):
+## Deploying
 
-- `SQUARE_APPLICATION_ID` — sandbox application ID (safe to expose to the browser)
-- `SQUARE_LOCATION_ID` — sandbox location ID
-- `SQUARE_ACCESS_TOKEN` — sandbox **access token** — server-side only, never commit this or send it to the frontend
+Any static host works — no backend, no database, no environment variables. Options include GitHub Pages, Cloudflare Pages, Netlify, or Render's (actual) Static Site tier — unlike the full version's Render *Web Service*, a static site has no sleep/cold-start behavior and no database to expire.
 
-Without these three set, the site still runs — availability and browsing work — but checkout will show "Square is not configured yet" instead of a card form.
+## Relationship to the full version
 
-### 3. Install, migrate, seed
-
-```bash
-npm install
-npm run migrate   # applies db/schema.sql
-npm run seed       # loads the 12 placeholder sites
-```
-
-### 4. Run
-
-```bash
-npm run dev
-```
-
-Visit `http://localhost:3000`.
-
-## Testing payments
-
-Use Square's [sandbox test card numbers](https://developer.squareup.com/docs/testing/test-values) — e.g. `4111 1111 1111 1111` with any future expiry/CVV — against your sandbox credentials. Nothing is charged for real until `SQUARE_ACCESS_TOKEN`/`SQUARE_ENVIRONMENT` point at production.
-
-## How double-booking is prevented
-
-`reservations` has a generated `stay_range daterange` column and a Postgres `EXCLUDE USING gist` constraint keyed on `(site_id, stay_range)` for any reservation in `pending` or `confirmed` status. Two requests racing to book the same site/dates can't both succeed — the database rejects the second `INSERT` outright (error code `23P01`), which the reservation route turns into a `409`. The booking flow inserts the reservation as `pending` *before* charging the card, so a lost race never touches Square, and a failed charge flips the row to `cancelled`, which releases the hold.
-
-## Remaining path to a real launch
-
-From the original planning conversation, still open:
-
-1. Real site list, layout, and nightly rates from the park
-2. Production Square credentials + going live with `SQUARE_ENVIRONMENT=production`
-3. Hosting (backend: Render/Railway/Fly/VPS; this app serves its own frontend, so one deploy target is enough) + DNS pointed at the park's domain + SSL (automatic on most of those hosts)
-4. Transactional email for confirmations (Postmark/SendGrid, or Square's own receipt emails)
-5. A refund flow (cancelling in `/admin` releases the site but does not call Square to refund; nothing in this app calls Square's refund API yet)
-6. ~~Some way for the park to see upcoming reservations~~ — done, see `/admin`. **Before launch: change `ADMIN_PASSWORD` from the local-dev placeholder to a strong, unique value.** The server prints a startup warning if it's left as `admin`/`password`/`changeme`/`wagonwheel`.
+The full custom-built app (real-time availability, its own PostgreSQL-backed double-booking prevention, Square payments, `/admin` panel) lives on branch `claude/rv-booking-project-6pigax` and is deployed separately (Render + Fly.io). This branch does not track or merge with that one — they're two independent approaches kept side by side so both can be demoed.

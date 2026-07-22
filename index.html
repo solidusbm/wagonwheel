@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Rye&family=Zilla+Slab:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="/css/style.css" />
+<link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
@@ -208,95 +208,32 @@
     <div class="section-head">
       <div class="eyebrow">Reservations</div>
       <h2>Book your site</h2>
-      <p>Real availability, checked against the database as you go.</p>
-    </div>
-    <div class="trail" id="trail"></div>
-
-    <div class="panel" id="dates-panel">
-      <h2>Choose your dates</h2>
-      <div class="sub">Check availability across the park before you pick a spot.</div>
-      <form id="availability-form">
-        <div class="grid-2">
-          <div class="field">
-            <label for="checkIn">Check-in</label>
-            <input type="date" id="checkIn" name="checkIn" required />
-          </div>
-          <div class="field">
-            <label for="checkOut">Check-out</label>
-            <input type="date" id="checkOut" name="checkOut" required />
-          </div>
-        </div>
-        <div class="field">
-          <label for="numGuests">Guests</label>
-          <input type="number" id="numGuests" name="numGuests" min="1" max="8" value="2" />
-        </div>
-        <p id="availability-error" class="error-msg" hidden></p>
-        <div class="btn-row"><button type="submit" class="btn btn-primary">Check availability</button></div>
-      </form>
+      <p>Reservations run through our booking partners — pick whichever's easiest for you.</p>
     </div>
 
-    <section id="sites-section" class="panel" hidden>
-      <h2>Pick a site</h2>
-      <p class="sub" id="stay-summary"></p>
-      <p class="gallery-note" style="margin:-8px 0 20px;">Site layout, numbering, and the Inner Ring / Rim Row grouping shown below are placeholders — swap in the park's actual site map before this goes live.</p>
-      <div class="map-wrap">
-        <svg id="site-map" viewBox="0 0 900 900" xmlns="http://www.w3.org/2000/svg"></svg>
-        <div class="map-legend">
-          <span><span class="swatch" style="background:var(--cedar)"></span>Available</span>
-          <span><span class="swatch" style="background:var(--gold-bright)"></span>Selected</span>
-          <span><span class="swatch" style="background:var(--taken)"></span>Reserved</span>
+    <div class="booking-options">
+      <div class="booking-option panel">
+        <h3>Book direct</h3>
+        <div class="sub">Powered by RoverPass</div>
+        <div class="widget-placeholder">
+          <span class="placeholder-tag">Placeholder</span>
+          <p>The RoverPass booking widget (real-time availability, dynamic pricing, interactive site map) goes here once the park has a RoverPass account. This block gets replaced with their embed code.</p>
         </div>
+        <a href="#" class="btn btn-primary btn-disabled" aria-disabled="true" tabindex="-1">Check availability &amp; book</a>
       </div>
-      <div id="site-groups"></div>
-      <div class="btn-row"><button type="button" class="btn btn-ghost" id="backDates">Back</button></div>
-    </section>
 
-    <section id="booking-section" class="panel" hidden>
-      <h2>Guest details &amp; payment</h2>
-      <div class="sub">Site selected — enter your details and card to confirm.</div>
-      <div class="booking-grid">
-        <form id="booking-form">
-          <div class="field">
-            <label for="guestName">Full name</label>
-            <input type="text" id="guestName" required />
-          </div>
-          <div class="field">
-            <label for="guestEmail">Email</label>
-            <input type="email" id="guestEmail" required />
-          </div>
-          <div class="field">
-            <label for="guestPhone">Phone</label>
-            <input type="tel" id="guestPhone" />
-          </div>
-          <div class="field">
-            <label for="guestNotes">Notes for the office (optional)</label>
-            <textarea id="guestNotes" rows="3"></textarea>
-          </div>
-
-          <div class="field">
-            <label for="card-container">Card details (Square sandbox)</label>
-            <div id="card-container" class="card-mock"></div>
-          </div>
-
-          <p id="booking-error" class="error-msg" hidden></p>
-          <div class="btn-row">
-            <button type="button" class="btn btn-ghost" id="backSite">Back</button>
-            <button type="submit" class="btn btn-primary" id="pay-btn">Pay &amp; reserve</button>
-          </div>
-          <p class="demo-note">Payments are processed by Square. This site is running against Square's <strong>sandbox</strong> environment until real API keys are configured — no real card will be charged.</p>
-        </form>
-
-        <aside class="order-summary" id="order-summary"></aside>
+      <div class="booking-option panel">
+        <h3>Book via Hipcamp</h3>
+        <div class="sub">Reach campers already browsing Hipcamp</div>
+        <div class="widget-placeholder">
+          <span class="placeholder-tag">Placeholder</span>
+          <p>Once the park has a Hipcamp listing, this becomes a real "Book on Hipcamp" button linking straight to it — synced with RoverPass automatically so no site gets double-booked.</p>
+        </div>
+        <a href="#" class="btn btn-ghost btn-disabled" aria-disabled="true" tabindex="-1">Book on Hipcamp</a>
       </div>
-    </section>
+    </div>
 
-    <section id="confirmation-section" class="panel" style="text-align:center;" hidden>
-      <h2>You're booked</h2>
-      <div class="confirm-code" id="confirmation-code"></div>
-      <div id="confirmation-details" style="max-width:340px;margin:0 auto;text-align:left;"></div>
-      <p class="demo-note">Save this code — it's how the office looks up your reservation. Automated email confirmations aren't wired up yet, so this screen is your receipt for now.</p>
-      <div class="btn-row" style="justify-content:center;"><button type="button" class="btn btn-primary" id="bookAnother">Book another site</button></div>
-    </section>
+    <p class="gallery-note" style="margin-top:24px;">Both booking options above are placeholders — this park doesn't have RoverPass or Hipcamp accounts yet. Once they exist, swap each block for the real widget embed / listing link.</p>
   </section>
 
 </div>
@@ -307,6 +244,5 @@
   Site count, layout, and rates shown here are placeholders pending the park's real site list and pricing.
 </footer>
 
-<script type="module" src="/js/app.js"></script>
 </body>
 </html>
