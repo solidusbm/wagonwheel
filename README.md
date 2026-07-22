@@ -18,19 +18,28 @@ This is the **static** variant of this site: plain HTML/CSS, no server, no datab
 
 ## Style/layout variants
 
-The root `index.html` is a small comparison hub linking to each design variant, kept live side by side rather than replacing one another:
+The root `index.html` is a small comparison hub linking to each design variant, kept live side by side rather than replacing one another. All twelve share the same content (address, amenities, nearby spots, booking copy) — only layout, typography, and styling differ:
 
 - **`v1/`** — Dark Cowboy: dark parchment-on-charcoal, night-sky hero. The original design.
 - **`v2/`** — Light Rustic: same HTML/content, flipped to a warm cream/tan daytime palette and sunlit hero.
+- **`v3/`** — Minimalist Modern: off-white/black, Inter type, hairline grids, generous whitespace.
+- **`v4/`** — Brutalist: raw borders, monospace type, no rounded corners, black/cream/acid-yellow.
+- **`v5/`** — National Park Poster: WPA travel-poster flats, Bebas Neue display type, screen-printed mountains.
+- **`v6/`** — Neon Saloon: synthwave-western mashup, glowing pink/cyan on deep violet, grid horizon.
+- **`v7/`** — Boutique Lodge: black/cream/gold, Playfair Display italics, thin rules, quiet luxury restraint.
+- **`v8/`** — Retro '70s Americana: sunburst hero, chunky slab type, rounded panels in burnt orange/avocado/mustard.
+- **`v9/`** — Editorial Magazine: newsroom masthead, drop caps, pull quotes, asymmetric grid.
+- **`v10/`** — Trail Map / Topographic: olive/khaki outdoors palette, contour-line texture, patch-style badges.
+- **`v11/`** — Glassmorphism: frosted-glass cards over a violet/teal gradient glow, dark and modern.
+- **`v12/`** — Vintage Newspaper: sepia broadsheet, gazette masthead, drop caps, typewriter accents.
 
-Both variants share identical markup and copy — only `css/style.css` (and the hero illustration's CSS-variable colors) differ — so it's a clean visual A/B, not a content diff. To add another variant: copy a `vN/` folder, redesign its `css/style.css`, add a card to the root `index.html`.
+`v1`/`v2` share identical markup, differing only in `css/style.css`. `v3`–`v12` vary layout structure as well as styling, for real visual range rather than palette swaps alone. To add another variant: copy a `vN/` folder, redesign its markup/`css/style.css`, add a card to the root `index.html`.
 
 ## Stack
 
 Just static files — no build step, no dependencies, no server:
 - `index.html` (comparison hub)
-- `v1/index.html`, `v1/css/style.css`
-- `v2/index.html`, `v2/css/style.css`
+- `v1/` … `v12/`, each with its own `index.html` and `css/style.css`
 
 ## Local preview
 
