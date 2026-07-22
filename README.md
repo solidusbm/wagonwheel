@@ -37,25 +37,29 @@ The root `index.html` is a small comparison hub linking to each design variant, 
 
 ### Alternate takes
 
-Four of the twelve — v5, v7, v8, and v10 — also have alternate takes on the same theme, nested under their card on the root `index.html` rather than listed as top-level variants:
+Every one of the twelve numbered variants now also has two alternate takes on its theme, nested under its card on the root `index.html` (an "Alternates" chip row) rather than listed as top-level variants:
 
-- **`v5b/`** — Canyon Postcard: terracotta/turquoise desert palette, postcard-and-stamp hero framing.
-- **`v5c/`** — Ranger Badge: dark forest-green letterpress feel, centered circular ranger-badge emblem.
-- **`v7b/`** — Cabin Luxury: walnut/terracotta/brass, split hero with a woodgrain-striped frame panel.
-- **`v7c/`** — Modern Ivory: ivory/sage, ultra-thin hairline rules, spa-boutique airiness.
-- **`v8b/`** — Googie Diner: teal/coral mid-century motel signage, boomerang shapes, angled hero.
-- **`v8c/`** — Woodgrain Sienna: muted sienna/olive, concentric rainbow-arch hero, hand-lettered accents.
-- **`v10b/`** — USGS Survey: technical cartography look, coordinate grid overlay, compass rose, monospace labels.
-- **`v10c/`** — Alpine Gear Co.: pine green/burnt orange, bold condensed type, outdoor-gear catalog branding.
+- **v1 (Dark Cowboy):** `v1b` Midnight Rodeo — red/blue neon marquee frame, arena-signage hero. `v1c` Campfire Ember — dark charcoal with a warm ember-glow vignette hero.
+- **v2 (Light Rustic):** `v2b` Sunday Porch — pale sage/cream, screen-door lattice texture, wicker frame. `v2c` Wildflower Meadow — dusty pink/lavender, botanical line art.
+- **v3 (Minimalist Modern):** `v3b` Mono Ledger — pure black/white, zero color accent, numbered ledger rows. `v3c` Soft Neutral — warm gray/beige, single dusty-blue accent, rounded cards.
+- **v4 (Brutalist):** `v4b` Concrete Block — grayscale concrete texture, single red stamp accent. `v4c` Zine Punk — photocopy/torn-paper collage, hot pink accent.
+- **v5 (National Park Poster):** `v5b` Canyon Postcard — terracotta/turquoise desert palette, postcard-and-stamp hero framing. `v5c` Ranger Badge — dark forest-green letterpress feel, circular badge emblem.
+- **v6 (Neon Saloon):** `v6b` Laser Grid Rodeo — green/amber Tron-style grid, terminal aesthetic. `v6c` Neon Cactus — magenta sunset gradient, glowing cyan cactus silhouettes.
+- **v7 (Boutique Lodge):** `v7b` Cabin Luxury — walnut/terracotta/brass, split-frame hero. `v7c` Modern Ivory — ivory/sage, ultra-airy hairline minimalism.
+- **v8 (Retro '70s Americana):** `v8b` Googie Diner — teal/coral mid-century motel signage, boomerang shapes. `v8c` Woodgrain Sienna — muted sienna/olive, rainbow-arch hero.
+- **v9 (Editorial Magazine):** `v9b` Travel Journal — warm cream, handwriting captions, polaroid gallery. `v9c` Business Weekly — cool navy/gray, spreadsheet-style data tables.
+- **v10 (Trail Map / Topographic):** `v10b` USGS Survey — technical cartography, coordinate grid, compass rose. `v10c` Alpine Gear Co. — pine/orange, bold outdoor-brand catalog look.
+- **v11 (Glassmorphism):** `v11b` Aurora Glass — cool green/blue aurora gradient, frosted white glass. `v11c` Sunset Glass — warm coral/orange/pink gradient glass.
+- **v12 (Vintage Newspaper):** `v12b` Wanted Poster — aged parchment, torn edges, bold wood-type headline. `v12c` Telegram Dispatch — Western Union telegram look, typewriter ALL-CAPS.
 
-Same rule applies: identical page content, different execution. Folder naming is `vN` + a letter (`b`, `c`, …) for each additional take on that variant's theme.
+Same rule applies throughout: identical page content, different execution. Folder naming is `vN` + a letter (`b`, `c`, …) for each additional take on that variant's theme.
 
 ## Stack
 
 Just static files — no build step, no dependencies, no server:
 - `index.html` (comparison hub)
 - `v1/` … `v12/`, each with its own `index.html` and `css/style.css`
-- `v5b/`, `v5c/`, `v7b/`, `v7c/`, `v8b/`, `v8c/`, `v10b/`, `v10c/` — alternate takes on v5/v7/v8/v10
+- `v1b/`, `v1c/`, `v2b/`, `v2c/`, `v3b/`, `v3c/`, `v4b/`, `v4c/`, `v5b/`, `v5c/`, `v6b/`, `v6c/`, `v7b/`, `v7c/`, `v8b/`, `v8c/`, `v9b/`, `v9c/`, `v10b/`, `v10c/`, `v11b/`, `v11c/`, `v12b/`, `v12c/` — two alternate takes per numbered variant, 24 pages in total
 
 ## Local preview
 
