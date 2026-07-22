@@ -9,11 +9,12 @@
   :root{ --bg:#f6ecd8; --panel:#fffaf0; --line:#d8c39d; --gold:#a9721f; --ink:#3c2a1a; --dim:#7a6650; --radius:4px; }
   *{box-sizing:border-box;}
   body{margin:0; background:var(--bg); color:var(--ink); font-family:'Zilla Slab', Georgia, serif; min-height:100vh;}
-  .wrap{max-width:760px; margin:0 auto; padding:64px 24px;}
+  .wrap{max-width:1080px; margin:0 auto; padding:64px 24px;}
   h1{font-family:'Rye', serif; font-weight:400; font-size:34px; margin:0 0 8px;}
   .sub{color:var(--dim); font-style:italic; margin:0 0 40px; font-size:15px;}
-  .variants{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
-  @media(max-width:600px){.variants{grid-template-columns:1fr;}}
+  .variants{display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px;}
+  @media(max-width:860px){.variants{grid-template-columns:1fr 1fr;}}
+  @media(max-width:560px){.variants{grid-template-columns:1fr;}}
   .card{
     display:block; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
     padding:24px; text-decoration:none; color:inherit; transition:border-color 0.15s;
@@ -55,9 +56,119 @@
         <span class="swatch" style="background:#8c3a2b"></span>
       </div>
     </a>
+    <a class="card" href="v3/">
+      <div class="tag">v3</div>
+      <h2>Minimalist Modern</h2>
+      <p>Off-white and black, Inter type, generous whitespace, hairline grids instead of decoration.</p>
+      <div class="swatch-row">
+        <span class="swatch" style="background:#fafaf9"></span>
+        <span class="swatch" style="background:#0f0f0e"></span>
+        <span class="swatch" style="background:#1c4d3e"></span>
+        <span class="swatch" style="background:#c96a3a"></span>
+      </div>
+    </a>
+    <a class="card" href="v4/">
+      <div class="tag">v4</div>
+      <h2>Brutalist</h2>
+      <p>Raw borders, monospace type, no rounded corners — black/cream/acid-yellow with hazard-stripe art.</p>
+      <div class="swatch-row">
+        <span class="swatch" style="background:#f2f0e8"></span>
+        <span class="swatch" style="background:#0a0a0a"></span>
+        <span class="swatch" style="background:#f3ff33"></span>
+        <span class="swatch" style="background:#ff3b1f"></span>
+      </div>
+    </a>
+    <a class="card" href="v5/">
+      <div class="tag">v5</div>
+      <h2>National Park Poster</h2>
+      <p>WPA travel-poster flats — Bebas Neue display type, screen-printed mountains and sunburst sky.</p>
+      <div class="swatch-row">
+        <span class="swatch" style="background:#f4ecd8"></span>
+        <span class="swatch" style="background:#2f4a3c"></span>
+        <span class="swatch" style="background:#c1502e"></span>
+        <span class="swatch" style="background:#d9a02c"></span>
+      </div>
+    </a>
+    <a class="card" href="v6/">
+      <div class="tag">v6</div>
+      <h2>Neon Saloon</h2>
+      <p>Synthwave-western mashup — deep violet night, glowing pink/cyan, grid horizon behind the sign.</p>
+      <div class="swatch-row">
+        <span class="swatch" style="background:#0a0417"></span>
+        <span class="swatch" style="background:#ff2fd6"></span>
+        <span class="swatch" style="background:#28f7f0"></span>
+        <span class="swatch" style="background:#8a4dff"></span>
+      </div>
+    </a>
+    <a class="card" href="v7/">
+      <div class="tag">v7</div>
+      <h2>Boutique Lodge</h2>
+      <p>Black, cream, and gold — Playfair Display italics, thin rules, quiet luxury-hotel restraint.</p>
+      <div class="swatch-row">
+        <span class="swatch" style="background:#0f0e0c"></span>
+        <span class="swatch" style="background:#f3ede1"></span>
+        <span class="swatch" style="background:#c9a24d"></span>
+        <span class="swatch" style="background:#2b2620"></span>
+      </div>
+    </a>
+    <a class="card" href="v8/">
+      <div class="tag">v8</div>
+      <h2>Retro '70s Americana</h2>
+      <p>Sunburst hero, chunky slab type, rounded panels in burnt orange, avocado, and mustard.</p>
+      <div class="swatch-row">
+        <span class="swatch" style="background:#f6e4c8"></span>
+        <span class="swatch" style="background:#d9702e"></span>
+        <span class="swatch" style="background:#748a4a"></span>
+        <span class="swatch" style="background:#e0a415"></span>
+      </div>
+    </a>
+    <a class="card" href="v9/">
+      <div class="tag">v9</div>
+      <h2>Editorial Magazine</h2>
+      <p>Newsroom masthead, drop caps and pull quotes, asymmetric grid, oversized serif headlines.</p>
+      <div class="swatch-row">
+        <span class="swatch" style="background:#fffdf9"></span>
+        <span class="swatch" style="background:#161311"></span>
+        <span class="swatch" style="background:#b3401f"></span>
+        <span class="swatch" style="background:#e2dccd"></span>
+      </div>
+    </a>
+    <a class="card" href="v10/">
+      <div class="tag">v10</div>
+      <h2>Trail Map / Topographic</h2>
+      <p>Olive and khaki outdoors palette, contour-line texture, condensed type, patch-style badges.</p>
+      <div class="swatch-row">
+        <span class="swatch" style="background:#eef0e4"></span>
+        <span class="swatch" style="background:#5c6b3c"></span>
+        <span class="swatch" style="background:#a89968"></span>
+        <span class="swatch" style="background:#c1621f"></span>
+      </div>
+    </a>
+    <a class="card" href="v11/">
+      <div class="tag">v11</div>
+      <h2>Glassmorphism</h2>
+      <p>Frosted-glass cards over a violet/teal gradient glow — dark, modern, soft blurred depth.</p>
+      <div class="swatch-row">
+        <span class="swatch" style="background:#120a24"></span>
+        <span class="swatch" style="background:#8b6bff"></span>
+        <span class="swatch" style="background:#38e8d0"></span>
+        <span class="swatch" style="background:#2a0f3d"></span>
+      </div>
+    </a>
+    <a class="card" href="v12/">
+      <div class="tag">v12</div>
+      <h2>Vintage Newspaper</h2>
+      <p>Sepia broadsheet — gazette masthead, drop caps, hairline rules, typewriter accents.</p>
+      <div class="swatch-row">
+        <span class="swatch" style="background:#f1e9d6"></span>
+        <span class="swatch" style="background:#231f1a"></span>
+        <span class="swatch" style="background:#7a1f1f"></span>
+        <span class="swatch" style="background:#f8f2e2"></span>
+      </div>
+    </a>
   </div>
 
-  <footer>Both variants share identical HTML/content — only CSS differs — so it's a clean visual A/B, not a content diff.</footer>
+  <footer>All twelve variants share the same page content — address, amenities, nearby spots, booking copy — only layout and styling differ, so it's a clean visual comparison, not a content diff.</footer>
 </div>
 </body>
 </html>
