@@ -7,6 +7,7 @@ import { pool } from "./db.js";
 import sitesRouter from "./routes/sites.js";
 import reservationsRouter from "./routes/reservations.js";
 import adminRouter from "./routes/admin.js";
+import calendarRouter from "./routes/calendar.js";
 import { adminAuth } from "./middleware/adminAuth.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -42,6 +43,7 @@ app.use("/api", sitesRouter);
 app.use("/api/reservations", reservationsRouter);
 app.use("/api/admin", adminAuth, adminRouter);
 app.use("/admin", adminAuth, express.static(path.join(__dirname, "..", "admin")));
+app.use("/calendar", calendarRouter);
 
 app.use(express.static(path.join(__dirname, "..", "public")));
 

@@ -21,6 +21,12 @@
   .status-pill.pending{background:rgba(201,138,43,0.2); color:var(--gold-bright);}
   .status-pill.cancelled{background:rgba(140,58,43,0.25); color:var(--rust-bright);}
   .empty-note, .error-msg{color:var(--parchment-dim); font-style:italic; padding:20px 0;}
+  .sync-feeds{margin:32px 0; padding:20px 24px; background:var(--bg-panel); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius);}
+  .sync-feeds h2{font-size:17px; margin:0 0 6px;}
+  .sync-feeds .sub{color:var(--parchment-dim); font-size:12.5px; font-style:italic; margin-bottom:14px;}
+  .feed-row{display:flex; align-items:center; gap:10px; padding:6px 0; font-size:12.5px; flex-wrap:wrap;}
+  .feed-row input{flex:1; min-width:220px; background:var(--bg); border:1px solid rgba(232,220,196,0.2); color:var(--parchment-dim); padding:6px 10px; border-radius:var(--radius); font-family:'JetBrains Mono',monospace; font-size:11.5px;}
+  .feed-row button{font-size:10.5px; padding:6px 10px;}
   .row-actions{display:flex; gap:8px; flex-wrap:wrap;}
   .row-actions button{font-size:10.5px; padding:6px 10px;}
   #booking-panel{display:none;}
@@ -78,6 +84,12 @@
   </div>
 
   <div id="admin-content">Loading…</div>
+
+  <div class="sync-feeds">
+    <h2>RoverPass / Hipcamp sync feeds</h2>
+    <div class="sub">One iCal feed per site, listing this app's booked dates only (no guest details). Paste a site's URL into RoverPass's or Hipcamp's "import calendar" field once those accounts exist, so a direct booking here blocks the site there too.</div>
+    <div id="feed-list"></div>
+  </div>
 </div>
 <script type="module" src="/admin/js/admin.js"></script>
 </body>

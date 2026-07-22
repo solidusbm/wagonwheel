@@ -32,6 +32,31 @@ async function loadSites() {
   const res = await fetch("/api/sites");
   sites = res.ok ? await res.json() : [];
   siteField.innerHTML = sites.map((s) => `<option value="${s.id}">${s.name} · ${s.area} (${money(s.price_per_night_cents)}/night)</option>`).join("");
+  renderFeedList();
+}
+
+function renderFeedList() {
+  const feedList = document.getElementById("feed-list");
+  feedList.innerHTML = sites
+    .map((s) => {
+      const url = `${window.location.origin}/calendar/sites/${s.id}.ics`;
+      return `
+    <div class="feed-row">
+      <span>${s.name}</span>
+      <input type="text" readonly value="${url}" onclick="this.select()" />
+      <button type="button" class="btn btn-ghost" data-copy-feed="${url}">Copy</button>
+    </div>`;
+    })
+    .join("");
+
+  feedList.querySelectorAll("[data-copy-feed]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      await navigator.clipboard.writeText(btn.getAttribute("data-copy-feed"));
+      const original = btn.textContent;
+      btn.textContent = "Copied";
+      setTimeout(() => (btn.textContent = original), 1200);
+    });
+  });
 }
 
 async function loadReservations() {
