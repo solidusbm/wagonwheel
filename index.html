@@ -17,14 +17,19 @@
   @media(max-width:560px){.variants{grid-template-columns:1fr;}}
   .card{
     display:block; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
-    padding:24px; text-decoration:none; color:inherit; transition:border-color 0.15s;
+    padding:24px; transition:border-color 0.15s;
   }
   .card:hover{border-color:var(--gold);}
+  .card-link{display:block; text-decoration:none; color:inherit;}
   .card .tag{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--gold); margin-bottom:8px;}
   .card h2{font-size:20px; margin:0 0 8px; font-family:'Zilla Slab',serif; font-weight:600;}
   .card p{margin:0; font-size:13.5px; color:var(--dim); line-height:1.6;}
   .swatch-row{display:flex; gap:6px; margin-top:16px;}
   .swatch{width:20px; height:20px; border-radius:50%; border:1px solid rgba(0,0,0,0.1);}
+  .alts{display:flex; align-items:center; gap:8px; margin-top:16px; padding-top:16px; border-top:1px solid var(--line); flex-wrap:wrap;}
+  .alts .alts-label{font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:var(--dim); margin-right:2px;}
+  .alt-chip{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--dim); background:var(--bg); border:1px solid var(--line); border-radius:100px; padding:5px 11px; text-decoration:none;}
+  .alt-chip:hover{color:var(--gold); border-color:var(--gold);}
   footer{margin-top:48px; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--dim);}
 </style>
 </head>
@@ -78,17 +83,24 @@
         <span class="swatch" style="background:#ff3b1f"></span>
       </div>
     </a>
-    <a class="card" href="v5/">
-      <div class="tag">v5</div>
-      <h2>National Park Poster</h2>
-      <p>WPA travel-poster flats — Bebas Neue display type, screen-printed mountains and sunburst sky.</p>
-      <div class="swatch-row">
-        <span class="swatch" style="background:#f4ecd8"></span>
-        <span class="swatch" style="background:#2f4a3c"></span>
-        <span class="swatch" style="background:#c1502e"></span>
-        <span class="swatch" style="background:#d9a02c"></span>
+    <div class="card">
+      <a class="card-link" href="v5/">
+        <div class="tag">v5</div>
+        <h2>National Park Poster</h2>
+        <p>WPA travel-poster flats — Bebas Neue display type, screen-printed mountains and sunburst sky.</p>
+        <div class="swatch-row">
+          <span class="swatch" style="background:#f4ecd8"></span>
+          <span class="swatch" style="background:#2f4a3c"></span>
+          <span class="swatch" style="background:#c1502e"></span>
+          <span class="swatch" style="background:#d9a02c"></span>
+        </div>
+      </a>
+      <div class="alts">
+        <span class="alts-label">Alternates:</span>
+        <a class="alt-chip" href="v5b/" title="Canyon Postcard — terracotta/turquoise, postcard-stamp hero">v5b · Canyon Postcard</a>
+        <a class="alt-chip" href="v5c/" title="Ranger Badge — forest green letterpress, circular badge emblem">v5c · Ranger Badge</a>
       </div>
-    </a>
+    </div>
     <a class="card" href="v6/">
       <div class="tag">v6</div>
       <h2>Neon Saloon</h2>
@@ -100,28 +112,42 @@
         <span class="swatch" style="background:#8a4dff"></span>
       </div>
     </a>
-    <a class="card" href="v7/">
-      <div class="tag">v7</div>
-      <h2>Boutique Lodge</h2>
-      <p>Black, cream, and gold — Playfair Display italics, thin rules, quiet luxury-hotel restraint.</p>
-      <div class="swatch-row">
-        <span class="swatch" style="background:#0f0e0c"></span>
-        <span class="swatch" style="background:#f3ede1"></span>
-        <span class="swatch" style="background:#c9a24d"></span>
-        <span class="swatch" style="background:#2b2620"></span>
+    <div class="card">
+      <a class="card-link" href="v7/">
+        <div class="tag">v7</div>
+        <h2>Boutique Lodge</h2>
+        <p>Black, cream, and gold — Playfair Display italics, thin rules, quiet luxury-hotel restraint.</p>
+        <div class="swatch-row">
+          <span class="swatch" style="background:#0f0e0c"></span>
+          <span class="swatch" style="background:#f3ede1"></span>
+          <span class="swatch" style="background:#c9a24d"></span>
+          <span class="swatch" style="background:#2b2620"></span>
+        </div>
+      </a>
+      <div class="alts">
+        <span class="alts-label">Alternates:</span>
+        <a class="alt-chip" href="v7b/" title="Cabin Luxury — walnut/terracotta/brass, split-frame hero">v7b · Cabin Luxury</a>
+        <a class="alt-chip" href="v7c/" title="Modern Ivory — ivory/sage, ultra-airy hairline minimalism">v7c · Modern Ivory</a>
       </div>
-    </a>
-    <a class="card" href="v8/">
-      <div class="tag">v8</div>
-      <h2>Retro '70s Americana</h2>
-      <p>Sunburst hero, chunky slab type, rounded panels in burnt orange, avocado, and mustard.</p>
-      <div class="swatch-row">
-        <span class="swatch" style="background:#f6e4c8"></span>
-        <span class="swatch" style="background:#d9702e"></span>
-        <span class="swatch" style="background:#748a4a"></span>
-        <span class="swatch" style="background:#e0a415"></span>
+    </div>
+    <div class="card">
+      <a class="card-link" href="v8/">
+        <div class="tag">v8</div>
+        <h2>Retro '70s Americana</h2>
+        <p>Sunburst hero, chunky slab type, rounded panels in burnt orange, avocado, and mustard.</p>
+        <div class="swatch-row">
+          <span class="swatch" style="background:#f6e4c8"></span>
+          <span class="swatch" style="background:#d9702e"></span>
+          <span class="swatch" style="background:#748a4a"></span>
+          <span class="swatch" style="background:#e0a415"></span>
+        </div>
+      </a>
+      <div class="alts">
+        <span class="alts-label">Alternates:</span>
+        <a class="alt-chip" href="v8b/" title="Googie Diner — teal/coral mid-century motel signage">v8b · Googie Diner</a>
+        <a class="alt-chip" href="v8c/" title="Woodgrain Sienna — muted sienna/olive, rainbow-arch hero">v8c · Woodgrain Sienna</a>
       </div>
-    </a>
+    </div>
     <a class="card" href="v9/">
       <div class="tag">v9</div>
       <h2>Editorial Magazine</h2>
@@ -133,17 +159,24 @@
         <span class="swatch" style="background:#e2dccd"></span>
       </div>
     </a>
-    <a class="card" href="v10/">
-      <div class="tag">v10</div>
-      <h2>Trail Map / Topographic</h2>
-      <p>Olive and khaki outdoors palette, contour-line texture, condensed type, patch-style badges.</p>
-      <div class="swatch-row">
-        <span class="swatch" style="background:#eef0e4"></span>
-        <span class="swatch" style="background:#5c6b3c"></span>
-        <span class="swatch" style="background:#a89968"></span>
-        <span class="swatch" style="background:#c1621f"></span>
+    <div class="card">
+      <a class="card-link" href="v10/">
+        <div class="tag">v10</div>
+        <h2>Trail Map / Topographic</h2>
+        <p>Olive and khaki outdoors palette, contour-line texture, condensed type, patch-style badges.</p>
+        <div class="swatch-row">
+          <span class="swatch" style="background:#eef0e4"></span>
+          <span class="swatch" style="background:#5c6b3c"></span>
+          <span class="swatch" style="background:#a89968"></span>
+          <span class="swatch" style="background:#c1621f"></span>
+        </div>
+      </a>
+      <div class="alts">
+        <span class="alts-label">Alternates:</span>
+        <a class="alt-chip" href="v10b/" title="USGS Survey — technical cartography, coordinate grid, compass rose">v10b · USGS Survey</a>
+        <a class="alt-chip" href="v10c/" title="Alpine Gear Co. — pine/orange, bold outdoor-brand catalog look">v10c · Alpine Gear Co.</a>
       </div>
-    </a>
+    </div>
     <a class="card" href="v11/">
       <div class="tag">v11</div>
       <h2>Glassmorphism</h2>
@@ -168,7 +201,7 @@
     </a>
   </div>
 
-  <footer>All twelve variants share the same page content — address, amenities, nearby spots, booking copy — only layout and styling differ, so it's a clean visual comparison, not a content diff.</footer>
+  <footer>All variants — including the alternates nested under v5, v7, v8, and v10 — share the same page content: address, amenities, nearby spots, booking copy. Only layout and styling differ, so it's a clean visual comparison, not a content diff.</footer>
 </div>
 </body>
 </html>

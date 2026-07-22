@@ -35,11 +35,27 @@ The root `index.html` is a small comparison hub linking to each design variant, 
 
 `v1`/`v2` share identical markup, differing only in `css/style.css`. `v3`–`v12` vary layout structure as well as styling, for real visual range rather than palette swaps alone. To add another variant: copy a `vN/` folder, redesign its markup/`css/style.css`, add a card to the root `index.html`.
 
+### Alternate takes
+
+Four of the twelve — v5, v7, v8, and v10 — also have alternate takes on the same theme, nested under their card on the root `index.html` rather than listed as top-level variants:
+
+- **`v5b/`** — Canyon Postcard: terracotta/turquoise desert palette, postcard-and-stamp hero framing.
+- **`v5c/`** — Ranger Badge: dark forest-green letterpress feel, centered circular ranger-badge emblem.
+- **`v7b/`** — Cabin Luxury: walnut/terracotta/brass, split hero with a woodgrain-striped frame panel.
+- **`v7c/`** — Modern Ivory: ivory/sage, ultra-thin hairline rules, spa-boutique airiness.
+- **`v8b/`** — Googie Diner: teal/coral mid-century motel signage, boomerang shapes, angled hero.
+- **`v8c/`** — Woodgrain Sienna: muted sienna/olive, concentric rainbow-arch hero, hand-lettered accents.
+- **`v10b/`** — USGS Survey: technical cartography look, coordinate grid overlay, compass rose, monospace labels.
+- **`v10c/`** — Alpine Gear Co.: pine green/burnt orange, bold condensed type, outdoor-gear catalog branding.
+
+Same rule applies: identical page content, different execution. Folder naming is `vN` + a letter (`b`, `c`, …) for each additional take on that variant's theme.
+
 ## Stack
 
 Just static files — no build step, no dependencies, no server:
 - `index.html` (comparison hub)
 - `v1/` … `v12/`, each with its own `index.html` and `css/style.css`
+- `v5b/`, `v5c/`, `v7b/`, `v7c/`, `v8b/`, `v8c/`, `v10b/`, `v10c/` — alternate takes on v5/v7/v8/v10
 
 ## Local preview
 
