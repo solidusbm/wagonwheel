@@ -14,6 +14,7 @@ function mapReservation(row) {
     site: { id: row.site_id, name: row.site_name, area: row.area },
     guest: { name: row.guest_name, email: row.guest_email, phone: row.guest_phone, numGuests: row.num_guests },
     notes: row.notes,
+    applicationDetails: row.application_details ?? null,
     checkIn: row.check_in,
     checkOut: row.check_out,
     subtotalCents: row.subtotal_cents,
@@ -25,6 +26,7 @@ function mapReservation(row) {
 
 const SELECT_RESERVATION = `
   SELECT r.reservation_code, r.status, r.guest_name, r.guest_email, r.guest_phone, r.num_guests, r.notes,
+         r.application_details,
          r.check_in::text AS check_in, r.check_out::text AS check_out,
          r.subtotal_cents, r.booking_fee_cents, r.total_cents, r.created_at,
          s.id AS site_id, s.name AS site_name, s.area
@@ -64,7 +66,7 @@ router.post("/reservations", async (req, res, next) => {
   const client = await pool.connect();
   try {
     const siteResult = await client.query(
-      "SELECT id, price_per_night_cents FROM sites WHERE id = $1 AND active = true",
+      "SELECT id, price_per_night_cents, price_per_week_cents FROM sites WHERE id = $1 AND active = true",
       [siteId]
     );
     const site = siteResult.rows[0];
@@ -74,6 +76,7 @@ router.post("/reservations", async (req, res, next) => {
 
     const { nights, subtotalCents, bookingFeeCents, totalCents } = quote({
       pricePerNightCents: site.price_per_night_cents,
+      pricePerWeekCents: site.price_per_week_cents,
       checkIn,
       checkOut,
     });
@@ -85,8 +88,8 @@ router.post("/reservations", async (req, res, next) => {
     await client.query(
       `INSERT INTO reservations
          (site_id, reservation_code, guest_name, guest_email, guest_phone, num_guests, notes,
-          check_in, check_out, subtotal_cents, booking_fee_cents, total_cents, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+          application_details, check_in, check_out, subtotal_cents, booking_fee_cents, total_cents, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
       [
         siteId,
         reservationCode,
@@ -95,6 +98,7 @@ router.post("/reservations", async (req, res, next) => {
         guest.phone ?? null,
         guest.numGuests ?? 1,
         guest.notes ?? null,
+        guest.application ? JSON.stringify(guest.application) : null,
         checkIn,
         checkOut,
         subtotalCents,
@@ -139,7 +143,8 @@ router.patch("/reservations/:code", async (req, res, next) => {
   const client = await pool.connect();
   try {
     const existingResult = await client.query(
-      `SELECT r.*, r.check_in::text AS check_in_text, r.check_out::text AS check_out_text, s.price_per_night_cents
+      `SELECT r.*, r.check_in::text AS check_in_text, r.check_out::text AS check_out_text,
+              s.price_per_night_cents, s.price_per_week_cents
        FROM reservations r JOIN sites s ON s.id = r.site_id WHERE r.reservation_code = $1`,
       [code]
     );
@@ -157,19 +162,22 @@ router.patch("/reservations/:code", async (req, res, next) => {
     }
 
     let pricePerNightCents = existing.price_per_night_cents;
+    let pricePerWeekCents = existing.price_per_week_cents;
     if (siteId !== undefined && siteId !== existing.site_id) {
       const siteResult = await client.query(
-        "SELECT price_per_night_cents FROM sites WHERE id = $1 AND active = true",
+        "SELECT price_per_night_cents, price_per_week_cents FROM sites WHERE id = $1 AND active = true",
         [siteId]
       );
       if (!siteResult.rows[0]) {
         return res.status(404).json({ error: "Site not found" });
       }
       pricePerNightCents = siteResult.rows[0].price_per_night_cents;
+      pricePerWeekCents = siteResult.rows[0].price_per_week_cents;
     }
 
     const { nights, subtotalCents, bookingFeeCents, totalCents } = quote({
       pricePerNightCents,
+      pricePerWeekCents,
       checkIn: nextCheckIn,
       checkOut: nextCheckOut,
     });

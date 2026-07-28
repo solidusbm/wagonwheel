@@ -6,8 +6,9 @@ Node/Express backend, PostgreSQL for reservations, Square for payments. This rep
 
 ## Status / what's real vs. placeholder
 
-- **Real:** address, phone, office hours, hookup type (30/50 amp, full hook-up), pet-friendly — pulled from what's publicly listed for the park.
-- **Placeholder, needs your input:** the 12 sites (names, layout, "Inner Ring"/"Rim Row" grouping, nightly rates in `db/seed.sql`). Nobody publishes the actual site list, layout, or rates — swap in the real ones before this goes live. The booking page's site picker also carries a visible note to this effect.
+- **Real:** address, phone, office hours, hookup type (30/50 amp, full hook-up), pet-friendly, and now the site count/layout/numbering and daily+weekly rates — pulled from the park's county-filed engineering plan and printed rate notes (see `db/seed.sql`). `/hours.html` covers office hours and the posted Rules & Guidelines.
+- **Still placeholder:** per-site amp service and max rig length (the park's own list only gives 30/50 amp and "some 60' sites" park-wide, not a per-site breakdown) — swap in real per-site values in `db/seed.sql` when the park provides them. A monthly rate was mentioned but not confirmed clearly enough to enter as a number; the weekly-rate tier (`price_per_week_cents`) is real and applies automatically to any 7+ night stay.
+- **Guest application:** the booking form on step 3 now doubles as the park's paper "Application for Monthly RV Guests" — DOB, driver's license, spouse/co-applicant, additional occupants, vehicles, RV details, and pets, all optional and stored per-reservation (`reservations.application_details` JSONB), visible to `/admin` under each booking's Notes column. The paper form's prior-residence/landlord-reference section and background-check questions were both struck out by the park on the original and are intentionally not collected here.
 - **Payments:** wired to Square's real Payments API (not a mock), but requires your Square **sandbox** credentials to actually run a charge. See setup below.
 - **Admin notifications:** when a booking is confirmed, an email fires to `ADMIN_EMAIL`. Without SMTP credentials configured it logs to the server console instead of sending, so it works out of the box in dev.
 - **Admin view:** `/admin` lists pending/confirmed reservations and lets the office create, reschedule/reassign, or cancel a booking directly (phone-ins, walk-ins, corrections — no card is charged through this path). Protected by HTTP Basic Auth via `ADMIN_USERNAME`/`ADMIN_PASSWORD` — the route returns 503 until both are set. Reschedules and cancellations go through the same database exclusion constraint as guest bookings, so they can't create a double-booking either. **The `.env` in this repo ships with `admin`/`admin` for local dev only — change it before deploying anywhere public; the server warns on startup if it's still a weak placeholder.**
@@ -53,7 +54,7 @@ Without these three set, the site still runs — availability and browsing work 
 ```bash
 npm install
 npm run migrate   # applies db/schema.sql
-npm run seed       # loads the 12 placeholder sites
+npm run seed       # loads the 12 real sites (rates + layout; still-placeholder amp/rig-length noted above)
 ```
 
 ### 4. Run
@@ -76,7 +77,7 @@ Use Square's [sandbox test card numbers](https://developer.squareup.com/docs/tes
 
 From the original planning conversation, still open:
 
-1. Real site list, layout, and nightly rates from the park
+1. ~~Real site list, layout, and nightly/weekly rates from the park~~ — done, see `db/seed.sql`. Still open: per-site amp service/max rig length, and a confirmed monthly rate.
 2. Production Square credentials + going live with `SQUARE_ENVIRONMENT=production`
 3. Hosting (backend: Render/Railway/Fly/VPS; this app serves its own frontend, so one deploy target is enough) + DNS pointed at the park's domain + SSL (automatic on most of those hosts)
 4. Transactional email for confirmations (Postmark/SendGrid, or Square's own receipt emails)

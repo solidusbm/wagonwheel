@@ -30,6 +30,7 @@
     <a href="#gallery">Gallery</a>
     <a href="#amenities">Amenities</a>
     <a href="#nearby">Nearby</a>
+    <a href="/hours.html">Hours</a>
     <a href="#contact">Contact</a>
   </div>
   <a href="#booking" class="cta">Book now</a>
@@ -188,6 +189,18 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5a11 11 0 0 1 14 0M8 16a6.5 6.5 0 0 1 8 0M12 19.5h.01"/></svg>
         <div class="t">New high-speed WiFi</div>
       </div>
+      <div class="amenity">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4zM4 12h16M9 4v16"/></svg>
+        <div class="t">Laundry on site</div>
+      </div>
+      <div class="amenity">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        <div class="t">Keyless entry</div>
+      </div>
+      <div class="amenity">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v6a8 8 0 0 0 16 0V4M4 4h16M9 20h6"/></svg>
+        <div class="t">Showers</div>
+      </div>
     </div>
   </section>
 
@@ -199,6 +212,8 @@
     <div class="nearby-list">
       <div class="nearby-item"><div class="t">Medina River</div><div class="d">Tubing, kayaking, and riverside walks close to the park.</div></div>
       <div class="nearby-item"><div class="t">Downtown Bandera</div><div class="d">Shops, cowboy bars, and honky-tonks in the Cowboy Capital of the World.</div></div>
+      <div class="nearby-item"><div class="t">Bandera Brewery</div><div class="d">Local taproom right on State Hwy 16, a few minutes from the park.</div></div>
+      <div class="nearby-item"><div class="t">The Shindig</div><div class="d">Live music and dance hall on the way into town.</div></div>
       <div class="nearby-item"><div class="t">Frontier Times Museum</div><div class="d">Local history and frontier-era artifacts in town.</div></div>
       <div class="nearby-item"><div class="t">Bandera Natural History Museum</div><div class="d">Hill Country wildlife and natural history exhibits.</div></div>
     </div>
@@ -238,7 +253,7 @@
     <section id="sites-section" class="panel" hidden>
       <h2>Pick a site</h2>
       <p class="sub" id="stay-summary"></p>
-      <p class="gallery-note" style="margin:-8px 0 20px;">Site layout, numbering, and the Inner Ring / Rim Row grouping shown below are placeholders — swap in the park's actual site map before this goes live.</p>
+      <p class="gallery-note" style="margin:-8px 0 20px;">Layout and numbering follow the park's actual site plan (Front / Center / Back Row, sites 1–12). Per-site amp service and rig-length limits are still placeholders pending final confirmation from the park.</p>
       <div class="map-wrap">
         <svg id="site-map" viewBox="0 0 900 900" xmlns="http://www.w3.org/2000/svg"></svg>
         <div class="map-legend">
@@ -253,21 +268,155 @@
 
     <section id="booking-section" class="panel" hidden>
       <h2>Guest details &amp; payment</h2>
-      <div class="sub">Site selected — enter your details and card to confirm.</div>
+      <div class="sub">Site selected — this doubles as the park's guest application, so a few extra questions below the basics.</div>
       <div class="booking-grid">
         <form id="booking-form">
           <div class="field">
             <label for="guestName">Full name</label>
             <input type="text" id="guestName" required />
           </div>
-          <div class="field">
-            <label for="guestEmail">Email</label>
-            <input type="email" id="guestEmail" required />
+          <div class="grid-2">
+            <div class="field">
+              <label for="guestEmail">Email</label>
+              <input type="email" id="guestEmail" required />
+            </div>
+            <div class="field">
+              <label for="guestPhone">Phone</label>
+              <input type="tel" id="guestPhone" />
+            </div>
           </div>
-          <div class="field">
-            <label for="guestPhone">Phone</label>
-            <input type="tel" id="guestPhone" />
+          <div class="grid-3">
+            <div class="field">
+              <label for="appDob">Date of birth</label>
+              <input type="date" id="appDob" />
+            </div>
+            <div class="field">
+              <label for="appLicenseNumber">Driver's license number</label>
+              <input type="text" id="appLicenseNumber" />
+            </div>
+            <div class="field">
+              <label for="appLicenseState">License state</label>
+              <input type="text" id="appLicenseState" maxlength="2" placeholder="TX" />
+            </div>
           </div>
+
+          <fieldset>
+            <legend>Spouse / co-applicant (optional)</legend>
+            <div class="field">
+              <label for="spouseName">Full name</label>
+              <input type="text" id="spouseName" />
+            </div>
+            <div class="grid-3">
+              <div class="field">
+                <label for="spouseDob">Date of birth</label>
+                <input type="date" id="spouseDob" />
+              </div>
+              <div class="field">
+                <label for="spousePhone">Phone</label>
+                <input type="tel" id="spousePhone" />
+              </div>
+              <div class="field">
+                <label for="spouseLicenseNumber">License #</label>
+                <input type="text" id="spouseLicenseNumber" />
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Additional occupants</legend>
+            <div id="occupants-list"></div>
+            <button type="button" class="btn btn-ghost" id="add-occupant" style="margin-bottom:18px;">+ Add occupant</button>
+          </fieldset>
+
+          <fieldset>
+            <legend>Vehicles (up to 2, not counting the RV)</legend>
+            <div class="grid-4">
+              <div class="field"><label for="v1Make">Make</label><input type="text" id="v1Make" /></div>
+              <div class="field"><label for="v1Model">Model</label><input type="text" id="v1Model" /></div>
+              <div class="field"><label for="v1Year">Year</label><input type="text" id="v1Year" inputmode="numeric" /></div>
+              <div class="field"><label for="v1Plate">Plate</label><input type="text" id="v1Plate" /></div>
+            </div>
+            <div class="grid-4">
+              <div class="field"><label for="v2Make">Make</label><input type="text" id="v2Make" /></div>
+              <div class="field"><label for="v2Model">Model</label><input type="text" id="v2Model" /></div>
+              <div class="field"><label for="v2Year">Year</label><input type="text" id="v2Year" inputmode="numeric" /></div>
+              <div class="field"><label for="v2Plate">Plate</label><input type="text" id="v2Plate" /></div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>RV information</legend>
+            <div class="grid-3">
+              <div class="field"><label for="rvMake">Make</label><input type="text" id="rvMake" /></div>
+              <div class="field"><label for="rvModel">Model</label><input type="text" id="rvModel" /></div>
+              <div class="field"><label for="rvYear">Year</label><input type="text" id="rvYear" inputmode="numeric" /></div>
+            </div>
+            <div class="grid-4">
+              <div class="field"><label for="rvLength">Length (ft)</label><input type="text" id="rvLength" inputmode="numeric" /></div>
+              <div class="field"><label for="rvWidth">Width (ft)</label><input type="text" id="rvWidth" inputmode="numeric" /></div>
+              <div class="field"><label for="rvSlides"># of slides</label><input type="text" id="rvSlides" inputmode="numeric" /></div>
+              <div class="field"><label for="rvPlate">Plate</label><input type="text" id="rvPlate" /></div>
+            </div>
+            <div class="grid-3">
+              <div class="field">
+                <label for="rvAmp">30 or 50 amp</label>
+                <select id="rvAmp"><option value="">—</option><option>30</option><option>50</option></select>
+              </div>
+              <div class="field">
+                <label for="rvClass">Class of RV</label>
+                <select id="rvClass"><option value="">—</option><option>A</option><option>B</option><option>C</option></select>
+              </div>
+              <div class="field">
+                <label for="rvTrailerType">Trailer type</label>
+                <select id="rvTrailerType"><option value="">—</option><option>Bumper Pull</option><option>Fifth Wheel</option></select>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Pets (up to 2)</legend>
+            <div class="pet-block">
+              <div class="grid-4">
+                <div class="field"><label for="pet1Type">Type &amp; breed</label><input type="text" id="pet1Type" /></div>
+                <div class="field"><label for="pet1Name">Name</label><input type="text" id="pet1Name" /></div>
+                <div class="field"><label for="pet1Color">Color</label><input type="text" id="pet1Color" /></div>
+                <div class="field"><label for="pet1Weight">Weight</label><input type="text" id="pet1Weight" inputmode="numeric" /></div>
+              </div>
+              <div class="grid-4">
+                <div class="field"><label for="pet1Age">Age</label><input type="text" id="pet1Age" inputmode="numeric" /></div>
+                <div class="field"><label for="pet1Gender">Gender</label><input type="text" id="pet1Gender" /></div>
+                <div class="field">
+                  <label for="pet1Spayed">Spayed/neutered</label>
+                  <select id="pet1Spayed"><option value="">—</option><option>Yes</option><option>No</option></select>
+                </div>
+                <div class="field">
+                  <label for="pet1Rabies">Current rabies vaccine</label>
+                  <select id="pet1Rabies"><option value="">—</option><option>Yes</option><option>No</option></select>
+                </div>
+              </div>
+            </div>
+            <div class="pet-block">
+              <div class="grid-4">
+                <div class="field"><label for="pet2Type">Type &amp; breed</label><input type="text" id="pet2Type" /></div>
+                <div class="field"><label for="pet2Name">Name</label><input type="text" id="pet2Name" /></div>
+                <div class="field"><label for="pet2Color">Color</label><input type="text" id="pet2Color" /></div>
+                <div class="field"><label for="pet2Weight">Weight</label><input type="text" id="pet2Weight" inputmode="numeric" /></div>
+              </div>
+              <div class="grid-4">
+                <div class="field"><label for="pet2Age">Age</label><input type="text" id="pet2Age" inputmode="numeric" /></div>
+                <div class="field"><label for="pet2Gender">Gender</label><input type="text" id="pet2Gender" /></div>
+                <div class="field">
+                  <label for="pet2Spayed">Spayed/neutered</label>
+                  <select id="pet2Spayed"><option value="">—</option><option>Yes</option><option>No</option></select>
+                </div>
+                <div class="field">
+                  <label for="pet2Rabies">Current rabies vaccine</label>
+                  <select id="pet2Rabies"><option value="">—</option><option>Yes</option><option>No</option></select>
+                </div>
+              </div>
+            </div>
+          </fieldset>
+
           <div class="field">
             <label for="guestNotes">Notes for the office (optional)</label>
             <textarea id="guestNotes" rows="3"></textarea>
@@ -303,8 +452,9 @@
 
 <footer id="contact">
   <strong>Bandera Wagon Wheel RV Park</strong> · 325 Polly Peak Dr, Bandera, TX 78003<br>
-  (830) 850-0805 · Office hours: Sun 1–5pm · Mon–Fri 8am–5pm · Sat 9am–3pm<br>
-  Site count, layout, and rates shown here are placeholders pending the park's real site list and pricing.
+  (830) 850-0805 · banderawagonwheelrv@gmail.com<br>
+  Reservations open 24/7 online · <a href="/hours.html">Office hours &amp; policies →</a><br>
+  Site count, layout, and daily/weekly rates are real; per-site amp service and rig-length limits are still placeholders.
 </footer>
 
 <script type="module" src="/js/app.js"></script>

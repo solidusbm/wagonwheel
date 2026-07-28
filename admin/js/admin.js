@@ -1,5 +1,43 @@
 const money = (cents) => `$${(cents / 100).toFixed(2)}`;
 
+function escapeHtml(str) {
+  return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// Renders the extended monthly-guest intake (DOB, license, spouse/co-applicant, occupants,
+// vehicles, RV, pets) captured for stays of 28+ nights -- see public/js/app.js buildApplication().
+function renderApplication(app) {
+  if (!app) return "";
+  const rows = [];
+  if (app.dob) rows.push(["DOB", app.dob]);
+  if (app.driversLicense?.number) rows.push(["License", `${app.driversLicense.number} (${app.driversLicense.state ?? "?"})`]);
+  if (app.spouse?.name) {
+    const lic = app.spouse.driversLicense?.number ? ` · Lic ${app.spouse.driversLicense.number} (${app.spouse.driversLicense.state ?? "?"})` : "";
+    rows.push(["Co-applicant", `${app.spouse.name}${app.spouse.dob ? " · DOB " + app.spouse.dob : ""}${app.spouse.phone ? " · " + app.spouse.phone : ""}${lic}`]);
+  }
+  if (app.occupants?.length) {
+    rows.push(["Occupants", app.occupants.filter((o) => o.name).map((o) => `${o.name} (${o.age || "?"}, ${o.relationship || "?"})`).join("; ")]);
+  }
+  if (app.vehicles?.length) {
+    const v = app.vehicles.filter((v) => v.make || v.model || v.plate).map((v) => `${v.year ?? ""} ${v.make ?? ""} ${v.model ?? ""} · plate ${v.plate ?? "?"}`.trim());
+    if (v.length) rows.push(["Vehicles", v.join("; ")]);
+  }
+  if (app.rv && (app.rv.make || app.rv.model)) {
+    rows.push([
+      "RV",
+      `${app.rv.year ?? ""} ${app.rv.make ?? ""} ${app.rv.model ?? ""} · Class ${app.rv.rvClass ?? "?"} · ${app.rv.trailerType ?? "?"} · ${app.rv.length ?? "?"}′×${app.rv.width ?? "?"}′ · ${app.rv.slides ?? "?"} slides · ${app.rv.amp ?? "?"} amp · plate ${app.rv.plate ?? "?"}`,
+    ]);
+  }
+  if (app.pets?.length) {
+    const p = app.pets.filter((p) => p.name || p.type).map((p) => `${p.name ?? "?"} (${p.type ?? "?"}${p.breed ? "/" + p.breed : ""}${p.spayedNeutered ? ", " + p.spayedNeutered + " S/N" : ""}${p.rabiesVaccine ? ", rabies " + p.rabiesVaccine : ""})`);
+    if (p.length) rows.push(["Pets", p.join("; ")]);
+  }
+  if (!rows.length) return "";
+  return `<details class="app-details"><summary>Monthly application</summary>${rows
+    .map(([k, v]) => `<div class="app-row"><b>${escapeHtml(k)}:</b> ${escapeHtml(v)}</div>`)
+    .join("")}</details>`;
+}
+
 let sites = [];
 let reservations = [];
 
@@ -83,7 +121,7 @@ async function loadReservations() {
       <td>${r.guest.name}<br><span style="color:var(--parchment-dim);font-size:11px;">${r.guest.email}${r.guest.phone ? " · " + r.guest.phone : ""}</span></td>
       <td>${r.guest.numGuests}</td>
       <td>${money(r.totalCents)}</td>
-      <td>${r.notes ?? ""}</td>
+      <td>${r.notes ?? ""}${renderApplication(r.applicationDetails)}</td>
       <td class="row-actions">
         <button type="button" class="btn btn-ghost" data-edit="${r.reservationCode}">Edit</button>
         <button type="button" class="btn btn-ghost" data-cancel="${r.reservationCode}">Cancel</button>

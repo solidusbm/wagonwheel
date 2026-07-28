@@ -28,7 +28,7 @@ router.post("/", async (req, res, next) => {
   const client = await pool.connect();
   try {
     const siteResult = await client.query(
-      "SELECT id, name, area, price_per_night_cents FROM sites WHERE id = $1 AND active = true",
+      "SELECT id, name, area, price_per_night_cents, price_per_week_cents FROM sites WHERE id = $1 AND active = true",
       [siteId]
     );
     const site = siteResult.rows[0];
@@ -38,6 +38,7 @@ router.post("/", async (req, res, next) => {
 
     const { nights, subtotalCents, bookingFeeCents, totalCents } = quote({
       pricePerNightCents: site.price_per_night_cents,
+      pricePerWeekCents: site.price_per_week_cents,
       checkIn,
       checkOut,
     });
@@ -53,8 +54,8 @@ router.post("/", async (req, res, next) => {
       const insertResult = await client.query(
         `INSERT INTO reservations
            (site_id, reservation_code, guest_name, guest_email, guest_phone, num_guests, notes,
-            check_in, check_out, subtotal_cents, booking_fee_cents, total_cents, status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,'pending')
+            application_details, check_in, check_out, subtotal_cents, booking_fee_cents, total_cents, status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'pending')
          RETURNING id`,
         [
           siteId,
@@ -64,6 +65,7 @@ router.post("/", async (req, res, next) => {
           guest.phone ?? null,
           guest.numGuests ?? 1,
           guest.notes ?? null,
+          guest.application ? JSON.stringify(guest.application) : null,
           checkIn,
           checkOut,
           subtotalCents,

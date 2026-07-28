@@ -10,9 +10,17 @@ CREATE TABLE IF NOT EXISTS sites (
   max_rig_length INTEGER,
   pet_friendly BOOLEAN NOT NULL DEFAULT true,
   price_per_night_cents INTEGER NOT NULL,
+  -- Nullable (not NOT NULL): lets this column be added to an already-deployed sites table
+  -- via ALTER TABLE below without a backfill. quote() in pricing.js falls back to pure
+  -- nightly pricing when it's null.
+  price_per_week_cents INTEGER,
   active BOOLEAN NOT NULL DEFAULT true,
   sort_order INTEGER NOT NULL DEFAULT 0
 );
+
+-- CREATE TABLE IF NOT EXISTS above is a no-op against an already-provisioned database, so
+-- these backfill any columns added after that table was first created (safe to re-run).
+ALTER TABLE sites ADD COLUMN IF NOT EXISTS price_per_week_cents INTEGER;
 
 CREATE TABLE IF NOT EXISTS reservations (
   id SERIAL PRIMARY KEY,
@@ -23,6 +31,11 @@ CREATE TABLE IF NOT EXISTS reservations (
   guest_phone TEXT,
   num_guests INTEGER NOT NULL DEFAULT 1,
   notes TEXT,
+  -- Extended intake for long (monthly) stays: DOB, driver's license, spouse/co-applicant,
+  -- additional occupants, vehicle & RV details, and pet info -- mirrors the park's paper
+  -- "Application for Monthly RV Guests" minus the prior-residence and background-check
+  -- sections, which the park struck from that form. Null for ordinary nightly/weekly bookings.
+  application_details JSONB,
   check_in DATE NOT NULL,
   check_out DATE NOT NULL,
   stay_range DATERANGE GENERATED ALWAYS AS (daterange(check_in, check_out, '[)')) STORED,
@@ -39,6 +52,8 @@ CREATE TABLE IF NOT EXISTS reservations (
   -- double-book a site regardless of what the application code does.
   EXCLUDE USING gist (site_id WITH =, stay_range WITH &&) WHERE (status IN ('pending', 'confirmed'))
 );
+
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS application_details JSONB;
 
 CREATE INDEX IF NOT EXISTS idx_reservations_site ON reservations(site_id);
 CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);

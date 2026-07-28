@@ -27,6 +27,8 @@ const bookingError = document.getElementById("booking-error");
 const orderSummary = document.getElementById("order-summary");
 const confirmationSection = document.getElementById("confirmation-section");
 const payBtn = document.getElementById("pay-btn");
+const occupantsList = document.getElementById("occupants-list");
+const addOccupantBtn = document.getElementById("add-occupant");
 
 init();
 
@@ -42,6 +44,7 @@ async function init() {
   document.getElementById("backDates").addEventListener("click", () => goToStep(0));
   document.getElementById("backSite").addEventListener("click", () => goToStep(1));
   document.getElementById("bookAnother").addEventListener("click", resetToStart);
+  addOccupantBtn.addEventListener("click", () => addOccupantRow());
 
   // Browsing/availability doesn't depend on Square, so a slow or failed SDK
   // load shouldn't block the rest of the page -- only checkout needs it,
@@ -182,17 +185,19 @@ function renderBookedRanges(ranges) {
   return `<div class="booked-ranges"><span class="l">Booked</span>${shown.join(", ")}${extra}</div>`;
 }
 
-/* ---------- wagon-wheel site map ---------- */
-const CX = 450,
-  CY = 450,
-  HUB_R = 95,
-  INNER_R = 250,
-  OUTER_R = 350;
-
-function polar(radius, index, total, offsetDeg = -90) {
-  const angle = ((offsetDeg + index * (360 / total)) * Math.PI) / 180;
-  return { x: CX + radius * Math.cos(angle), y: CY + radius * Math.sin(angle) };
-}
+/* ---------- site map ----------
+   Schematic of the park's real layout, from the county-filed septic/site engineering
+   plan (Mangold Engineering, drawing 100-7799): a loop of 2-way road off the Polly Peak
+   Dr. entrance, the office near the front, and 12 numbered sites in three rows -- a short
+   Front Row by the office, then two 5-site rows (Center, Back). Row grouping and site
+   count/numbering come from that plan; it is not an illustrative placeholder. */
+const MAP_VW = 900;
+const ROW_WIDTH = 780;
+const MARGIN_X = (MAP_VW - ROW_WIDTH) / 2;
+const BAY_H = 78;
+const GAP = 18;
+const ROW_PITCH = 148; // vertical distance between row tops
+const FIRST_ROW_Y = 150;
 
 function renderSiteMap(sites) {
   const byArea = new Map();
@@ -201,38 +206,51 @@ function renderSiteMap(sites) {
     byArea.get(site.area).push(site);
   }
   const areas = [...byArea.keys()];
-  const outerArea = areas[areas.length - 1];
-  const outerSites = byArea.get(outerArea) ?? [];
+  const maxPerRow = Math.max(1, ...areas.map((a) => byArea.get(a).length));
+  const bayW = (ROW_WIDTH - (maxPerRow - 1) * GAP) / maxPerRow;
+  const mapVH = FIRST_ROW_Y + (areas.length - 1) * ROW_PITCH + BAY_H + 70;
 
-  let spokes = "";
-  outerSites.forEach((_, i) => {
-    const a = polar(HUB_R, i, outerSites.length);
-    const b = polar(OUTER_R, i, outerSites.length);
-    spokes += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="var(--line)" stroke-width="2"/>`;
-  });
+  let roads = "";
+  let bays = "";
+  let labels = "";
 
-  let pins = "";
-  areas.forEach((area, areaIndex) => {
-    const areaSites = byArea.get(area);
-    const radius = areas.length === 1 ? INNER_R : INNER_R + areaIndex * ((OUTER_R - INNER_R) / (areas.length - 1));
-    areaSites.forEach((site, i) => {
-      const p = polar(radius, i, areaSites.length);
+  areas.forEach((area, rowIndex) => {
+    const rowSites = byArea.get(area);
+    const rowY = FIRST_ROW_Y + rowIndex * ROW_PITCH;
+    const rowTotalW = rowSites.length * bayW + (rowSites.length - 1) * GAP;
+    const startX = MARGIN_X + (ROW_WIDTH - rowTotalW) / 2;
+    const roadY = rowY - 26;
+
+    roads += `<line x1="${MARGIN_X}" y1="${roadY}" x2="${MARGIN_X + ROW_WIDTH}" y2="${roadY}" stroke="var(--line)" stroke-width="10" stroke-linecap="round"/>`;
+    labels += `<text x="${MARGIN_X + ROW_WIDTH + 4}" y="${roadY + 4}" fill="var(--parchment-dim)" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.5" text-anchor="start">${area.toUpperCase()}</text>`;
+
+    rowSites.forEach((site, i) => {
+      const x = startX + i * (bayW + GAP);
+      const cx = x + bayW / 2;
       const selected = state.selectedSite?.id === site.id;
       const cls = `site-pin ${site.available ? "" : "taken"} ${selected ? "selected" : ""}`;
-      pins += `<g class="${cls}" data-site-id="${site.id}">
-        <circle class="base" cx="${p.x}" cy="${p.y}" r="28"/>
-        <text x="${p.x}" y="${p.y + 5}">${site.name.replace(/[^0-9]/g, "") || "•"}</text>
+      const num = site.name.replace(/[^0-9]/g, "") || "•";
+      bays += `<line x1="${cx}" y1="${roadY}" x2="${cx}" y2="${rowY}" stroke="var(--line)" stroke-width="3"/>`;
+      bays += `<g class="${cls}" data-site-id="${site.id}">
+        <rect class="base" x="${x}" y="${rowY}" width="${bayW}" height="${BAY_H}" rx="6"/>
+        <text x="${cx}" y="${rowY + BAY_H / 2 + 6}">${num}</text>
       </g>`;
     });
   });
 
+  const lastRowBottom = FIRST_ROW_Y + (areas.length - 1) * ROW_PITCH + BAY_H;
+  const entranceX = MARGIN_X + ROW_WIDTH / 2;
+
+  siteMap.setAttribute("viewBox", `0 0 ${MAP_VW} ${mapVH}`);
   siteMap.innerHTML = `
-    <circle cx="${CX}" cy="${CY}" r="${OUTER_R}" fill="none" stroke="var(--line)" stroke-width="2"/>
-    ${spokes}
-    <circle cx="${CX}" cy="${CY}" r="${HUB_R}" fill="var(--bg-panel-2)" stroke="var(--gold)" stroke-width="2"/>
-    <text x="${CX}" y="${CY - 5}" text-anchor="middle" fill="var(--gold)" font-family="JetBrains Mono, monospace" font-size="16" letter-spacing="1">OFFICE</text>
-    <text x="${CX}" y="${CY + 15}" text-anchor="middle" fill="var(--parchment-dim)" font-family="JetBrains Mono, monospace" font-size="11">CHECK-IN</text>
-    ${pins}
+    <rect x="${entranceX - 60}" y="18" width="120" height="46" rx="6" fill="var(--bg-panel-2)" stroke="var(--gold)" stroke-width="2"/>
+    <text x="${entranceX}" y="46" text-anchor="middle" fill="var(--gold)" font-family="JetBrains Mono, monospace" font-size="14" letter-spacing="1">OFFICE</text>
+    <line x1="${entranceX}" y1="64" x2="${entranceX}" y2="${FIRST_ROW_Y - 26}" stroke="var(--line)" stroke-width="6"/>
+    ${roads}
+    ${bays}
+    ${labels}
+    <line x1="${entranceX}" y1="${lastRowBottom + 4}" x2="${entranceX}" y2="${mapVH - 24}" stroke="var(--line)" stroke-width="10" stroke-linecap="round"/>
+    <text x="${entranceX}" y="${mapVH - 6}" text-anchor="middle" fill="var(--parchment-dim)" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="1">ENTRANCE · POLLY PEAK DR.</text>
   `;
 
   siteMap.querySelectorAll("[data-site-id]").forEach((el) => {
@@ -245,19 +263,110 @@ function renderSiteMap(sites) {
   });
 }
 
+let occupantRowCount = 0;
+
+function addOccupantRow() {
+  occupantRowCount += 1;
+  const id = occupantRowCount;
+  const row = document.createElement("div");
+  row.className = "occupant-row";
+  row.dataset.occupantRow = id;
+  row.innerHTML = `
+    <div class="field"><label for="occName${id}">Name</label><input type="text" id="occName${id}" /></div>
+    <div class="field"><label for="occAge${id}">Age</label><input type="text" id="occAge${id}" inputmode="numeric" /></div>
+    <div class="field"><label for="occRel${id}">Relationship</label><input type="text" id="occRel${id}" /></div>
+    <button type="button" class="btn btn-ghost" data-remove-occupant="${id}">Remove</button>
+  `;
+  row.querySelector("[data-remove-occupant]").addEventListener("click", () => row.remove());
+  occupantsList.appendChild(row);
+}
+
+function resetApplicationFields() {
+  occupantsList.innerHTML = "";
+  occupantRowCount = 0;
+  addOccupantRow();
+}
+
+function val(id) {
+  return (document.getElementById(id)?.value ?? "").trim() || null;
+}
+
+function buildApplication() {
+  const occupants = [...occupantsList.querySelectorAll("[data-occupant-row]")]
+    .map((row) => {
+      const id = row.dataset.occupantRow;
+      return { name: val(`occName${id}`), age: val(`occAge${id}`), relationship: val(`occRel${id}`) };
+    })
+    .filter((o) => o.name || o.age || o.relationship);
+
+  const vehicles = [1, 2]
+    .map((n) => ({ make: val(`v${n}Make`), model: val(`v${n}Model`), year: val(`v${n}Year`), plate: val(`v${n}Plate`) }))
+    .filter((v) => v.make || v.model || v.year || v.plate);
+
+  const pets = [1, 2]
+    .map((n) => ({
+      type: val(`pet${n}Type`),
+      name: val(`pet${n}Name`),
+      color: val(`pet${n}Color`),
+      weight: val(`pet${n}Weight`),
+      age: val(`pet${n}Age`),
+      gender: val(`pet${n}Gender`),
+      spayedNeutered: val(`pet${n}Spayed`),
+      rabiesVaccine: val(`pet${n}Rabies`),
+    }))
+    .filter((p) => p.type || p.name);
+
+  const rv = {
+    make: val("rvMake"),
+    model: val("rvModel"),
+    year: val("rvYear"),
+    length: val("rvLength"),
+    width: val("rvWidth"),
+    slides: val("rvSlides"),
+    plate: val("rvPlate"),
+    amp: val("rvAmp"),
+    rvClass: val("rvClass"),
+    trailerType: val("rvTrailerType"),
+  };
+
+  const spouse = {
+    name: val("spouseName"),
+    dob: val("spouseDob"),
+    phone: val("spousePhone"),
+    driversLicense: { number: val("spouseLicenseNumber"), state: null },
+  };
+
+  return {
+    dob: val("appDob"),
+    driversLicense: { number: val("appLicenseNumber"), state: val("appLicenseState") },
+    spouse: spouse.name ? spouse : null,
+    occupants,
+    vehicles,
+    rv: rv.make || rv.model ? rv : null,
+    pets,
+  };
+}
+
 async function selectSite(site, nights) {
   state.selectedSite = site;
   renderSites(state.sites);
 
-  const subtotal = site.price_per_night_cents * nights;
+  const weeks = site.price_per_week_cents ? Math.floor(nights / 7) : 0;
+  const remainderNights = site.price_per_week_cents ? nights % 7 : nights;
+  const subtotal = weeks * site.price_per_week_cents + remainderNights * site.price_per_night_cents;
   const bookingFee = 500;
   const total = subtotal + bookingFee;
+
+  const rateRows = [
+    weeks > 0 ? `<div class="summary-row"><span>${money(site.price_per_week_cents)} × ${weeks} week${weeks === 1 ? "" : "s"}</span><span>${money(weeks * site.price_per_week_cents)}</span></div>` : "",
+    remainderNights > 0 ? `<div class="summary-row"><span>${money(site.price_per_night_cents)} × ${remainderNights} night${remainderNights === 1 ? "" : "s"}</span><span>${money(remainderNights * site.price_per_night_cents)}</span></div>` : "",
+  ].join("");
 
   orderSummary.innerHTML = `
     <h3>${site.name}</h3>
     <p>${site.area}</p>
     <div class="summary-row"><span>${formatDate(state.checkIn)} → ${formatDate(state.checkOut)}</span><span>${nights} night${nights === 1 ? "" : "s"}</span></div>
-    <div class="summary-row"><span>${money(site.price_per_night_cents)} × ${nights}</span><span>${money(subtotal)}</span></div>
+    ${rateRows}
     <div class="summary-row"><span>Booking fee</span><span>${money(bookingFee)}</span></div>
     <div class="summary-row total"><span>Estimated total</span><span>${money(total)}</span></div>
     <p style="font-size:0.75rem;opacity:0.75;margin-top:8px;">Final total is confirmed by the server at checkout.</p>
@@ -265,6 +374,7 @@ async function selectSite(site, nights) {
 
   bookingError.hidden = true;
   bookingForm.reset();
+  resetApplicationFields();
   goToStep(2);
 
   await mountCard();
@@ -326,6 +436,7 @@ async function onSubmitBooking(event) {
           phone: document.getElementById("guestPhone").value || null,
           numGuests: state.numGuests,
           notes: document.getElementById("guestNotes").value || null,
+          application: buildApplication(),
         },
       }),
     });
