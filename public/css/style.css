@@ -84,6 +84,7 @@ a{color:var(--gold-bright);}
 .gallery{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px; padding-bottom:16px;}
 .gallery figure{margin:0; background:var(--bg-panel); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius); overflow:hidden;}
 .gallery svg{display:block; width:100%; height:auto;}
+.gallery img{display:block; width:100%; height:216px; object-fit:cover;}
 .gallery figcaption{padding:12px 14px; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--parchment-dim); display:flex; justify-content:space-between; gap:8px;}
 .gallery figcaption b{color:var(--parchment); font-family:'Zilla Slab',serif; font-size:13px; font-weight:600;}
 .placeholder-tag{color:var(--gold); text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap;}

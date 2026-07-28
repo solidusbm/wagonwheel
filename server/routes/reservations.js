@@ -28,12 +28,15 @@ router.post("/", async (req, res, next) => {
   const client = await pool.connect();
   try {
     const siteResult = await client.query(
-      "SELECT id, name, area, price_per_night_cents, price_per_week_cents FROM sites WHERE id = $1 AND active = true",
+      "SELECT id, name, area, price_per_night_cents, price_per_week_cents, permanently_occupied FROM sites WHERE id = $1 AND active = true",
       [siteId]
     );
     const site = siteResult.rows[0];
     if (!site) {
       return res.status(404).json({ error: "Site not found" });
+    }
+    if (site.permanently_occupied) {
+      return res.status(409).json({ error: "That site is not available for booking" });
     }
 
     const { nights, subtotalCents, bookingFeeCents, totalCents } = quote({

@@ -350,6 +350,7 @@ const sPullThroughField = document.getElementById("s-pullthrough");
 const sNightField = document.getElementById("s-night");
 const sWeekField = document.getElementById("s-week");
 const sActiveField = document.getElementById("s-active");
+const sOccupiedField = document.getElementById("s-occupied");
 const sNotesField = document.getElementById("s-notes");
 const siteAmenityChecks = document.getElementById("site-amenity-checks");
 
@@ -477,7 +478,7 @@ function renderSitesTable() {
       <td>${money(s.pricePerNightCents)}/night${s.pricePerWeekCents ? `<br>${money(s.pricePerWeekCents)}/week` : ""}</td>
       <td>${escapeHtml(s.ampService)} amp</td>
       <td>${siteAmenities.map((n) => `<span class="tag">${escapeHtml(n)}</span>`).join(" ") || "—"}</td>
-      <td>${s.active ? "Active" : "Inactive"}</td>
+      <td>${s.active ? (s.permanentlyOccupied ? "Occupied (not bookable)" : "Active") : "Inactive"}</td>
       <td class="row-actions"><button type="button" class="btn btn-ghost" data-edit-site="${s.id}">Edit</button></td>
     </tr>`;
     })
@@ -512,12 +513,14 @@ function openSiteForm(site) {
     sNightField.value = (site.pricePerNightCents / 100).toFixed(2);
     sWeekField.value = site.pricePerWeekCents ? (site.pricePerWeekCents / 100).toFixed(2) : "";
     sActiveField.value = String(site.active);
+    sOccupiedField.value = String(site.permanentlyOccupied);
     sNotesField.value = site.notes ?? "";
     renderAmenityChecks(site.amenityIds);
   } else {
     sitePanelTitle.textContent = "New site";
     sIdField.value = "";
     sActiveField.value = "true";
+    sOccupiedField.value = "false";
     sPullThroughField.value = "false";
     renderAmenityChecks([]);
   }
@@ -543,8 +546,9 @@ async function onSiteSubmit(event) {
     maxRigLength: sRigField.value ? Number(sRigField.value) : null,
     pullThrough: sPullThroughField.value === "true",
     pricePerNightCents: Math.round(Number(sNightField.value) * 100),
-    pricePerWeekCents: sWeekField.value ? Math.round(Number(sWeekField.value) * 100) : null,
+    pricePerWeekCents: Math.round(Number(sWeekField.value) * 100),
     active: sActiveField.value === "true",
+    permanentlyOccupied: sOccupiedField.value === "true",
     notes: sNotesField.value.trim() || null,
     amenityIds,
   };
@@ -575,6 +579,47 @@ async function onSiteSubmit(event) {
     saveBtn.disabled = false;
   }
 }
+
+/* ---------- danger zone: force reseed ---------- */
+
+const reseedBtn = document.getElementById("reseed-btn");
+const reseedStatus = document.getElementById("reseed-status");
+
+reseedBtn.addEventListener("click", async () => {
+  const sure = confirm(
+    "This deletes ALL current reservations, sites, and amenities and reloads them from db/seed.sql. This cannot be undone. Continue?"
+  );
+  if (!sure) return;
+  const typed = prompt('Type RESEED to confirm.');
+  if (typed !== "RESEED") {
+    reseedStatus.textContent = "Cancelled — input didn't match.";
+    return;
+  }
+
+  reseedBtn.disabled = true;
+  reseedStatus.textContent = "Reseeding…";
+  try {
+    const res = await fetch("/api/admin/db/reseed", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirm: "RESEED" }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error ?? "Reseed failed");
+    }
+    reseedStatus.textContent = `Done — ${data.sitesCount} sites loaded. Refreshing…`;
+    await loadSites();
+    await loadReservations();
+    await loadAmenities();
+    await loadAdminSites();
+    await loadParkAmenitiesAdmin();
+  } catch (err) {
+    reseedStatus.textContent = `Failed: ${err.message}`;
+  } finally {
+    reseedBtn.disabled = false;
+  }
+});
 
 (async function init() {
   await loadSites();

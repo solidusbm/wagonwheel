@@ -2,6 +2,7 @@ import { Router } from "express";
 import { pool } from "../db.js";
 import { quote } from "../lib/pricing.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
+import { applySchema, applySeed, sitesCount } from "../lib/dbBootstrap.js";
 
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -29,6 +30,7 @@ function mapSite(row) {
     pricePerWeekCents: row.price_per_week_cents,
     notes: row.notes,
     active: row.active,
+    permanentlyOccupied: row.permanently_occupied,
     sortOrder: row.sort_order,
     amenityIds: row.amenity_ids,
   };
@@ -264,7 +266,7 @@ router.get("/sites", async (req, res, next) => {
 });
 
 router.post("/sites", async (req, res, next) => {
-  const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, notes, sortOrder, amenityIds } =
+  const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, notes, sortOrder, amenityIds, permanentlyOccupied } =
     req.body ?? {};
 
   if (!name?.trim() || !area?.trim()) {
@@ -273,13 +275,16 @@ router.post("/sites", async (req, res, next) => {
   if (!Number.isInteger(pricePerNightCents)) {
     return res.status(400).json({ error: "pricePerNightCents is required" });
   }
+  if (!Number.isInteger(pricePerWeekCents)) {
+    return res.status(400).json({ error: "pricePerWeekCents is required" });
+  }
 
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const { rows } = await client.query(
-      `INSERT INTO sites (name, area, amp_service, pull_through, max_rig_length, pet_friendly, price_per_night_cents, price_per_week_cents, notes, sort_order)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
+      `INSERT INTO sites (name, area, amp_service, pull_through, max_rig_length, pet_friendly, price_per_night_cents, price_per_week_cents, notes, sort_order, permanently_occupied)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
       [
         name.trim(),
         area.trim(),
@@ -288,9 +293,10 @@ router.post("/sites", async (req, res, next) => {
         maxRigLength ?? null,
         petFriendly ?? true,
         pricePerNightCents,
-        pricePerWeekCents ?? null,
+        pricePerWeekCents,
         notes ?? null,
         Number.isInteger(sortOrder) ? sortOrder : 0,
+        !!permanentlyOccupied,
       ]
     );
     const siteId = rows[0].id;
@@ -314,8 +320,12 @@ router.patch("/sites/:id", async (req, res, next) => {
   if (!Number.isInteger(id)) {
     return res.status(400).json({ error: "Invalid site id" });
   }
-  const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, notes, active, sortOrder, amenityIds } =
+  const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, notes, active, sortOrder, amenityIds, permanentlyOccupied } =
     req.body ?? {};
+
+  if (pricePerWeekCents !== undefined && !Number.isInteger(pricePerWeekCents)) {
+    return res.status(400).json({ error: "pricePerWeekCents must be a whole number of cents" });
+  }
 
   const client = await pool.connect();
   try {
@@ -331,8 +341,8 @@ router.patch("/sites/:id", async (req, res, next) => {
       `UPDATE sites SET
          name = $1, area = $2, amp_service = $3, pull_through = $4, max_rig_length = $5,
          pet_friendly = $6, price_per_night_cents = $7, price_per_week_cents = $8,
-         notes = $9, active = $10, sort_order = $11
-       WHERE id = $12`,
+         notes = $9, active = $10, sort_order = $11, permanently_occupied = $12
+       WHERE id = $13`,
       [
         name?.trim() || existing.name,
         area?.trim() || existing.area,
@@ -345,6 +355,7 @@ router.patch("/sites/:id", async (req, res, next) => {
         notes !== undefined ? notes : existing.notes,
         active !== undefined ? active : existing.active,
         Number.isInteger(sortOrder) ? sortOrder : existing.sort_order,
+        permanentlyOccupied !== undefined ? permanentlyOccupied : existing.permanently_occupied,
         id,
       ]
     );
@@ -504,6 +515,27 @@ router.delete("/park-amenities/:id", async (req, res, next) => {
   try {
     await pool.query("DELETE FROM park_amenities WHERE id = $1", [id]);
     res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* ---------- danger zone: force a reseed of an already-provisioned database ----------
+   bootstrapDatabase() in server/index.js only runs db/seed.sql when the sites table is
+   completely empty, so an already-deployed database (like the live Render demo) doesn't
+   pick up corrected seed data automatically. This lets an authenticated admin trigger it
+   explicitly instead of needing direct database credentials. TRUNCATEs reservations, sites,
+   amenities, site_amenities, and park_amenities -- irreversible. */
+router.post("/db/reseed", async (req, res, next) => {
+  const { confirm } = req.body ?? {};
+  if (confirm !== "RESEED") {
+    return res.status(400).json({ error: 'Send { "confirm": "RESEED" } to proceed. This truncates and reloads sites, amenities, and reservations.' });
+  }
+  try {
+    await applySchema();
+    await applySeed();
+    const count = await sitesCount();
+    res.json({ ok: true, sitesCount: count });
   } catch (err) {
     next(err);
   }

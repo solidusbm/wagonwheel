@@ -19,7 +19,7 @@ router.get("/sites", async (req, res, next) => {
   try {
     const { rows } = await pool.query(
       `SELECT s.id, s.name, s.area, s.amp_service, s.pull_through, s.max_rig_length, s.pet_friendly,
-              s.price_per_night_cents, s.price_per_week_cents, s.notes, am.names AS amenities
+              s.price_per_night_cents, s.price_per_week_cents, s.notes, s.permanently_occupied, am.names AS amenities
        FROM sites s
        ${AMENITIES_JOIN}
        WHERE s.active = true ORDER BY s.sort_order`
@@ -42,13 +42,13 @@ router.get("/availability", async (req, res, next) => {
     const { rows } = await pool.query(
       `SELECT s.id, s.name, s.area, s.amp_service, s.pull_through, s.max_rig_length,
               s.pet_friendly, s.price_per_night_cents, s.price_per_week_cents, s.notes,
-              am.names AS amenities,
-              NOT EXISTS (
+              s.permanently_occupied, am.names AS amenities,
+              (NOT s.permanently_occupied AND NOT EXISTS (
                 SELECT 1 FROM reservations r
                 WHERE r.site_id = s.id
                   AND r.status IN ('pending', 'confirmed')
                   AND r.stay_range && daterange($1::date, $2::date, '[)')
-              ) AS available,
+              )) AS available,
               COALESCE(br.ranges, '[]'::json) AS booked_ranges
        FROM sites s
        ${AMENITIES_JOIN}

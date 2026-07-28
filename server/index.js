@@ -1,14 +1,13 @@
 import "dotenv/config";
 import path from "node:path";
-import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import express from "express";
-import { pool } from "./db.js";
 import sitesRouter from "./routes/sites.js";
 import reservationsRouter from "./routes/reservations.js";
 import adminRouter from "./routes/admin.js";
 import calendarRouter from "./routes/calendar.js";
 import { adminAuth } from "./middleware/adminAuth.js";
+import { applySchema, applySeed, sitesCount } from "./lib/dbBootstrap.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -16,15 +15,13 @@ const app = express();
 // Applies schema.sql (idempotent -- CREATE TABLE/INDEX IF NOT EXISTS) on every boot,
 // and seed.sql only if the sites table is still empty, so a fresh deploy provisions
 // itself without a manual migration step, while an existing deploy's data (including
-// any admin-entered bookings) survives restarts and redeploys.
+// any admin-entered bookings) survives restarts and redeploys. To force a reseed of an
+// already-provisioned database (e.g. to pick up corrected site data), use the "Danger
+// zone" button in /admin instead of relying on this -- it won't touch a non-empty table.
 async function bootstrapDatabase() {
-  const schemaSql = await readFile(path.join(__dirname, "..", "db", "schema.sql"), "utf8");
-  await pool.query(schemaSql);
-
-  const { rows } = await pool.query("SELECT COUNT(*)::int AS count FROM sites");
-  if (rows[0].count === 0) {
-    const seedSql = await readFile(path.join(__dirname, "..", "db", "seed.sql"), "utf8");
-    await pool.query(seedSql);
+  await applySchema();
+  if ((await sitesCount()) === 0) {
+    await applySeed();
     console.log("[bootstrap] sites table was empty -- applied db/seed.sql");
   }
 }

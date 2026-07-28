@@ -16,13 +16,19 @@ CREATE TABLE IF NOT EXISTS sites (
   price_per_week_cents INTEGER,
   active BOOLEAN NOT NULL DEFAULT true,
   sort_order INTEGER NOT NULL DEFAULT 0,
-  notes TEXT
+  notes TEXT,
+  -- A site with a long-term resident who isn't going through the reservation system --
+  -- distinct from `active`, which controls whether the site is shown at all. A permanently
+  -- occupied site still shows on the map/site list (as unavailable), it just can never be
+  -- booked, regardless of dates.
+  permanently_occupied BOOLEAN NOT NULL DEFAULT false
 );
 
 -- CREATE TABLE IF NOT EXISTS above is a no-op against an already-provisioned database, so
 -- these backfill any columns added after that table was first created (safe to re-run).
 ALTER TABLE sites ADD COLUMN IF NOT EXISTS price_per_week_cents INTEGER;
 ALTER TABLE sites ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE sites ADD COLUMN IF NOT EXISTS permanently_occupied BOOLEAN NOT NULL DEFAULT false;
 
 -- Global, admin-managed amenity catalog (e.g. "Wired Ethernet") that can be toggled on a
 -- per-site basis via site_amenities, separate from the fixed built-in site columns above
