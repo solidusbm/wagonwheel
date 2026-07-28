@@ -7,6 +7,37 @@ const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const STATUSES = ["pending", "confirmed", "cancelled"];
 
+const SITE_SELECT = `
+  SELECT s.*, COALESCE(am.ids, '[]'::json) AS amenity_ids
+  FROM sites s
+  LEFT JOIN LATERAL (
+    SELECT json_agg(sa.amenity_id ORDER BY sa.amenity_id) AS ids
+    FROM site_amenities sa WHERE sa.site_id = s.id
+  ) am ON true
+`;
+
+function mapSite(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    area: row.area,
+    ampService: row.amp_service,
+    pullThrough: row.pull_through,
+    maxRigLength: row.max_rig_length,
+    petFriendly: row.pet_friendly,
+    pricePerNightCents: row.price_per_night_cents,
+    pricePerWeekCents: row.price_per_week_cents,
+    notes: row.notes,
+    active: row.active,
+    sortOrder: row.sort_order,
+    amenityIds: row.amenity_ids,
+  };
+}
+
+function mapAmenity(row) {
+  return { id: row.id, name: row.name, sortOrder: row.sort_order, active: row.active };
+}
+
 function mapReservation(row) {
   return {
     reservationCode: row.reservation_code,
@@ -218,6 +249,192 @@ router.patch("/reservations/:code", async (req, res, next) => {
     next(err);
   } finally {
     client.release();
+  }
+});
+
+/* ---------- sites (park layout, rates, per-site amenity toggles) ---------- */
+
+router.get("/sites", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(`${SITE_SELECT} ORDER BY s.sort_order`);
+    res.json(rows.map(mapSite));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/sites", async (req, res, next) => {
+  const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, notes, sortOrder, amenityIds } =
+    req.body ?? {};
+
+  if (!name?.trim() || !area?.trim()) {
+    return res.status(400).json({ error: "name and area are required" });
+  }
+  if (!Number.isInteger(pricePerNightCents)) {
+    return res.status(400).json({ error: "pricePerNightCents is required" });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rows } = await client.query(
+      `INSERT INTO sites (name, area, amp_service, pull_through, max_rig_length, pet_friendly, price_per_night_cents, price_per_week_cents, notes, sort_order)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
+      [
+        name.trim(),
+        area.trim(),
+        ampService ?? "30/50",
+        !!pullThrough,
+        maxRigLength ?? null,
+        petFriendly ?? true,
+        pricePerNightCents,
+        pricePerWeekCents ?? null,
+        notes ?? null,
+        Number.isInteger(sortOrder) ? sortOrder : 0,
+      ]
+    );
+    const siteId = rows[0].id;
+    if (Array.isArray(amenityIds) && amenityIds.length) {
+      await client.query(`INSERT INTO site_amenities (site_id, amenity_id) SELECT $1, UNNEST($2::int[])`, [siteId, amenityIds]);
+    }
+    await client.query("COMMIT");
+
+    const { rows: siteRows } = await pool.query(`${SITE_SELECT} WHERE s.id = $1`, [siteId]);
+    res.status(201).json(mapSite(siteRows[0]));
+  } catch (err) {
+    await client.query("ROLLBACK");
+    next(err);
+  } finally {
+    client.release();
+  }
+});
+
+router.patch("/sites/:id", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({ error: "Invalid site id" });
+  }
+  const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, notes, active, sortOrder, amenityIds } =
+    req.body ?? {};
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const existingResult = await client.query("SELECT * FROM sites WHERE id = $1 FOR UPDATE", [id]);
+    const existing = existingResult.rows[0];
+    if (!existing) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Site not found" });
+    }
+
+    await client.query(
+      `UPDATE sites SET
+         name = $1, area = $2, amp_service = $3, pull_through = $4, max_rig_length = $5,
+         pet_friendly = $6, price_per_night_cents = $7, price_per_week_cents = $8,
+         notes = $9, active = $10, sort_order = $11
+       WHERE id = $12`,
+      [
+        name?.trim() || existing.name,
+        area?.trim() || existing.area,
+        ampService ?? existing.amp_service,
+        pullThrough !== undefined ? pullThrough : existing.pull_through,
+        maxRigLength !== undefined ? maxRigLength : existing.max_rig_length,
+        petFriendly !== undefined ? petFriendly : existing.pet_friendly,
+        pricePerNightCents ?? existing.price_per_night_cents,
+        pricePerWeekCents !== undefined ? pricePerWeekCents : existing.price_per_week_cents,
+        notes !== undefined ? notes : existing.notes,
+        active !== undefined ? active : existing.active,
+        Number.isInteger(sortOrder) ? sortOrder : existing.sort_order,
+        id,
+      ]
+    );
+
+    if (Array.isArray(amenityIds)) {
+      await client.query("DELETE FROM site_amenities WHERE site_id = $1", [id]);
+      if (amenityIds.length) {
+        await client.query(`INSERT INTO site_amenities (site_id, amenity_id) SELECT $1, UNNEST($2::int[])`, [id, amenityIds]);
+      }
+    }
+
+    await client.query("COMMIT");
+    const { rows } = await pool.query(`${SITE_SELECT} WHERE s.id = $1`, [id]);
+    res.json(mapSite(rows[0]));
+  } catch (err) {
+    await client.query("ROLLBACK");
+    next(err);
+  } finally {
+    client.release();
+  }
+});
+
+/* ---------- global amenity catalog ---------- */
+
+router.get("/amenities", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query("SELECT id, name, sort_order, active FROM amenities ORDER BY sort_order, name");
+    res.json(rows.map(mapAmenity));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/amenities", async (req, res, next) => {
+  const { name } = req.body ?? {};
+  if (!name?.trim()) {
+    return res.status(400).json({ error: "name is required" });
+  }
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO amenities (name, sort_order)
+       VALUES ($1, COALESCE((SELECT MAX(sort_order) + 1 FROM amenities), 0))
+       RETURNING id, name, sort_order, active`,
+      [name.trim()]
+    );
+    res.status(201).json(mapAmenity(rows[0]));
+  } catch (err) {
+    if (err.code === "23505") {
+      return res.status(409).json({ error: "An amenity with that name already exists" });
+    }
+    next(err);
+  }
+});
+
+router.patch("/amenities/:id", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({ error: "Invalid amenity id" });
+  }
+  const { name, active } = req.body ?? {};
+  try {
+    const existingResult = await pool.query("SELECT * FROM amenities WHERE id = $1", [id]);
+    const existing = existingResult.rows[0];
+    if (!existing) {
+      return res.status(404).json({ error: "Amenity not found" });
+    }
+    const { rows } = await pool.query(`UPDATE amenities SET name = $1, active = $2 WHERE id = $3 RETURNING id, name, sort_order, active`, [
+      name?.trim() || existing.name,
+      active !== undefined ? active : existing.active,
+      id,
+    ]);
+    res.json(mapAmenity(rows[0]));
+  } catch (err) {
+    if (err.code === "23505") {
+      return res.status(409).json({ error: "An amenity with that name already exists" });
+    }
+    next(err);
+  }
+});
+
+router.delete("/amenities/:id", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({ error: "Invalid amenity id" });
+  }
+  try {
+    await pool.query("DELETE FROM amenities WHERE id = $1", [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
   }
 });
 

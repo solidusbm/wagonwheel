@@ -241,7 +241,258 @@ async function onCancel(code) {
   await loadReservations();
 }
 
+/* ---------- sites & amenities admin ---------- */
+
+let amenities = [];
+let adminSites = [];
+
+const sitesContent = document.getElementById("sites-content");
+const amenityList = document.getElementById("amenity-list");
+const amenityAddForm = document.getElementById("amenity-add-form");
+const amenityNameInput = document.getElementById("amenity-name-input");
+
+const sitePanel = document.getElementById("site-panel");
+const sitePanelTitle = document.getElementById("site-panel-title");
+const siteForm = document.getElementById("site-form");
+const siteFormError = document.getElementById("site-form-error");
+const sIdField = document.getElementById("s-id");
+const sNameField = document.getElementById("s-name");
+const sAreaField = document.getElementById("s-area");
+const sAmpField = document.getElementById("s-amp");
+const sRigField = document.getElementById("s-rig");
+const sPullThroughField = document.getElementById("s-pullthrough");
+const sNightField = document.getElementById("s-night");
+const sWeekField = document.getElementById("s-week");
+const sActiveField = document.getElementById("s-active");
+const sNotesField = document.getElementById("s-notes");
+const siteAmenityChecks = document.getElementById("site-amenity-checks");
+
+document.getElementById("new-site-btn").addEventListener("click", () => openSiteForm());
+document.getElementById("cancel-site-btn").addEventListener("click", closeSiteForm);
+siteForm.addEventListener("submit", onSiteSubmit);
+amenityAddForm.addEventListener("submit", onAddAmenity);
+
+async function loadAmenities() {
+  const res = await fetch("/api/admin/amenities");
+  amenities = res.ok ? await res.json() : [];
+  renderAmenityList();
+  renderAmenityChecks();
+}
+
+function renderAmenityList() {
+  if (amenities.length === 0) {
+    amenityList.innerHTML = `<p class="empty-note">No amenities yet — add one below.</p>`;
+    return;
+  }
+  amenityList.innerHTML = amenities
+    .map(
+      (a) => `
+    <div class="amenity-row${a.active ? "" : " inactive"}">
+      <span class="name">${escapeHtml(a.name)}</span>
+      <button type="button" class="btn btn-ghost" data-toggle-amenity="${a.id}">${a.active ? "Deactivate" : "Activate"}</button>
+      <button type="button" class="btn btn-ghost" data-delete-amenity="${a.id}">Delete</button>
+    </div>`
+    )
+    .join("");
+
+  amenityList.querySelectorAll("[data-toggle-amenity]").forEach((btn) => {
+    btn.addEventListener("click", () => onToggleAmenityActive(Number(btn.getAttribute("data-toggle-amenity"))));
+  });
+  amenityList.querySelectorAll("[data-delete-amenity]").forEach((btn) => {
+    btn.addEventListener("click", () => onDeleteAmenity(Number(btn.getAttribute("data-delete-amenity"))));
+  });
+}
+
+function renderAmenityChecks(checkedIds = []) {
+  if (amenities.length === 0) {
+    siteAmenityChecks.innerHTML = `<p class="empty-note">No amenities in the catalog yet.</p>`;
+    return;
+  }
+  siteAmenityChecks.innerHTML = amenities
+    .map(
+      (a) => `
+    <label>
+      <input type="checkbox" value="${a.id}" ${checkedIds.includes(a.id) ? "checked" : ""} ${a.active ? "" : "disabled"} />
+      ${escapeHtml(a.name)}${a.active ? "" : " (inactive)"}
+    </label>`
+    )
+    .join("");
+}
+
+async function onAddAmenity(event) {
+  event.preventDefault();
+  const name = amenityNameInput.value.trim();
+  if (!name) return;
+  const res = await fetch("/api/admin/amenities", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert(data.error ?? "Could not add amenity.");
+    return;
+  }
+  amenityNameInput.value = "";
+  await loadAmenities();
+}
+
+async function onToggleAmenityActive(id) {
+  const a = amenities.find((x) => x.id === id);
+  if (!a) return;
+  const res = await fetch(`/api/admin/amenities/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ active: !a.active }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert(data.error ?? "Could not update amenity.");
+    return;
+  }
+  await loadAmenities();
+}
+
+async function onDeleteAmenity(id) {
+  const a = amenities.find((x) => x.id === id);
+  if (!a) return;
+  if (!confirm(`Delete "${a.name}"? This removes it from every site it's toggled on.`)) return;
+  const res = await fetch(`/api/admin/amenities/${id}`, { method: "DELETE" });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert(data.error ?? "Could not delete amenity.");
+    return;
+  }
+  await loadAmenities();
+  await loadAdminSites();
+}
+
+async function loadAdminSites() {
+  const res = await fetch("/api/admin/sites");
+  if (!res.ok) {
+    sitesContent.innerHTML = `<p class="error-msg">Could not load sites (${res.status}).</p>`;
+    return;
+  }
+  adminSites = await res.json();
+  renderSitesTable();
+}
+
+function renderSitesTable() {
+  if (adminSites.length === 0) {
+    sitesContent.innerHTML = `<p class="empty-note">No sites yet.</p>`;
+    return;
+  }
+  const rows = adminSites
+    .map((s) => {
+      const siteAmenities = s.amenityIds.map((id) => amenities.find((a) => a.id === id)?.name).filter(Boolean);
+      return `
+    <tr${s.active ? "" : ' style="opacity:0.5;"'}>
+      <td>${escapeHtml(s.name)}<br><span style="color:var(--parchment-dim);font-size:11px;">${escapeHtml(s.area)}</span></td>
+      <td>${money(s.pricePerNightCents)}/night${s.pricePerWeekCents ? `<br>${money(s.pricePerWeekCents)}/week` : ""}</td>
+      <td>${escapeHtml(s.ampService)} amp</td>
+      <td>${siteAmenities.map((n) => `<span class="tag">${escapeHtml(n)}</span>`).join(" ") || "—"}</td>
+      <td>${s.active ? "Active" : "Inactive"}</td>
+      <td class="row-actions"><button type="button" class="btn btn-ghost" data-edit-site="${s.id}">Edit</button></td>
+    </tr>`;
+    })
+    .join("");
+
+  sitesContent.innerHTML = `
+    <table>
+      <thead><tr><th>Site</th><th>Rate</th><th>Amp</th><th>Amenities</th><th>Status</th><th></th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+
+  sitesContent.querySelectorAll("[data-edit-site]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const s = adminSites.find((x) => x.id === Number(btn.getAttribute("data-edit-site")));
+      if (s) openSiteForm(s);
+    });
+  });
+}
+
+function openSiteForm(site) {
+  siteFormError.hidden = true;
+  siteForm.reset();
+  if (site) {
+    sitePanelTitle.textContent = `Edit ${site.name}`;
+    sIdField.value = site.id;
+    sNameField.value = site.name;
+    sAreaField.value = site.area;
+    sAmpField.value = site.ampService;
+    sRigField.value = site.maxRigLength ?? "";
+    sPullThroughField.value = String(site.pullThrough);
+    sNightField.value = (site.pricePerNightCents / 100).toFixed(2);
+    sWeekField.value = site.pricePerWeekCents ? (site.pricePerWeekCents / 100).toFixed(2) : "";
+    sActiveField.value = String(site.active);
+    sNotesField.value = site.notes ?? "";
+    renderAmenityChecks(site.amenityIds);
+  } else {
+    sitePanelTitle.textContent = "New site";
+    sIdField.value = "";
+    sActiveField.value = "true";
+    sPullThroughField.value = "false";
+    renderAmenityChecks([]);
+  }
+  sitePanel.classList.add("open");
+  sitePanel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function closeSiteForm() {
+  sitePanel.classList.remove("open");
+  siteForm.reset();
+}
+
+async function onSiteSubmit(event) {
+  event.preventDefault();
+  siteFormError.hidden = true;
+
+  const amenityIds = [...siteAmenityChecks.querySelectorAll('input[type="checkbox"]:checked')].map((el) => Number(el.value));
+
+  const payload = {
+    name: sNameField.value.trim(),
+    area: sAreaField.value.trim(),
+    ampService: sAmpField.value,
+    maxRigLength: sRigField.value ? Number(sRigField.value) : null,
+    pullThrough: sPullThroughField.value === "true",
+    pricePerNightCents: Math.round(Number(sNightField.value) * 100),
+    pricePerWeekCents: sWeekField.value ? Math.round(Number(sWeekField.value) * 100) : null,
+    active: sActiveField.value === "true",
+    notes: sNotesField.value.trim() || null,
+    amenityIds,
+  };
+
+  const editingId = sIdField.value;
+  const url = editingId ? `/api/admin/sites/${editingId}` : "/api/admin/sites";
+  const method = editingId ? "PATCH" : "POST";
+
+  const saveBtn = document.getElementById("save-site-btn");
+  saveBtn.disabled = true;
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error ?? "Save failed");
+    }
+    closeSiteForm();
+    await loadAdminSites();
+    await loadSites(); // refresh the booking-form site dropdown + feed list too
+  } catch (err) {
+    siteFormError.textContent = err.message;
+    siteFormError.hidden = false;
+  } finally {
+    saveBtn.disabled = false;
+  }
+}
+
 (async function init() {
   await loadSites();
   await loadReservations();
+  await loadAmenities();
+  await loadAdminSites();
 })();

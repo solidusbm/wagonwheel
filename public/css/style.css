@@ -170,6 +170,7 @@ legend{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:up
 .site-card.unavailable{opacity:0.45; cursor:not-allowed;}
 .site-card h4{margin:0; font-size:15px; color:var(--parchment); font-family:'Zilla Slab',serif;}
 .site-price{font-family:'JetBrains Mono',monospace; font-size:18px; color:var(--parchment);}
+.site-notes{font-size:11.5px; color:var(--gold); font-style:italic; line-height:1.4;}
 .site-tags{display:flex; flex-wrap:wrap; gap:6px;}
 .tag{font-size:11px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.04em; color:var(--parchment-dim); background:var(--bg); border:1px solid rgba(232,220,196,0.14); border-radius:999px; padding:3px 10px;}
 .availability-flag{font-size:12px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.06em;}

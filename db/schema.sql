@@ -15,12 +15,31 @@ CREATE TABLE IF NOT EXISTS sites (
   -- nightly pricing when it's null.
   price_per_week_cents INTEGER,
   active BOOLEAN NOT NULL DEFAULT true,
-  sort_order INTEGER NOT NULL DEFAULT 0
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  notes TEXT
 );
 
 -- CREATE TABLE IF NOT EXISTS above is a no-op against an already-provisioned database, so
 -- these backfill any columns added after that table was first created (safe to re-run).
 ALTER TABLE sites ADD COLUMN IF NOT EXISTS price_per_week_cents INTEGER;
+ALTER TABLE sites ADD COLUMN IF NOT EXISTS notes TEXT;
+
+-- Global, admin-managed amenity catalog (e.g. "Wired Ethernet") that can be toggled on a
+-- per-site basis via site_amenities, separate from the fixed built-in site columns above
+-- (amp_service, pull_through, etc.) which the park may not add to over time the way it adds
+-- amenities.
+CREATE TABLE IF NOT EXISTS amenities (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT true
+);
+
+CREATE TABLE IF NOT EXISTS site_amenities (
+  site_id INTEGER NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+  amenity_id INTEGER NOT NULL REFERENCES amenities(id) ON DELETE CASCADE,
+  PRIMARY KEY (site_id, amenity_id)
+);
 
 CREATE TABLE IF NOT EXISTS reservations (
   id SERIAL PRIMARY KEY,

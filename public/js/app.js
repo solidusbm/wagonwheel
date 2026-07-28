@@ -1,4 +1,6 @@
 const money = (cents) => `$${(cents / 100).toFixed(2)}`;
+const escapeHtml = (str) =>
+  String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 const STEPS = ["Dates", "Site", "Details & Payment", "Confirmed"];
 
@@ -159,12 +161,14 @@ function renderSiteCard(site, nights) {
     site.pull_through ? "Pull-through" : "Back-in",
     site.pet_friendly ? "Pet friendly" : null,
     site.max_rig_length ? `Up to ${site.max_rig_length} ft` : null,
+    ...(site.amenities ?? []),
   ].filter(Boolean);
 
   card.innerHTML = `
-    <h4>${site.name}</h4>
-    <div class="site-tags">${tags.map((t) => `<span class="tag">${t}</span>`).join("")}</div>
-    <div class="site-price">${money(site.price_per_night_cents)} <span style="font-size:11px;color:var(--parchment-dim);">/night</span></div>
+    <h4>${escapeHtml(site.name)}</h4>
+    <div class="site-tags">${tags.map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>
+    <div class="site-price">${money(site.price_per_night_cents)} <span style="font-size:11px;color:var(--parchment-dim);">/night</span>${site.price_per_week_cents ? ` <span style="font-size:11px;color:var(--parchment-dim);">· ${money(site.price_per_week_cents)}/week</span>` : ""}</div>
+    ${site.notes ? `<div class="site-notes">${escapeHtml(site.notes)}</div>` : ""}
     <div class="availability-flag ${site.available ? "available" : "unavailable"}">
       ${site.available ? "Available" : "Booked for these dates"}
     </div>
@@ -222,7 +226,7 @@ function renderSiteMap(sites) {
     const roadY = rowY - 26;
 
     roads += `<line x1="${MARGIN_X}" y1="${roadY}" x2="${MARGIN_X + ROW_WIDTH}" y2="${roadY}" stroke="var(--line)" stroke-width="10" stroke-linecap="round"/>`;
-    labels += `<text x="${MARGIN_X + ROW_WIDTH + 4}" y="${roadY + 4}" fill="var(--parchment-dim)" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.5" text-anchor="start">${area.toUpperCase()}</text>`;
+    labels += `<text x="${MARGIN_X + ROW_WIDTH + 4}" y="${roadY + 4}" fill="var(--parchment-dim)" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.5" text-anchor="start">${escapeHtml(area.toUpperCase())}</text>`;
 
     rowSites.forEach((site, i) => {
       const x = startX + i * (bayW + GAP);
@@ -363,8 +367,8 @@ async function selectSite(site, nights) {
   ].join("");
 
   orderSummary.innerHTML = `
-    <h3>${site.name}</h3>
-    <p>${site.area}</p>
+    <h3>${escapeHtml(site.name)}</h3>
+    <p>${escapeHtml(site.area)}</p>
     <div class="summary-row"><span>${formatDate(state.checkIn)} → ${formatDate(state.checkOut)}</span><span>${nights} night${nights === 1 ? "" : "s"}</span></div>
     ${rateRows}
     <div class="summary-row"><span>Booking fee</span><span>${money(bookingFee)}</span></div>
@@ -459,7 +463,7 @@ async function onSubmitBooking(event) {
 function showConfirmation(reservation) {
   document.getElementById("confirmation-code").textContent = reservation.reservationCode;
   document.getElementById("confirmation-details").innerHTML = `
-    <div class="summary-row"><span>Site</span><span>${reservation.site.name} · ${reservation.site.area}</span></div>
+    <div class="summary-row"><span>Site</span><span>${escapeHtml(reservation.site.name)} · ${escapeHtml(reservation.site.area)}</span></div>
     <div class="summary-row"><span>Dates</span><span>${formatDate(reservation.checkIn)} → ${formatDate(reservation.checkOut)}</span></div>
     <div class="summary-row"><span>Nights</span><span>${reservation.nights}</span></div>
     <div class="summary-row"><span>Guest</span><span>${reservation.guest.name}</span></div>

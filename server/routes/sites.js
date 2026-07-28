@@ -4,11 +4,25 @@ import { pool } from "../db.js";
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+// Per-site custom amenities (e.g. "Wired Ethernet"), toggled from /admin against the global
+// amenities catalog -- separate from the fixed columns below (amp_service, pull_through, ...).
+const AMENITIES_JOIN = `
+  LEFT JOIN LATERAL (
+    SELECT COALESCE(json_agg(a.name ORDER BY a.sort_order), '[]'::json) AS names
+    FROM site_amenities sa
+    JOIN amenities a ON a.id = sa.amenity_id AND a.active = true
+    WHERE sa.site_id = s.id
+  ) am ON true
+`;
+
 router.get("/sites", async (req, res, next) => {
   try {
     const { rows } = await pool.query(
-      `SELECT id, name, area, amp_service, pull_through, max_rig_length, pet_friendly, price_per_night_cents, price_per_week_cents
-       FROM sites WHERE active = true ORDER BY sort_order`
+      `SELECT s.id, s.name, s.area, s.amp_service, s.pull_through, s.max_rig_length, s.pet_friendly,
+              s.price_per_night_cents, s.price_per_week_cents, s.notes, am.names AS amenities
+       FROM sites s
+       ${AMENITIES_JOIN}
+       WHERE s.active = true ORDER BY s.sort_order`
     );
     res.json(rows);
   } catch (err) {
@@ -27,7 +41,8 @@ router.get("/availability", async (req, res, next) => {
   try {
     const { rows } = await pool.query(
       `SELECT s.id, s.name, s.area, s.amp_service, s.pull_through, s.max_rig_length,
-              s.pet_friendly, s.price_per_night_cents, s.price_per_week_cents,
+              s.pet_friendly, s.price_per_night_cents, s.price_per_week_cents, s.notes,
+              am.names AS amenities,
               NOT EXISTS (
                 SELECT 1 FROM reservations r
                 WHERE r.site_id = s.id
@@ -36,6 +51,7 @@ router.get("/availability", async (req, res, next) => {
               ) AS available,
               COALESCE(br.ranges, '[]'::json) AS booked_ranges
        FROM sites s
+       ${AMENITIES_JOIN}
        LEFT JOIN LATERAL (
          SELECT json_agg(json_build_object('checkIn', sub.check_in, 'checkOut', sub.check_out) ORDER BY sub.check_in) AS ranges
          FROM (

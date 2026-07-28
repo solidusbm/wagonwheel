@@ -46,6 +46,20 @@
   #booking-panel{display:none;}
   #booking-panel.open{display:block;}
   #admin-form-error{margin:0 0 14px;}
+  #site-panel{display:none;}
+  #site-panel.open{display:block;}
+  .amenity-catalog h3, .sites-panel h3{font-size:15px; margin:0 0 12px;}
+  .amenity-row{display:flex; align-items:center; gap:10px; padding:6px 0; font-size:13px;}
+  .amenity-row .name{flex:1;}
+  .amenity-row.inactive .name{opacity:0.5; text-decoration:line-through;}
+  .amenity-row button{font-size:10.5px; padding:5px 9px;}
+  .amenity-add-row{display:flex; gap:10px; margin-top:10px;}
+  .amenity-add-row input{margin:0; flex:1;}
+  .amenity-add-row button{white-space:nowrap;}
+  .amenity-checks{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:18px;}
+  .amenity-checks label{display:flex; align-items:center; gap:6px; font-family:'Zilla Slab',serif; font-size:13px; text-transform:none; letter-spacing:0; color:var(--parchment); background:var(--bg); border:1px solid rgba(232,220,196,0.16); border-radius:999px; padding:6px 12px; cursor:pointer;}
+  .amenity-checks input{width:auto; margin:0;}
+  .amenity-checks .empty-note{padding:0;}
 </style>
 </head>
 <body>
@@ -104,6 +118,66 @@
     <div class="sub">One iCal feed per site, listing this app's booked dates only (no guest details). Paste a site's URL into RoverPass's or Hipcamp's "import calendar" field once those accounts exist, so a direct booking here blocks the site there too.</div>
     <div id="feed-list"></div>
   </details>
+
+  <details class="sync-feeds" open>
+    <summary><h2>Sites &amp; amenities</h2></summary>
+    <div class="sub">Edit site names, rates, and per-site details. Amenities are a global list you can grow over time (e.g. "Wired Ethernet") and toggle on individual sites below.</div>
+
+    <div class="amenity-catalog">
+      <h3>Amenity catalog</h3>
+      <div id="amenity-list"></div>
+      <form id="amenity-add-form" class="amenity-add-row">
+        <input type="text" id="amenity-name-input" placeholder="Add an amenity (e.g. Wired Ethernet)" />
+        <button type="submit" class="btn btn-ghost">+ Add</button>
+      </form>
+    </div>
+
+    <div class="admin-toolbar" style="margin-top:28px;">
+      <h3 style="margin:0;">Sites</h3>
+      <button type="button" class="btn btn-primary" id="new-site-btn">+ New site</button>
+    </div>
+    <div id="sites-content">Loading…</div>
+  </details>
+
+  <div class="panel" id="site-panel">
+    <h2 id="site-panel-title">Edit site</h2>
+    <form id="site-form">
+      <input type="hidden" id="s-id" value="" />
+      <div class="grid-2">
+        <div class="field"><label for="s-name">Name</label><input type="text" id="s-name" required /></div>
+        <div class="field"><label for="s-area">Row / area</label><input type="text" id="s-area" required /></div>
+      </div>
+      <div class="grid-3">
+        <div class="field">
+          <label for="s-amp">Amp service</label>
+          <select id="s-amp"><option value="30">30</option><option value="50">50</option><option value="30/50" selected>30/50</option></select>
+        </div>
+        <div class="field"><label for="s-rig">Max rig length (ft)</label><input type="number" id="s-rig" /></div>
+        <div class="field">
+          <label for="s-pullthrough">Pull-through</label>
+          <select id="s-pullthrough"><option value="false">Back-in</option><option value="true">Pull-through</option></select>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="field"><label for="s-night">Price per night ($)</label><input type="number" step="0.01" id="s-night" required /></div>
+        <div class="field"><label for="s-week">Price per week ($, optional)</label><input type="number" step="0.01" id="s-week" /></div>
+        <div class="field">
+          <label for="s-active">Active</label>
+          <select id="s-active"><option value="true">Active</option><option value="false">Inactive</option></select>
+        </div>
+      </div>
+      <div class="field"><label for="s-notes">Notes (shown to guests on the booking page)</label><textarea id="s-notes" rows="2"></textarea></div>
+      <div class="field">
+        <label>Amenities</label>
+        <div id="site-amenity-checks" class="amenity-checks"></div>
+      </div>
+      <p id="site-form-error" class="error-msg" hidden></p>
+      <div class="btn-row">
+        <button type="button" class="btn btn-ghost" id="cancel-site-btn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="save-site-btn">Save site</button>
+      </div>
+    </form>
+  </div>
 
   <div class="push-panel">
     <h2>Push notifications</h2>
