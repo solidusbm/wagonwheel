@@ -77,4 +77,13 @@ router.get("/availability", async (req, res, next) => {
   }
 });
 
+router.get("/park-amenities", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query("SELECT id, name FROM park_amenities WHERE active = true ORDER BY sort_order, name");
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

@@ -56,7 +56,46 @@ async function init() {
     return null;
   });
 
+  loadParkAmenities();
   renderTrail();
+}
+
+/* ---------- park-wide amenities ("what every site includes") ----------
+   Curated icons for the amenities known at build time; anything added later from
+   /admin's "Park amenities" panel falls back to DEFAULT_AMENITY_ICON. */
+const PARK_AMENITY_ICONS = {
+  "Water hookup": '<path d="M12 3c3 4 6 7 6 11a6 6 0 1 1-12 0c0-4 3-7 6-11z"/>',
+  "30/50 amp electric": '<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>',
+  "Wastewater hookup": '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+  "Pet friendly": '<circle cx="12" cy="14" r="4"/><circle cx="6" cy="7" r="2"/><circle cx="18" cy="7" r="2"/><circle cx="9" cy="5" r="1.6"/><circle cx="15" cy="5" r="1.6"/>',
+  "Management on-site": '<path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/>',
+  "Trash service": '<path d="M4 7h16l-1.5 13a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2L4 7zM9 7V4h6v3"/>',
+  "New high-speed WiFi": '<path d="M5 12.5a11 11 0 0 1 14 0M8 16a6.5 6.5 0 0 1 8 0M12 19.5h.01"/>',
+  "Laundry on site": '<path d="M4 4h16v16H4zM4 12h16M9 4v16"/>',
+  "Keyless entry": '<rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  Showers: '<path d="M4 4v6a8 8 0 0 0 16 0V4M4 4h16M9 20h6"/>',
+  "Dog park — large & small": '<circle cx="12" cy="14" r="4"/><circle cx="6" cy="7" r="2"/><circle cx="18" cy="7" r="2"/><circle cx="9" cy="5" r="1.6"/><circle cx="15" cy="5" r="1.6"/>',
+  "10% military discount — active or retired": '<path d="M12 2 4 7v6c0 5 3.4 7.4 8 9 4.6-1.6 8-4 8-9V7l-8-5z"/>',
+};
+const DEFAULT_AMENITY_ICON = '<path d="M20 6 9 17l-5-5"/>';
+
+async function loadParkAmenities() {
+  const grid = document.getElementById("amenities-grid");
+  try {
+    const res = await fetch("/api/park-amenities");
+    const list = res.ok ? await res.json() : [];
+    grid.innerHTML = list
+      .map(
+        (a) => `
+      <div class="amenity">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${PARK_AMENITY_ICONS[a.name] ?? DEFAULT_AMENITY_ICON}</svg>
+        <div class="t">${escapeHtml(a.name)}</div>
+      </div>`
+      )
+      .join("");
+  } catch (err) {
+    console.error("Failed to load amenities", err);
+  }
 }
 
 function loadSquareSdk(environment) {

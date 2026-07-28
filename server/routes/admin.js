@@ -438,6 +438,77 @@ router.delete("/amenities/:id", async (req, res, next) => {
   }
 });
 
+/* ---------- park-wide amenities (homepage "what every site includes" grid) ---------- */
+
+router.get("/park-amenities", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query("SELECT id, name, sort_order, active FROM park_amenities ORDER BY sort_order, name");
+    res.json(rows.map(mapAmenity));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/park-amenities", async (req, res, next) => {
+  const { name } = req.body ?? {};
+  if (!name?.trim()) {
+    return res.status(400).json({ error: "name is required" });
+  }
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO park_amenities (name, sort_order)
+       VALUES ($1, COALESCE((SELECT MAX(sort_order) + 1 FROM park_amenities), 0))
+       RETURNING id, name, sort_order, active`,
+      [name.trim()]
+    );
+    res.status(201).json(mapAmenity(rows[0]));
+  } catch (err) {
+    if (err.code === "23505") {
+      return res.status(409).json({ error: "A park amenity with that name already exists" });
+    }
+    next(err);
+  }
+});
+
+router.patch("/park-amenities/:id", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({ error: "Invalid amenity id" });
+  }
+  const { name, active } = req.body ?? {};
+  try {
+    const existingResult = await pool.query("SELECT * FROM park_amenities WHERE id = $1", [id]);
+    const existing = existingResult.rows[0];
+    if (!existing) {
+      return res.status(404).json({ error: "Park amenity not found" });
+    }
+    const { rows } = await pool.query(`UPDATE park_amenities SET name = $1, active = $2 WHERE id = $3 RETURNING id, name, sort_order, active`, [
+      name?.trim() || existing.name,
+      active !== undefined ? active : existing.active,
+      id,
+    ]);
+    res.json(mapAmenity(rows[0]));
+  } catch (err) {
+    if (err.code === "23505") {
+      return res.status(409).json({ error: "A park amenity with that name already exists" });
+    }
+    next(err);
+  }
+});
+
+router.delete("/park-amenities/:id", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({ error: "Invalid amenity id" });
+  }
+  try {
+    await pool.query("DELETE FROM park_amenities WHERE id = $1", [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get("/push/vapid-public-key", (req, res) => {
   res.json({ publicKey: process.env.VAPID_PUBLIC_KEY ?? null });
 });

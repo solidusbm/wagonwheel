@@ -120,11 +120,21 @@
   </details>
 
   <details class="sync-feeds" open>
+    <summary><h2>Park amenities (homepage)</h2></summary>
+    <div class="sub">Shown in the "What every site includes" grid on the homepage. Add, rename, deactivate, or delete — no code change needed. New ones get a generic checkmark icon.</div>
+    <div id="park-amenity-list"></div>
+    <form id="park-amenity-add-form" class="amenity-add-row">
+      <input type="text" id="park-amenity-name-input" placeholder="Add a park amenity (e.g. Pickleball court)" />
+      <button type="submit" class="btn btn-ghost">+ Add</button>
+    </form>
+  </details>
+
+  <details class="sync-feeds" open>
     <summary><h2>Sites &amp; amenities</h2></summary>
-    <div class="sub">Edit site names, rates, and per-site details. Amenities are a global list you can grow over time (e.g. "Wired Ethernet") and toggle on individual sites below.</div>
+    <div class="sub">Edit site names, rates, and per-site details. Amenities here are a separate, per-site list you can grow over time (e.g. "Wired Ethernet") and toggle on individual sites below.</div>
 
     <div class="amenity-catalog">
-      <h3>Amenity catalog</h3>
+      <h3>Per-site amenity catalog</h3>
       <div id="amenity-list"></div>
       <form id="amenity-add-form" class="amenity-add-row">
         <input type="text" id="amenity-name-input" placeholder="Add an amenity (e.g. Wired Ethernet)" />

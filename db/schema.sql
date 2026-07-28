@@ -41,6 +41,16 @@ CREATE TABLE IF NOT EXISTS site_amenities (
   PRIMARY KEY (site_id, amenity_id)
 );
 
+-- Park-wide amenities shown in the homepage's "What every site includes" grid (water
+-- hookup, WiFi, dog park, military discount, ...). Separate from `amenities` above, which
+-- are per-site toggles (e.g. one site having Wired Ethernet) rather than park-wide features.
+CREATE TABLE IF NOT EXISTS park_amenities (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  active BOOLEAN NOT NULL DEFAULT true,
+  sort_order INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS reservations (
   id SERIAL PRIMARY KEY,
   site_id INTEGER NOT NULL REFERENCES sites(id),
