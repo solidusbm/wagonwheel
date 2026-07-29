@@ -57,7 +57,34 @@ async function init() {
   });
 
   loadParkAmenities();
+  loadHomepagePhotos();
   renderTrail();
+}
+
+// Admin-uploaded photos (see /admin -> Photos) flagged "show on homepage" -- appended after
+// the built-in gallery figures rather than replacing them.
+async function loadHomepagePhotos() {
+  try {
+    const res = await fetch("/api/photos");
+    const photos = res.ok ? await res.json() : [];
+    const homepagePhotos = photos.filter((p) => p.showOnHomepage);
+    if (homepagePhotos.length === 0) return;
+    const grid = document.getElementById("gallery-grid");
+    grid.insertAdjacentHTML(
+      "beforeend",
+      homepagePhotos
+        .map(
+          (p) => `
+      <figure>
+        <img src="/photos/${p.id}/image" alt="${escapeHtml(p.caption ?? "Wagon Wheel RV Park photo")}" loading="lazy" />
+        ${p.caption ? `<figcaption><b>${escapeHtml(p.caption)}</b></figcaption>` : ""}
+      </figure>`
+        )
+        .join("")
+    );
+  } catch (err) {
+    console.error("Failed to load homepage photos", err);
+  }
 }
 
 /* ---------- park-wide amenities ("what every site includes") ----------

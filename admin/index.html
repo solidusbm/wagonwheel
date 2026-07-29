@@ -63,6 +63,20 @@
   .amenity-checks label{display:flex; align-items:center; gap:6px; font-family:'Zilla Slab',serif; font-size:13px; text-transform:none; letter-spacing:0; color:var(--parchment); background:var(--bg); border:1px solid rgba(232,220,196,0.16); border-radius:999px; padding:6px 12px; cursor:pointer;}
   .amenity-checks input{width:auto; margin:0;}
   .amenity-checks .empty-note{padding:0;}
+  .photo-upload-row{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:8px;}
+  .photo-upload-row input[type="file"]{flex:1; min-width:180px; margin:0; padding:9px 10px;}
+  .photo-upload-row input[type="text"]{flex:1; min-width:160px; margin:0;}
+  .photo-homepage-check{display:flex; align-items:center; gap:6px; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:var(--parchment-dim); white-space:nowrap;}
+  .photo-homepage-check input{width:auto; margin:0;}
+  .photo-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:16px; margin-top:20px;}
+  .photo-tile{background:var(--bg-panel-2); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius); overflow:hidden;}
+  .photo-tile img{display:block; width:100%; height:130px; object-fit:cover; background:var(--bg);}
+  .photo-tile .body{padding:10px 12px;}
+  .photo-tile input[type="text"]{font-size:12px; padding:7px 9px; margin-bottom:8px;}
+  .photo-tile .row{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .photo-tile label{display:flex; align-items:center; gap:5px; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:var(--parchment-dim); cursor:pointer;}
+  .photo-tile label input{width:auto; margin:0;}
+  .photo-tile button{font-size:10.5px; padding:5px 9px;}
   .danger-zone{margin:32px 0; padding:20px 24px; background:var(--bg-panel); border:1px solid rgba(140,58,43,0.4); border-radius:var(--radius);}
   .danger-zone summary{list-style:none; cursor:pointer; display:flex; align-items:center; gap:8px;}
   .danger-zone summary::-webkit-details-marker{display:none;}
@@ -140,6 +154,19 @@
       <button type="button" class="btn btn-primary" id="new-site-btn">+ New site</button>
     </div>
     <div id="sites-content">Loading…</div>
+  </details>
+
+  <details class="sync-feeds" open>
+    <summary><h2>Photos</h2></summary>
+    <div class="sub">Upload photos here — check "Show on homepage" for the ones that should appear in the gallery on the home page. Every uploaded photo (homepage or not) also shows on the public <a href="/gallery.html" target="_blank" style="color:var(--gold-bright);">/gallery.html</a> page. Images over 8MB are rejected.</div>
+    <form id="photo-upload-form" class="photo-upload-row">
+      <input type="file" id="photo-file-input" accept="image/*" required />
+      <input type="text" id="photo-caption-input" placeholder="Caption (optional)" />
+      <label class="photo-homepage-check"><input type="checkbox" id="photo-homepage-input" /> Show on homepage</label>
+      <button type="submit" class="btn btn-primary" id="photo-upload-btn">Upload</button>
+    </form>
+    <p id="photo-upload-error" class="error-msg" hidden></p>
+    <div id="photo-grid" class="photo-grid"></div>
   </details>
 
   <div class="panel" id="site-panel">

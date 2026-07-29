@@ -6,6 +6,7 @@ import sitesRouter from "./routes/sites.js";
 import reservationsRouter from "./routes/reservations.js";
 import adminRouter from "./routes/admin.js";
 import calendarRouter from "./routes/calendar.js";
+import photosRouter from "./routes/photos.js";
 import { adminAuth } from "./middleware/adminAuth.js";
 import { applySchema, applySeed, sitesCount } from "./lib/dbBootstrap.js";
 
@@ -41,6 +42,7 @@ app.use("/api/reservations", reservationsRouter);
 app.use("/api/admin", adminAuth, adminRouter);
 app.use("/admin", adminAuth, express.static(path.join(__dirname, "..", "admin")));
 app.use("/calendar", calendarRouter);
+app.use(photosRouter);
 
 app.use(express.static(path.join(__dirname, "..", "public")));
 

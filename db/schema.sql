@@ -111,3 +111,19 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   auth TEXT NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Admin-uploaded photos, stored directly in Postgres (BYTEA) rather than on local disk --
+-- Render's free web-service filesystem is ephemeral and wiped on every deploy/restart, so
+-- anything written to disk at runtime wouldn't survive. show_on_homepage controls whether a
+-- photo appears in the homepage gallery; every active photo (homepage or not) shows on the
+-- full /gallery.html page. Kept deliberately size-capped at upload time (server/routes/
+-- photos.js) to avoid ballooning the database's 1GB free-tier storage limit.
+CREATE TABLE IF NOT EXISTS photos (
+  id SERIAL PRIMARY KEY,
+  caption TEXT,
+  mime_type TEXT NOT NULL,
+  data BYTEA NOT NULL,
+  show_on_homepage BOOLEAN NOT NULL DEFAULT false,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

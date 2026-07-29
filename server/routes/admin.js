@@ -1,4 +1,5 @@
 import { Router } from "express";
+import multer from "multer";
 import { pool } from "../db.js";
 import { quote } from "../lib/pricing.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
@@ -7,6 +8,21 @@ import { applySchema, applySeed, sitesCount } from "../lib/dbBootstrap.js";
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const STATUSES = ["pending", "confirmed", "cancelled"];
+
+// Photos are stored in Postgres (BYTEA), not on disk -- Render's free-tier filesystem is
+// wiped on every deploy/restart. Memory storage + a size cap keeps that from growing
+// unbounded against the database's 1GB free-tier storage limit.
+const PHOTO_MAX_BYTES = 8 * 1024 * 1024;
+const photoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: PHOTO_MAX_BYTES },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith("image/")) {
+      return cb(new Error("Only image files are allowed"));
+    }
+    cb(null, true);
+  },
+});
 
 const SITE_SELECT = `
   SELECT s.*, COALESCE(am.ids, '[]'::json) AS amenity_ids
@@ -45,6 +61,10 @@ function mapAmenity(row) {
     showOnHomepage: row.show_on_homepage,
     showPerSite: row.show_per_site,
   };
+}
+
+function mapPhoto(row) {
+  return { id: row.id, caption: row.caption, showOnHomepage: row.show_on_homepage, sortOrder: row.sort_order };
 }
 
 function mapReservation(row) {
@@ -457,6 +477,91 @@ router.delete("/amenities/:id", async (req, res, next) => {
   }
   try {
     await pool.query("DELETE FROM amenities WHERE id = $1", [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* ---------- photos ----------
+   Stored as BYTEA in Postgres (see db/schema.sql) since Render's free-tier filesystem
+   doesn't persist across deploys/restarts. Served publicly at GET /photos/:id/image
+   (server/routes/photos.js), not behind adminAuth. */
+
+router.get("/photos", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query("SELECT id, caption, show_on_homepage, sort_order FROM photos ORDER BY sort_order, created_at");
+    res.json(rows.map(mapPhoto));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post(
+  "/photos",
+  (req, res, next) => {
+    photoUpload.single("file")(req, res, (err) => {
+      if (!err) return next();
+      if (err.code === "LIMIT_FILE_SIZE") {
+        return res.status(400).json({ error: `Image must be ${PHOTO_MAX_BYTES / (1024 * 1024)}MB or smaller` });
+      }
+      return res.status(400).json({ error: err.message });
+    });
+  },
+  async (req, res, next) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "No image file was uploaded" });
+    }
+    const { caption, showOnHomepage } = req.body ?? {};
+    try {
+      const { rows } = await pool.query(
+        `INSERT INTO photos (caption, mime_type, data, show_on_homepage, sort_order)
+         VALUES ($1, $2, $3, $4, COALESCE((SELECT MAX(sort_order) + 1 FROM photos), 0))
+         RETURNING id, caption, show_on_homepage, sort_order`,
+        [caption?.trim() || null, req.file.mimetype, req.file.buffer, showOnHomepage === "true" || showOnHomepage === true]
+      );
+      res.status(201).json(mapPhoto(rows[0]));
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.patch("/photos/:id", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({ error: "Invalid photo id" });
+  }
+  const { caption, showOnHomepage, sortOrder } = req.body ?? {};
+  try {
+    const existingResult = await pool.query("SELECT * FROM photos WHERE id = $1", [id]);
+    const existing = existingResult.rows[0];
+    if (!existing) {
+      return res.status(404).json({ error: "Photo not found" });
+    }
+    const { rows } = await pool.query(
+      `UPDATE photos SET caption = $1, show_on_homepage = $2, sort_order = $3 WHERE id = $4
+       RETURNING id, caption, show_on_homepage, sort_order`,
+      [
+        caption !== undefined ? caption?.trim() || null : existing.caption,
+        showOnHomepage !== undefined ? showOnHomepage : existing.show_on_homepage,
+        Number.isInteger(sortOrder) ? sortOrder : existing.sort_order,
+        id,
+      ]
+    );
+    res.json(mapPhoto(rows[0]));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete("/photos/:id", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({ error: "Invalid photo id" });
+  }
+  try {
+    await pool.query("DELETE FROM photos WHERE id = $1", [id]);
     res.json({ ok: true });
   } catch (err) {
     next(err);

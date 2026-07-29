@@ -520,6 +520,110 @@ async function onSiteSubmit(event) {
   }
 }
 
+/* ---------- photos ---------- */
+
+let photos = [];
+const photoGrid = document.getElementById("photo-grid");
+const photoUploadForm = document.getElementById("photo-upload-form");
+const photoFileInput = document.getElementById("photo-file-input");
+const photoCaptionInput = document.getElementById("photo-caption-input");
+const photoHomepageInput = document.getElementById("photo-homepage-input");
+const photoUploadError = document.getElementById("photo-upload-error");
+const photoUploadBtn = document.getElementById("photo-upload-btn");
+
+photoUploadForm.addEventListener("submit", onUploadPhoto);
+
+async function loadPhotos() {
+  const res = await fetch("/api/admin/photos");
+  photos = res.ok ? await res.json() : [];
+  renderPhotoGrid();
+}
+
+function renderPhotoGrid() {
+  if (photos.length === 0) {
+    photoGrid.innerHTML = `<p class="empty-note">No photos uploaded yet.</p>`;
+    return;
+  }
+  photoGrid.innerHTML = photos
+    .map(
+      (p) => `
+    <div class="photo-tile">
+      <img src="/photos/${p.id}/image" alt="${escapeHtml(p.caption ?? "")}" loading="lazy" />
+      <div class="body">
+        <input type="text" data-caption="${p.id}" value="${escapeHtml(p.caption ?? "")}" placeholder="Caption" />
+        <div class="row">
+          <label><input type="checkbox" data-homepage="${p.id}" ${p.showOnHomepage ? "checked" : ""} /> Homepage</label>
+          <button type="button" class="btn btn-ghost" data-delete-photo="${p.id}">Delete</button>
+        </div>
+      </div>
+    </div>`
+    )
+    .join("");
+
+  photoGrid.querySelectorAll("[data-caption]").forEach((el) => {
+    el.addEventListener("change", () => onUpdatePhoto(Number(el.getAttribute("data-caption")), { caption: el.value }));
+  });
+  photoGrid.querySelectorAll("[data-homepage]").forEach((el) => {
+    el.addEventListener("change", () => onUpdatePhoto(Number(el.getAttribute("data-homepage")), { showOnHomepage: el.checked }));
+  });
+  photoGrid.querySelectorAll("[data-delete-photo]").forEach((btn) => {
+    btn.addEventListener("click", () => onDeletePhoto(Number(btn.getAttribute("data-delete-photo"))));
+  });
+}
+
+async function onUpdatePhoto(id, patch) {
+  const res = await fetch(`/api/admin/photos/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert(data.error ?? "Could not update photo.");
+  }
+  await loadPhotos();
+}
+
+async function onDeletePhoto(id) {
+  if (!confirm("Delete this photo? This can't be undone.")) return;
+  const res = await fetch(`/api/admin/photos/${id}`, { method: "DELETE" });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert(data.error ?? "Could not delete photo.");
+    return;
+  }
+  await loadPhotos();
+}
+
+async function onUploadPhoto(event) {
+  event.preventDefault();
+  photoUploadError.hidden = true;
+
+  const file = photoFileInput.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append("file", file);
+  if (photoCaptionInput.value.trim()) formData.append("caption", photoCaptionInput.value.trim());
+  formData.append("showOnHomepage", String(photoHomepageInput.checked));
+
+  photoUploadBtn.disabled = true;
+  try {
+    const res = await fetch("/api/admin/photos", { method: "POST", body: formData });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error ?? "Upload failed");
+    }
+    photoUploadForm.reset();
+    await loadPhotos();
+  } catch (err) {
+    photoUploadError.textContent = err.message;
+    photoUploadError.hidden = false;
+  } finally {
+    photoUploadBtn.disabled = false;
+  }
+}
+
 /* ---------- danger zone: force reseed ---------- */
 
 const reseedBtn = document.getElementById("reseed-btn");
@@ -565,4 +669,5 @@ reseedBtn.addEventListener("click", async () => {
   await loadReservations();
   await loadAmenities();
   await loadAdminSites();
+  await loadPhotos();
 })();

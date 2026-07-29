@@ -16,6 +16,7 @@
   "dependencies": {
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "multer": "^2.2.0",
     "nanoid": "^6.0.0",
     "nodemailer": "^9.0.3",
     "pg": "^8.22.0",
