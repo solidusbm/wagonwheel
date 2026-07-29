@@ -109,7 +109,8 @@ a{color:var(--gold-bright);}
 /* ---------- nearby ---------- */
 .nearby-list{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; padding-bottom:56px;}
 .nearby-item{background:var(--bg-panel-2); border-left:3px solid var(--cedar); border-radius:var(--radius); padding:16px 18px;}
-.nearby-item .t{font-size:15px; font-weight:600; margin-bottom:4px;}
+/* --bg-panel-2 is a fixed dark accent, not a style-preset var — text here must stay fixed too, not follow --parchment */
+.nearby-item .t{font-size:15px; font-weight:600; margin-bottom:4px; color:#e8dcc4;}
 .nearby-item .d{font-size:13px; color:var(--parchment-dim); line-height:1.5;}
 
 /* ---------- booking section ---------- */
@@ -179,8 +180,9 @@ legend{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:up
 .site-card:hover{border-color:var(--gold);}
 .site-card.selected{border-color:var(--gold); background:rgba(201,138,43,0.09);}
 .site-card.unavailable{opacity:0.45; cursor:not-allowed;}
-.site-card h4{margin:0; font-size:15px; color:var(--parchment); font-family:'Zilla Slab',serif;}
-.site-price{font-family:'JetBrains Mono',monospace; font-size:18px; color:var(--parchment);}
+/* .site-card sits on the fixed-dark --bg-panel-2, so its text stays fixed too, same reasoning as .nearby-item */
+.site-card h4{margin:0; font-size:15px; color:#e8dcc4; font-family:'Zilla Slab',serif;}
+.site-price{font-family:'JetBrains Mono',monospace; font-size:18px; color:#e8dcc4;}
 .site-notes{font-size:11.5px; color:var(--gold); font-style:italic; line-height:1.4;}
 .site-tags{display:flex; flex-wrap:wrap; gap:6px;}
 .tag{font-size:11px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.04em; color:var(--parchment-dim); background:var(--bg); border:1px solid rgba(232,220,196,0.14); border-radius:999px; padding:3px 10px;}
@@ -197,10 +199,11 @@ legend{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:up
 .demo-note{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--parchment-dim); background:rgba(201,138,43,0.1); border:1px solid rgba(201,138,43,0.3); padding:10px 14px; border-radius:var(--radius); margin:8px 0 0;}
 
 .order-summary{background:var(--bg-panel-2); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius); padding:22px; position:sticky; top:88px;}
-.order-summary h3{margin:0 0 4px; font-size:19px;}
+/* .order-summary sits on the fixed-dark --bg-panel-2, so its text stays fixed too, same reasoning as .nearby-item */
+.order-summary h3{margin:0 0 4px; font-size:19px; color:#e8dcc4;}
 .order-summary p{margin:0 0 12px; color:var(--parchment-dim); font-size:13px;}
-.summary-row, .order-summary .line{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px dashed rgba(232,220,196,0.16); font-size:14px;}
-.summary-row.total, .order-summary .line.total{font-family:'JetBrains Mono',monospace; font-size:18px; color:var(--gold-bright); border-bottom:none; padding-top:14px; font-weight:600;}
+.summary-row, .order-summary .line{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px dashed rgba(232,220,196,0.16); font-size:14px; color:#e8dcc4;}
+.summary-row.total, .order-summary .line.total{font-family:'JetBrains Mono',monospace; font-size:18px; color:#e0a83f; border-bottom:none; padding-top:14px; font-weight:600;}
 
 /* ---------- confirmation ---------- */
 .confirm-code{font-family:'JetBrains Mono',monospace; font-size:32px; letter-spacing:0.1em; color:var(--gold-bright); border:1px dashed var(--gold); display:inline-block; padding:10px 22px; border-radius:var(--radius); margin:12px 0 24px;}
