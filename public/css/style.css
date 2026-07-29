@@ -51,17 +51,22 @@ a{color:var(--gold-bright);}
   position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
   text-align:center; padding:0 24px;
 }
-.hero-text .eyebrow{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.24em; text-transform:uppercase; color:var(--gold-bright); margin-bottom:12px; text-shadow:0 2px 8px rgba(0,0,0,0.6);}
-.hero-text h1{font-size:clamp(36px,7vw,68px); margin:0 0 14px; text-shadow:0 3px 14px rgba(0,0,0,0.65);}
-.hero-text p{font-size:16px; font-style:italic; color:var(--parchment); max-width:520px; margin:0 0 26px; text-shadow:0 2px 10px rgba(0,0,0,0.6);}
+/* Hero text colors are intentionally fixed, not theme-variable-driven: .hero-art below is a
+   permanently dark SVG (night-sky/mountains), so hero text must stay light-on-dark regardless
+   of which style preset (/admin -> Styles) is active elsewhere on the page. A style that
+   overrides --parchment to a dark color for a light theme would otherwise make hero text
+   illegible against art that never changes. */
+.hero-text .eyebrow{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.24em; text-transform:uppercase; color:#e0a83f; margin-bottom:12px; text-shadow:0 2px 8px rgba(0,0,0,0.6);}
+.hero-text h1{font-size:clamp(36px,7vw,68px); margin:0 0 14px; text-shadow:0 3px 14px rgba(0,0,0,0.65); color:#e8dcc4;}
+.hero-text p{font-size:16px; font-style:italic; color:#e8dcc4; max-width:520px; margin:0 0 26px; text-shadow:0 2px 10px rgba(0,0,0,0.6);}
 .hero-badge{
   display:inline-flex; align-items:center; gap:8px; margin-bottom:18px;
-  background:rgba(107,122,84,0.22); border:1px solid var(--cedar-light);
-  color:var(--parchment); font-family:'JetBrains Mono',monospace; font-size:12px;
+  background:rgba(107,122,84,0.22); border:1px solid #8a9c6d;
+  color:#e8dcc4; font-family:'JetBrains Mono',monospace; font-size:12px;
   text-transform:uppercase; letter-spacing:0.08em; padding:8px 16px; border-radius:20px;
   text-shadow:0 2px 8px rgba(0,0,0,0.6);
 }
-.hero-badge svg{width:15px; height:15px; color:var(--cedar-light);}
+.hero-badge svg{width:15px; height:15px; color:#8a9c6d;}
 
 /* ---------- section shells ---------- */
 .section-pad{padding:64px 0 8px;}
