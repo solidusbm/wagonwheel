@@ -706,6 +706,41 @@ router.delete("/styles/:id", async (req, res, next) => {
   }
 });
 
+/* ---------- style gallery approval checklist (static-site branch's 36-page gallery) ---------- */
+
+const STYLE_GALLERY_SLUG_RE = /^v(1[0-2]|[1-9])[bc]?$/;
+
+router.patch("/style-gallery-approvals/:slug", async (req, res, next) => {
+  const { slug } = req.params;
+  const { approved } = req.body ?? {};
+  if (!STYLE_GALLERY_SLUG_RE.test(slug)) {
+    return res.status(400).json({ error: "Invalid style gallery slug" });
+  }
+  if (typeof approved !== "boolean") {
+    return res.status(400).json({ error: "approved (boolean) is required" });
+  }
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO style_gallery_approvals (slug, approved, updated_at) VALUES ($1, $2, now())
+       ON CONFLICT (slug) DO UPDATE SET approved = $2, updated_at = now()
+       RETURNING slug, approved`,
+      [slug, approved]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/style-gallery-approvals/reset", async (req, res, next) => {
+  try {
+    await pool.query("DELETE FROM style_gallery_approvals");
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 /* ---------- danger zone: force a reseed of an already-provisioned database ----------
    bootstrapDatabase() in server/index.js only runs db/seed.sql when the sites table is
    completely empty, so an already-deployed database (like the live Render demo) doesn't

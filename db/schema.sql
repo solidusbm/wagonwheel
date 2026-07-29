@@ -157,3 +157,15 @@ CREATE TABLE IF NOT EXISTS styles (
   sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Approval curation for the static-site branch's 36-page style gallery (v1-v12 plus two
+-- alternates each) -- distinct from the `styles` table above, which holds real switchable
+-- color-theme presets for the live booking site. This table is just a checklist: slug is the
+-- page's folder name (e.g. "v1", "v1b"), a missing row means "not reviewed yet". Read from
+-- GitHub Pages via GET /api/style-gallery-approvals (public, CORS-enabled); written via
+-- /api/admin/style-gallery-approvals (Basic Auth required).
+CREATE TABLE IF NOT EXISTS style_gallery_approvals (
+  slug TEXT PRIMARY KEY,
+  approved BOOLEAN NOT NULL DEFAULT false,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

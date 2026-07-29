@@ -126,6 +126,17 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   (anything not using `--bg` or `--bg-panel`), give its text fixed literal colors too** — don't let
   it inherit `--parchment`/`--gold`/`--gold-bright`, or it'll break the same way under a future
   light style.
+- **Cross-branch API surface:** the `static-site` branch's demo hub (GitHub Pages,
+  `solidusbm.github.io`) calls this app's API directly for the style-gallery approval checklist
+  (`GET /api/style-gallery-approvals` public, `PATCH/POST /api/admin/style-gallery-approvals/*`
+  Basic Auth) — the only place this app is called cross-origin. CORS for just those two path
+  prefixes is handled by `server/middleware/styleGalleryCors.js`, mounted in `server/index.js`
+  *before* the `adminAuth`-protected `/api/admin` mount specifically so CORS preflight `OPTIONS`
+  requests (sent without credentials, per spec) don't get bounced by Basic Auth before ever
+  reaching the route. If you add more cross-origin endpoints, follow the same
+  registration-order pattern — don't just slap `adminAuth` in front and assume CORS still works.
+  The `style_gallery_approvals` table (see `db/schema.sql`) is a plain approval checklist for the
+  36-page static style gallery — unrelated to the `styles` table's real switchable color presets.
 
 ## Known unresolved / don't guess at these
 

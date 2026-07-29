@@ -112,4 +112,15 @@ router.get("/live-style", async (req, res, next) => {
   }
 });
 
+// Approval checklist for the static-site branch's style gallery (see db/schema.sql for the
+// `style_gallery_approvals` table). A missing slug in this map means "not reviewed yet".
+router.get("/style-gallery-approvals", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query("SELECT slug, approved FROM style_gallery_approvals");
+    res.json(Object.fromEntries(rows.map((r) => [r.slug, r.approved])));
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;
