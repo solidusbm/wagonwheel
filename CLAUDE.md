@@ -184,14 +184,19 @@ at the exact width you want to test (e.g. 390px for phone, 768px for tablet) poi
 URL — an iframe gets its own genuine viewport for media-query purposes, unlike the outer window.
 Screenshot/zoom into that iframe region rather than the full tab.
 
-**Fixed (2026-07-29):** two phone/tablet bugs found this way — (1) the homepage hero's SVG art
+**Fixed (2026-07-29):** two phone/tablet bugs found this way. (1) The homepage hero's SVG art
 (`viewBox` ~2.3:1) sized the hero box via `width:100%;height:auto`, so below 820px the box got too
 short for the vertically-centered hero text, which overflowed upward behind the sticky nav; fixed
 with an explicit `min-height` on `.hero` below 820px, with the art absolutely-filling it via its
 existing `preserveAspectRatio="xMidYMid slice"` (crop-to-cover). (2) The admin Reservations/Sites
-tables have more columns than a phone/tablet is wide and weren't wrapped in a scrollable container,
-so their overflow stretched the whole page sideways instead of staying contained — fixed by
-wrapping both `<table>`s in a `.table-scroll` (`overflow-x:auto`) div in `admin/js/admin.js`. **If
-you add a new admin table, wrap it in `.table-scroll` too** — don't let the page depend on
-`body{overflow-x:hidden}` alone to contain a wide table, that didn't fully prevent the page-level
-scroll in testing.
+tables have more columns than a phone/tablet is wide. First pass just contained the overflow to a
+scrollable `.table-scroll` wrapper so the whole page stopped scrolling sideways — but the table
+itself still needed a sideways swipe to see every column, which wasn't good enough. Second pass:
+below 820px each `<tr>` now renders as a stacked card instead of a table row — `<thead>` is
+visually hidden (kept in the accessibility tree via a clip-rect, not `display:none`), and each
+`<td>` shows a small uppercase label (from its `data-label` attribute) above its value instead of
+sitting in a column. No scrolling needed at all below 820px now. **If you add a new admin table,
+add `data-label="..."` to every `<td>` (skip it on action-button cells) and wrap the table in
+`.table-scroll`** — both pieces are needed: the CSS media query keys off `[data-label]`, and
+`.table-scroll` stays as a fallback safety net above 820px in case a row ever doesn't fit even as a
+normal table.
