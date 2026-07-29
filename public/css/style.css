@@ -23,17 +23,20 @@ h1,h2,h3{font-family:'Rye', serif; font-weight:400; color:var(--parchment); lett
 a{color:var(--gold-bright);}
 
 /* ---------- nav ---------- */
+/* Like .hero-text, the nav bar's background is a fixed dark rgba() overlay, not theme-driven --
+   its text stays fixed light too, for the same reason (a light style's dark --parchment would
+   otherwise vanish against this always-dark bar). */
 .nav{
   position:sticky; top:0; z-index:20; background:rgba(28,20,13,0.92); backdrop-filter:blur(6px);
   border-bottom:1px solid rgba(232,220,196,0.12);
   display:flex; align-items:center; justify-content:space-between;
   padding:14px 28px;
 }
-.nav .brand{display:flex; align-items:center; gap:0.6rem; font-family:'Rye',serif; font-size:20px; color:var(--parchment); text-decoration:none;}
+.nav .brand{display:flex; align-items:center; gap:0.6rem; font-family:'Rye',serif; font-size:20px; color:#e8dcc4; text-decoration:none;}
 .nav .brand-wheel{width:1.9rem; height:1.9rem; color:var(--gold);}
 .nav .brand-logo-img{object-fit:contain; border-radius:3px;}
 .nav .links{display:flex; gap:22px; font-family:'JetBrains Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.06em;}
-.nav .links a{color:var(--parchment-dim); text-decoration:none;}
+.nav .links a{color:#b3a488; text-decoration:none;}
 .nav .links a:hover{color:var(--gold-bright);}
 .nav .cta{
   font-family:'JetBrains Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.06em;
