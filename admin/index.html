@@ -138,18 +138,8 @@
   <div id="admin-content">Loading…</div>
 
   <details class="sync-feeds" open>
-    <summary><h2>Amenities</h2></summary>
-    <div class="sub">One catalog for every amenity. Each one can independently show on the homepage's "What every site includes" grid, be toggleable per site (like "Wired Ethernet"), or both — check any combination. Add, rename, deactivate, or delete, no code change needed.</div>
-    <div id="amenity-list"></div>
-    <form id="amenity-add-form" class="amenity-add-row">
-      <input type="text" id="amenity-name-input" placeholder="Add an amenity (e.g. Pickleball court)" />
-      <button type="submit" class="btn btn-ghost">+ Add</button>
-    </form>
-  </details>
-
-  <details class="sync-feeds" open>
     <summary><h2>Sites</h2></summary>
-    <div class="sub">Edit site names, rates, and per-site details, including which "per-site" amenities from the catalog above apply to each one.</div>
+    <div class="sub">Edit site names, rates, and per-site details, including which "per-site" amenities from the catalog below apply to each one.</div>
     <div class="admin-toolbar">
       <button type="button" class="btn btn-primary" id="new-site-btn">+ New site</button>
     </div>
@@ -167,6 +157,16 @@
     </form>
     <p id="photo-upload-error" class="error-msg" hidden></p>
     <div id="photo-grid" class="photo-grid"></div>
+  </details>
+
+  <details class="sync-feeds" open>
+    <summary><h2>Amenities</h2></summary>
+    <div class="sub">One catalog for every amenity. Each one can independently show on the homepage's "What every site includes" grid, be toggleable per site (like "Wired Ethernet"), or both — check any combination. Add, rename, deactivate, or delete, no code change needed.</div>
+    <div id="amenity-list"></div>
+    <form id="amenity-add-form" class="amenity-add-row">
+      <input type="text" id="amenity-name-input" placeholder="Add an amenity (e.g. Pickleball court)" />
+      <button type="submit" class="btn btn-ghost">+ Add</button>
+    </form>
   </details>
 
   <div class="panel" id="site-panel">
