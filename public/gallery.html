@@ -48,25 +48,8 @@
       <p>Every photo we've got of the park, in one place.</p>
     </div>
 
-    <div class="full-gallery" id="full-gallery">
-      <figure>
-        <img src="/assets/gallery/around-the-park.jpg" alt="Sites and gravel roads at Bandera Wagon Wheel RV Park" loading="lazy" />
-        <figcaption><b>Around the park</b></figcaption>
-      </figure>
-      <figure>
-        <img src="/assets/gallery/park-entrance.jpg" alt="Bandera Wagon Wheel RV Park entrance sign" loading="lazy" />
-        <figcaption><b>Park entrance</b></figcaption>
-      </figure>
-      <figure>
-        <img src="/assets/gallery/bathroom.jpg" alt="Full-size guest bathroom" loading="lazy" />
-        <figcaption><b>Full-size bathroom</b></figcaption>
-      </figure>
-      <figure>
-        <img src="/assets/gallery/laundry-room.jpg" alt="On-site laundry room" loading="lazy" />
-        <figcaption><b>Laundry room</b></figcaption>
-      </figure>
-    </div>
-    <p class="empty-note" id="full-gallery-empty" hidden style="color:var(--parchment-dim); font-style:italic;">No additional photos uploaded yet.</p>
+    <div class="full-gallery" id="full-gallery"></div>
+    <p class="empty-note" id="full-gallery-empty" hidden style="color:var(--parchment-dim); font-style:italic;">No photos uploaded yet.</p>
 
     <div class="btn-row" style="justify-content:center; margin-top:32px;">
       <a href="/" class="btn btn-ghost">← Back home</a>
@@ -88,7 +71,10 @@
   fetch("/api/photos")
     .then((r) => (r.ok ? r.json() : []))
     .then((photos) => {
-      if (photos.length === 0) return;
+      if (photos.length === 0) {
+        document.getElementById("full-gallery-empty").hidden = false;
+        return;
+      }
       const grid = document.getElementById("full-gallery");
       grid.insertAdjacentHTML(
         "beforeend",

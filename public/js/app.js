@@ -61,8 +61,9 @@ async function init() {
   renderTrail();
 }
 
-// Admin-uploaded photos (see /admin -> Photos) flagged "show on homepage" -- appended after
-// the built-in gallery figures rather than replacing them.
+// All real gallery photos come from /admin -> Photos now (DB-backed). Photos flagged
+// "show on homepage" are inserted before the two illustrated placeholder figures (Medina
+// River, Downtown Bandera) that are still hardcoded until real shots exist for those.
 async function loadHomepagePhotos() {
   try {
     const res = await fetch("/api/photos");
@@ -71,7 +72,7 @@ async function loadHomepagePhotos() {
     if (homepagePhotos.length === 0) return;
     const grid = document.getElementById("gallery-grid");
     grid.insertAdjacentHTML(
-      "beforeend",
+      "afterbegin",
       homepagePhotos
         .map(
           (p) => `
