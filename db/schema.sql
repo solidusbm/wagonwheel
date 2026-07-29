@@ -164,10 +164,17 @@ CREATE TABLE IF NOT EXISTS styles (
 -- page's folder name (e.g. "v1", "v1b"), a missing row means "not reviewed yet". Read from
 -- GitHub Pages via GET /api/style-gallery-approvals (public, CORS-enabled); written via
 -- /api/admin/style-gallery-approvals (Basic Auth required).
+-- approved and dismissed are mutually exclusive -- a slug is "approved" (favorite), "dismissed"
+-- (explicitly rejected, archived), or neither (still under review, the default). Enforced in the
+-- application layer (server/routes/admin.js), not a DB constraint: setting one true clears the
+-- other. Un-approving something just clears approved back to false -- it does NOT set dismissed,
+-- so it lands back in "needs review", not the archive. Dismissing is a separate explicit action.
 CREATE TABLE IF NOT EXISTS style_gallery_approvals (
   slug TEXT PRIMARY KEY,
   approved BOOLEAN NOT NULL DEFAULT false,
+  dismissed BOOLEAN NOT NULL DEFAULT false,
   note TEXT NOT NULL DEFAULT '',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE style_gallery_approvals ADD COLUMN IF NOT EXISTS note TEXT NOT NULL DEFAULT '';
+ALTER TABLE style_gallery_approvals ADD COLUMN IF NOT EXISTS dismissed BOOLEAN NOT NULL DEFAULT false;

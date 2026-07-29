@@ -714,29 +714,41 @@ const STYLE_GALLERY_NOTE_MAX_LENGTH = 2000;
 
 router.patch("/style-gallery-approvals/:slug", async (req, res, next) => {
   const { slug } = req.params;
-  const { approved, note } = req.body ?? {};
+  const { approved, dismissed, note } = req.body ?? {};
   if (!STYLE_GALLERY_SLUG_RE.test(slug)) {
     return res.status(400).json({ error: "Invalid style gallery slug" });
   }
-  if (approved === undefined && note === undefined) {
-    return res.status(400).json({ error: "approved and/or note is required" });
+  if (approved === undefined && dismissed === undefined && note === undefined) {
+    return res.status(400).json({ error: "approved, dismissed, and/or note is required" });
   }
   if (approved !== undefined && typeof approved !== "boolean") {
     return res.status(400).json({ error: "approved must be a boolean" });
   }
+  if (dismissed !== undefined && typeof dismissed !== "boolean") {
+    return res.status(400).json({ error: "dismissed must be a boolean" });
+  }
   if (note !== undefined && (typeof note !== "string" || note.length > STYLE_GALLERY_NOTE_MAX_LENGTH)) {
     return res.status(400).json({ error: `note must be a string up to ${STYLE_GALLERY_NOTE_MAX_LENGTH} characters` });
   }
+
+  // approved/dismissed are mutually exclusive -- setting one true forces the other false,
+  // overriding whatever the client sent (or didn't send) for it.
+  let nextApproved = approved;
+  let nextDismissed = dismissed;
+  if (approved === true) nextDismissed = false;
+  if (dismissed === true) nextApproved = false;
+
   try {
     const { rows } = await pool.query(
-      `INSERT INTO style_gallery_approvals (slug, approved, note, updated_at)
-       VALUES ($1, COALESCE($2, false), COALESCE($3, ''), now())
+      `INSERT INTO style_gallery_approvals (slug, approved, dismissed, note, updated_at)
+       VALUES ($1, COALESCE($2, false), COALESCE($3, false), COALESCE($4, ''), now())
        ON CONFLICT (slug) DO UPDATE SET
          approved = COALESCE($2, style_gallery_approvals.approved),
-         note = COALESCE($3, style_gallery_approvals.note),
+         dismissed = COALESCE($3, style_gallery_approvals.dismissed),
+         note = COALESCE($4, style_gallery_approvals.note),
          updated_at = now()
-       RETURNING slug, approved, note`,
-      [slug, approved ?? null, note ?? null]
+       RETURNING slug, approved, dismissed, note`,
+      [slug, nextApproved ?? null, nextDismissed ?? null, note ?? null]
     );
     res.json(rows[0]);
   } catch (err) {
