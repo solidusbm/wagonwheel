@@ -4,13 +4,15 @@ import { pool } from "../db.js";
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-// Per-site custom amenities (e.g. "Wired Ethernet"), toggled from /admin against the global
+// Per-site custom amenities (e.g. "Wired Ethernet"), toggled from /admin against the unified
 // amenities catalog -- separate from the fixed columns below (amp_service, pull_through, ...).
+// show_per_site filters out homepage-only amenities even if one somehow got assigned to a
+// site (e.g. via a stale API call) before its show_per_site flag was toggled off.
 const AMENITIES_JOIN = `
   LEFT JOIN LATERAL (
     SELECT COALESCE(json_agg(a.name ORDER BY a.sort_order), '[]'::json) AS names
     FROM site_amenities sa
-    JOIN amenities a ON a.id = sa.amenity_id AND a.active = true
+    JOIN amenities a ON a.id = sa.amenity_id AND a.active = true AND a.show_per_site = true
     WHERE sa.site_id = s.id
   ) am ON true
 `;
@@ -77,9 +79,11 @@ router.get("/availability", async (req, res, next) => {
   }
 });
 
-router.get("/park-amenities", async (req, res, next) => {
+router.get("/homepage-amenities", async (req, res, next) => {
   try {
-    const { rows } = await pool.query("SELECT id, name FROM park_amenities WHERE active = true ORDER BY sort_order, name");
+    const { rows } = await pool.query(
+      "SELECT id, name FROM amenities WHERE active = true AND show_on_homepage = true ORDER BY sort_order, name"
+    );
     res.json(rows);
   } catch (err) {
     next(err);

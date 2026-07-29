@@ -49,10 +49,13 @@
   #site-panel{display:none;}
   #site-panel.open{display:block;}
   .amenity-catalog h3, .sites-panel h3{font-size:15px; margin:0 0 12px;}
-  .amenity-row{display:flex; align-items:center; gap:10px; padding:6px 0; font-size:13px;}
+  .amenity-row{display:flex; align-items:center; gap:14px; padding:8px 0; font-size:13px; flex-wrap:wrap; border-bottom:1px solid rgba(232,220,196,0.06);}
   .amenity-row .name{flex:1;}
   .amenity-row.inactive .name{opacity:0.5; text-decoration:line-through;}
   .amenity-row button{font-size:10.5px; padding:5px 9px;}
+  .amenity-row .flags{display:flex; gap:14px; align-items:center;}
+  .amenity-row .flags label{display:flex; align-items:center; gap:5px; font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:var(--parchment-dim); cursor:pointer; white-space:nowrap;}
+  .amenity-row .flags input{width:auto; margin:0;}
   .amenity-add-row{display:flex; gap:10px; margin-top:10px;}
   .amenity-add-row input{margin:0; flex:1;}
   .amenity-add-row button{white-space:nowrap;}
@@ -121,30 +124,19 @@
   <div id="admin-content">Loading…</div>
 
   <details class="sync-feeds" open>
-    <summary><h2>Park amenities (homepage)</h2></summary>
-    <div class="sub">Shown in the "What every site includes" grid on the homepage. Add, rename, deactivate, or delete — no code change needed. New ones get a generic checkmark icon.</div>
-    <div id="park-amenity-list"></div>
-    <form id="park-amenity-add-form" class="amenity-add-row">
-      <input type="text" id="park-amenity-name-input" placeholder="Add a park amenity (e.g. Pickleball court)" />
+    <summary><h2>Amenities</h2></summary>
+    <div class="sub">One catalog for every amenity. Each one can independently show on the homepage's "What every site includes" grid, be toggleable per site (like "Wired Ethernet"), or both — check any combination. Add, rename, deactivate, or delete, no code change needed.</div>
+    <div id="amenity-list"></div>
+    <form id="amenity-add-form" class="amenity-add-row">
+      <input type="text" id="amenity-name-input" placeholder="Add an amenity (e.g. Pickleball court)" />
       <button type="submit" class="btn btn-ghost">+ Add</button>
     </form>
   </details>
 
   <details class="sync-feeds" open>
-    <summary><h2>Sites &amp; amenities</h2></summary>
-    <div class="sub">Edit site names, rates, and per-site details. Amenities here are a separate, per-site list you can grow over time (e.g. "Wired Ethernet") and toggle on individual sites below.</div>
-
-    <div class="amenity-catalog">
-      <h3>Per-site amenity catalog</h3>
-      <div id="amenity-list"></div>
-      <form id="amenity-add-form" class="amenity-add-row">
-        <input type="text" id="amenity-name-input" placeholder="Add an amenity (e.g. Wired Ethernet)" />
-        <button type="submit" class="btn btn-ghost">+ Add</button>
-      </form>
-    </div>
-
-    <div class="admin-toolbar" style="margin-top:28px;">
-      <h3 style="margin:0;">Sites</h3>
+    <summary><h2>Sites</h2></summary>
+    <div class="sub">Edit site names, rates, and per-site details, including which "per-site" amenities from the catalog above apply to each one.</div>
+    <div class="admin-toolbar">
       <button type="button" class="btn btn-primary" id="new-site-btn">+ New site</button>
     </div>
     <div id="sites-content">Loading…</div>
@@ -214,7 +206,7 @@
 
   <details class="danger-zone">
     <summary><h2>Danger zone</h2></summary>
-    <div class="sub">Force-reload sites, amenities, and park amenities from <code>db/seed.sql</code> on the live database. Use this after a code update changes seed data (like this one) -- otherwise an already-provisioned database keeps its old rows and never picks up corrections. <strong>This deletes all current reservations, sites, and amenities and reloads them from scratch. Cannot be undone.</strong></div>
+    <div class="sub">Force-reload sites and amenities from <code>db/seed.sql</code> on the live database. Use this after a code update changes seed data (like this one) -- otherwise an already-provisioned database keeps its old rows and never picks up corrections. <strong>This deletes all current reservations, sites, and amenities and reloads them from scratch. Cannot be undone.</strong></div>
     <button type="button" class="btn btn-primary" id="reseed-btn" style="background:var(--rust);">Reseed database from seed.sql</button>
     <p id="reseed-status" class="sub" style="margin-top:10px;"></p>
   </details>

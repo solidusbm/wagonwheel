@@ -241,92 +241,6 @@ async function onCancel(code) {
   await loadReservations();
 }
 
-/* ---------- park-wide amenities (homepage grid) admin ---------- */
-
-let parkAmenities = [];
-const parkAmenityList = document.getElementById("park-amenity-list");
-const parkAmenityAddForm = document.getElementById("park-amenity-add-form");
-const parkAmenityNameInput = document.getElementById("park-amenity-name-input");
-
-parkAmenityAddForm.addEventListener("submit", onAddParkAmenity);
-
-async function loadParkAmenitiesAdmin() {
-  const res = await fetch("/api/admin/park-amenities");
-  parkAmenities = res.ok ? await res.json() : [];
-  renderParkAmenityList();
-}
-
-function renderParkAmenityList() {
-  if (parkAmenities.length === 0) {
-    parkAmenityList.innerHTML = `<p class="empty-note">No park amenities yet — add one below.</p>`;
-    return;
-  }
-  parkAmenityList.innerHTML = parkAmenities
-    .map(
-      (a) => `
-    <div class="amenity-row${a.active ? "" : " inactive"}">
-      <span class="name">${escapeHtml(a.name)}</span>
-      <button type="button" class="btn btn-ghost" data-toggle-park-amenity="${a.id}">${a.active ? "Hide from site" : "Show on site"}</button>
-      <button type="button" class="btn btn-ghost" data-delete-park-amenity="${a.id}">Delete</button>
-    </div>`
-    )
-    .join("");
-
-  parkAmenityList.querySelectorAll("[data-toggle-park-amenity]").forEach((btn) => {
-    btn.addEventListener("click", () => onToggleParkAmenityActive(Number(btn.getAttribute("data-toggle-park-amenity"))));
-  });
-  parkAmenityList.querySelectorAll("[data-delete-park-amenity]").forEach((btn) => {
-    btn.addEventListener("click", () => onDeleteParkAmenity(Number(btn.getAttribute("data-delete-park-amenity"))));
-  });
-}
-
-async function onAddParkAmenity(event) {
-  event.preventDefault();
-  const name = parkAmenityNameInput.value.trim();
-  if (!name) return;
-  const res = await fetch("/api/admin/park-amenities", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    alert(data.error ?? "Could not add park amenity.");
-    return;
-  }
-  parkAmenityNameInput.value = "";
-  await loadParkAmenitiesAdmin();
-}
-
-async function onToggleParkAmenityActive(id) {
-  const a = parkAmenities.find((x) => x.id === id);
-  if (!a) return;
-  const res = await fetch(`/api/admin/park-amenities/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ active: !a.active }),
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    alert(data.error ?? "Could not update park amenity.");
-    return;
-  }
-  await loadParkAmenitiesAdmin();
-}
-
-async function onDeleteParkAmenity(id) {
-  const a = parkAmenities.find((x) => x.id === id);
-  if (!a) return;
-  if (!confirm(`Delete "${a.name}"? This removes it from the homepage.`)) return;
-  const res = await fetch(`/api/admin/park-amenities/${id}`, { method: "DELETE" });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    alert(data.error ?? "Could not delete park amenity.");
-    return;
-  }
-  await loadParkAmenitiesAdmin();
-}
-
 /* ---------- sites & amenities admin ---------- */
 
 let amenities = [];
@@ -376,12 +290,21 @@ function renderAmenityList() {
       (a) => `
     <div class="amenity-row${a.active ? "" : " inactive"}">
       <span class="name">${escapeHtml(a.name)}</span>
+      <div class="flags">
+        <label><input type="checkbox" data-flag="showOnHomepage" data-id="${a.id}" ${a.showOnHomepage ? "checked" : ""} /> Homepage</label>
+        <label><input type="checkbox" data-flag="showPerSite" data-id="${a.id}" ${a.showPerSite ? "checked" : ""} /> Per-site</label>
+      </div>
       <button type="button" class="btn btn-ghost" data-toggle-amenity="${a.id}">${a.active ? "Deactivate" : "Activate"}</button>
       <button type="button" class="btn btn-ghost" data-delete-amenity="${a.id}">Delete</button>
     </div>`
     )
     .join("");
 
+  amenityList.querySelectorAll("[data-flag]").forEach((el) => {
+    el.addEventListener("change", () =>
+      onUpdateAmenityFlag(Number(el.getAttribute("data-id")), el.getAttribute("data-flag"), el.checked)
+    );
+  });
   amenityList.querySelectorAll("[data-toggle-amenity]").forEach((btn) => {
     btn.addEventListener("click", () => onToggleAmenityActive(Number(btn.getAttribute("data-toggle-amenity"))));
   });
@@ -390,12 +313,15 @@ function renderAmenityList() {
   });
 }
 
+// The site editor's per-site checklist only offers amenities meant to be toggled per site --
+// a homepage-only amenity like "Pet friendly" has nothing to do with an individual site.
 function renderAmenityChecks(checkedIds = []) {
-  if (amenities.length === 0) {
-    siteAmenityChecks.innerHTML = `<p class="empty-note">No amenities in the catalog yet.</p>`;
+  const perSite = amenities.filter((a) => a.showPerSite);
+  if (perSite.length === 0) {
+    siteAmenityChecks.innerHTML = `<p class="empty-note">No per-site amenities in the catalog yet.</p>`;
     return;
   }
-  siteAmenityChecks.innerHTML = amenities
+  siteAmenityChecks.innerHTML = perSite
     .map(
       (a) => `
     <label>
@@ -404,6 +330,20 @@ function renderAmenityChecks(checkedIds = []) {
     </label>`
     )
     .join("");
+}
+
+async function onUpdateAmenityFlag(id, flag, value) {
+  const res = await fetch(`/api/admin/amenities/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ [flag]: value }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert(data.error ?? "Could not update amenity.");
+  }
+  await loadAmenities();
+  await loadAdminSites();
 }
 
 async function onAddAmenity(event) {
@@ -443,7 +383,7 @@ async function onToggleAmenityActive(id) {
 async function onDeleteAmenity(id) {
   const a = amenities.find((x) => x.id === id);
   if (!a) return;
-  if (!confirm(`Delete "${a.name}"? This removes it from every site it's toggled on.`)) return;
+  if (!confirm(`Delete "${a.name}"? This removes it from the homepage (if shown there) and from every site it's toggled on.`)) return;
   const res = await fetch(`/api/admin/amenities/${id}`, { method: "DELETE" });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
@@ -613,7 +553,6 @@ reseedBtn.addEventListener("click", async () => {
     await loadReservations();
     await loadAmenities();
     await loadAdminSites();
-    await loadParkAmenitiesAdmin();
   } catch (err) {
     reseedStatus.textContent = `Failed: ${err.message}`;
   } finally {
@@ -626,5 +565,4 @@ reseedBtn.addEventListener("click", async () => {
   await loadReservations();
   await loadAmenities();
   await loadAdminSites();
-  await loadParkAmenitiesAdmin();
 })();

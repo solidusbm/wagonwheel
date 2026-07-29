@@ -82,7 +82,7 @@ const DEFAULT_AMENITY_ICON = '<path d="M20 6 9 17l-5-5"/>';
 async function loadParkAmenities() {
   const grid = document.getElementById("amenities-grid");
   try {
-    const res = await fetch("/api/park-amenities");
+    const res = await fetch("/api/homepage-amenities");
     const list = res.ok ? await res.json() : [];
     grid.innerHTML = list
       .map(

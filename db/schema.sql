@@ -30,16 +30,20 @@ ALTER TABLE sites ADD COLUMN IF NOT EXISTS price_per_week_cents INTEGER;
 ALTER TABLE sites ADD COLUMN IF NOT EXISTS notes TEXT;
 ALTER TABLE sites ADD COLUMN IF NOT EXISTS permanently_occupied BOOLEAN NOT NULL DEFAULT false;
 
--- Global, admin-managed amenity catalog (e.g. "Wired Ethernet") that can be toggled on a
--- per-site basis via site_amenities, separate from the fixed built-in site columns above
--- (amp_service, pull_through, etc.) which the park may not add to over time the way it adds
--- amenities.
+-- Unified, admin-managed amenity catalog. Each amenity independently controls where it
+-- shows: show_on_homepage puts it in the homepage's "What every site includes" grid;
+-- show_per_site makes it available to toggle on individual sites (via site_amenities) --
+-- e.g. "Wired Ethernet" (per-site only), "Dog park" (homepage only), or both.
 CREATE TABLE IF NOT EXISTS amenities (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
   sort_order INTEGER NOT NULL DEFAULT 0,
-  active BOOLEAN NOT NULL DEFAULT true
+  active BOOLEAN NOT NULL DEFAULT true,
+  show_on_homepage BOOLEAN NOT NULL DEFAULT false,
+  show_per_site BOOLEAN NOT NULL DEFAULT true
 );
+ALTER TABLE amenities ADD COLUMN IF NOT EXISTS show_on_homepage BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE amenities ADD COLUMN IF NOT EXISTS show_per_site BOOLEAN NOT NULL DEFAULT true;
 
 CREATE TABLE IF NOT EXISTS site_amenities (
   site_id INTEGER NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
@@ -47,15 +51,18 @@ CREATE TABLE IF NOT EXISTS site_amenities (
   PRIMARY KEY (site_id, amenity_id)
 );
 
--- Park-wide amenities shown in the homepage's "What every site includes" grid (water
--- hookup, WiFi, dog park, military discount, ...). Separate from `amenities` above, which
--- are per-site toggles (e.g. one site having Wired Ethernet) rather than park-wide features.
-CREATE TABLE IF NOT EXISTS park_amenities (
-  id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL UNIQUE,
-  active BOOLEAN NOT NULL DEFAULT true,
-  sort_order INTEGER NOT NULL DEFAULT 0
-);
+-- One-time migration: the homepage grid used to be a separate park_amenities table.
+-- Fold any existing rows into the unified amenities catalog above, then retire it.
+-- Safe to re-run -- a no-op once park_amenities no longer exists.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'park_amenities') THEN
+    INSERT INTO amenities (name, sort_order, active, show_on_homepage, show_per_site)
+    SELECT name, sort_order, active, true, false FROM park_amenities
+    ON CONFLICT (name) DO UPDATE SET show_on_homepage = true;
+    DROP TABLE park_amenities;
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS reservations (
   id SERIAL PRIMARY KEY,
