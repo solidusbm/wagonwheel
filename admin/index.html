@@ -16,13 +16,26 @@
   .admin-wrap h1{font-size:26px; margin:0 0 4px;}
   .admin-sub{color:var(--parchment-dim); font-size:13px; margin:0 0 24px; font-style:italic;}
   .admin-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;}
-  /* Reservations/Sites tables have more columns than a phone/tablet is wide -- scope the
-     horizontal scroll to the table itself instead of letting it stretch the whole page sideways. */
+  /* Reservations/Sites tables have more columns than a phone/tablet is wide. Above 820px this is
+     a normal table; the .table-scroll wrapper is just a fallback safety net (overflow-x:auto)
+     so it can never stretch the page sideways even if a row somehow still doesn't fit. Below
+     820px, each row becomes a stacked card instead -- see the media query below -- so there's
+     nothing to scroll at all on phone/tablet. */
   .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
   table{width:100%; border-collapse:collapse; background:var(--bg-panel); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius); overflow:hidden;}
   th, td{text-align:left; padding:10px 14px; font-size:13px; border-bottom:1px solid rgba(232,220,196,0.08); vertical-align:top;}
   th{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--gold); background:var(--bg-panel-2);}
   tr:last-child td{border-bottom:none;}
+  @media(max-width:820px){
+    table{border:none; background:none;}
+    thead{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;}
+    table, tbody, tr{display:block; width:100%;}
+    tr{background:var(--bg-panel); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius); margin-bottom:12px;}
+    tr:last-child{margin-bottom:0;}
+    td{display:block; text-align:left;}
+    td[data-label]::before{content:attr(data-label); display:block; font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:var(--gold); margin-bottom:4px;}
+    td.row-actions{display:flex; gap:8px;}
+  }
   .status-pill{font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; padding:3px 9px; border-radius:999px;}
   .status-pill.confirmed{background:rgba(107,122,84,0.25); color:var(--cedar-light);}
   .status-pill.pending{background:rgba(201,138,43,0.2); color:var(--gold-bright);}

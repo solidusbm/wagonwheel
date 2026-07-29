@@ -114,14 +114,14 @@ async function loadReservations() {
     .map(
       (r) => `
     <tr>
-      <td>${r.reservationCode}</td>
-      <td><span class="status-pill ${r.status}">${r.status}</span></td>
-      <td>${r.site.name}<br><span style="color:var(--parchment-dim);font-size:11px;">${r.site.area}</span></td>
-      <td>${formatDate(r.checkIn)} → ${formatDate(r.checkOut)}</td>
-      <td>${r.guest.name}<br><span style="color:var(--parchment-dim);font-size:11px;">${r.guest.email}${r.guest.phone ? " · " + r.guest.phone : ""}</span></td>
-      <td>${r.guest.numGuests}</td>
-      <td>${money(r.totalCents)}</td>
-      <td>${r.notes ?? ""}${renderApplication(r.applicationDetails)}</td>
+      <td data-label="Code">${r.reservationCode}</td>
+      <td data-label="Status"><span class="status-pill ${r.status}">${r.status}</span></td>
+      <td data-label="Site">${r.site.name}<br><span style="color:var(--parchment-dim);font-size:11px;">${r.site.area}</span></td>
+      <td data-label="Dates">${formatDate(r.checkIn)} → ${formatDate(r.checkOut)}</td>
+      <td data-label="Guest">${r.guest.name}<br><span style="color:var(--parchment-dim);font-size:11px;">${r.guest.email}${r.guest.phone ? " · " + r.guest.phone : ""}</span></td>
+      <td data-label="Guests">${r.guest.numGuests}</td>
+      <td data-label="Total">${money(r.totalCents)}</td>
+      <td data-label="Notes">${r.notes ?? ""}${renderApplication(r.applicationDetails)}</td>
       <td class="row-actions">
         <button type="button" class="btn btn-ghost" data-edit="${r.reservationCode}">Edit</button>
         <button type="button" class="btn btn-ghost" data-cancel="${r.reservationCode}">Cancel</button>
@@ -416,11 +416,11 @@ function renderSitesTable() {
       const siteAmenities = s.amenityIds.map((id) => amenities.find((a) => a.id === id)?.name).filter(Boolean);
       return `
     <tr${s.active ? "" : ' style="opacity:0.5;"'}>
-      <td>${escapeHtml(s.name)}<br><span style="color:var(--parchment-dim);font-size:11px;">${escapeHtml(s.area)}</span></td>
-      <td>${money(s.pricePerNightCents)}/night${s.pricePerWeekCents ? `<br>${money(s.pricePerWeekCents)}/week` : ""}</td>
-      <td>${escapeHtml(s.ampService)} amp</td>
-      <td>${siteAmenities.map((n) => `<span class="tag">${escapeHtml(n)}</span>`).join(" ") || "—"}</td>
-      <td>${s.active ? (s.permanentlyOccupied ? "Occupied (not bookable)" : "Active") : "Inactive"}</td>
+      <td data-label="Site">${escapeHtml(s.name)}<br><span style="color:var(--parchment-dim);font-size:11px;">${escapeHtml(s.area)}</span></td>
+      <td data-label="Rate">${money(s.pricePerNightCents)}/night${s.pricePerWeekCents ? `<br>${money(s.pricePerWeekCents)}/week` : ""}</td>
+      <td data-label="Amp">${escapeHtml(s.ampService)} amp</td>
+      <td data-label="Amenities">${siteAmenities.map((n) => `<span class="tag">${escapeHtml(n)}</span>`).join(" ") || "—"}</td>
+      <td data-label="Status">${s.active ? (s.permanentlyOccupied ? "Occupied (not bookable)" : "Active") : "Inactive"}</td>
       <td class="row-actions"><button type="button" class="btn btn-ghost" data-edit-site="${s.id}">Edit</button></td>
     </tr>`;
     })
