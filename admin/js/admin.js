@@ -131,14 +131,16 @@ async function loadReservations() {
     .join("");
 
   content.innerHTML = `
-    <table>
-      <thead>
-        <tr>
-          <th>Code</th><th>Status</th><th>Site</th><th>Dates</th><th>Guest</th><th>Guests</th><th>Total</th><th>Notes</th><th></th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th><th>Status</th><th>Site</th><th>Dates</th><th>Guest</th><th>Guests</th><th>Total</th><th>Notes</th><th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
   `;
 
   content.querySelectorAll("[data-edit]").forEach((btn) => {
@@ -425,10 +427,12 @@ function renderSitesTable() {
     .join("");
 
   sitesContent.innerHTML = `
-    <table>
-      <thead><tr><th>Site</th><th>Rate</th><th>Amp</th><th>Amenities</th><th>Status</th><th></th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Site</th><th>Rate</th><th>Amp</th><th>Amenities</th><th>Status</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
   `;
 
   sitesContent.querySelectorAll("[data-edit-site]").forEach((btn) => {

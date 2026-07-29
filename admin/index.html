@@ -16,6 +16,9 @@
   .admin-wrap h1{font-size:26px; margin:0 0 4px;}
   .admin-sub{color:var(--parchment-dim); font-size:13px; margin:0 0 24px; font-style:italic;}
   .admin-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;}
+  /* Reservations/Sites tables have more columns than a phone/tablet is wide -- scope the
+     horizontal scroll to the table itself instead of letting it stretch the whole page sideways. */
+  .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
   table{width:100%; border-collapse:collapse; background:var(--bg-panel); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius); overflow:hidden;}
   th, td{text-align:left; padding:10px 14px; font-size:13px; border-bottom:1px solid rgba(232,220,196,0.08); vertical-align:top;}
   th{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:var(--gold); background:var(--bg-panel-2);}
