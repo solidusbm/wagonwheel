@@ -104,6 +104,22 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   that split). The paper form's prior-residence/landlord-reference section and background-check
   questions (eviction history, criminal record, etc.) were struck out by the park on the original
   and are intentionally not collected — don't add them back without the user asking.
+- Editable text lives in the `content_blocks` table (key/section/label/value), applied client-side
+  by `public/js/content.js` to any element with a `data-content-key` attribute — `/admin` → Content
+  edits it. Currently only hero badge/subtitle, About heading + 3 paragraphs, and the hours-page
+  intro are wired up; footer, nearby-section blurbs, and the detailed hours.html policy lists are
+  still hardcoded on purpose (not yet extended to the editable set).
+- Color themes live in the `styles` table (`css_vars` JSONB, a curated subset of the base
+  stylesheet's CSS custom properties — bg, panel bg, gold ×2, rust, parchment text — plus an
+  optional `logo_url`), switchable from `/admin` → Styles. Only one style may be `is_live` at a
+  time (enforced in `server/routes/admin.js`, not a DB constraint). Both new tables are seeded via
+  `db/seed-content.sql`, applied unconditionally on every boot (unlike `db/seed.sql`, which needs
+  an empty `sites` table or a Danger Zone reseed) — see `applyContentSeed()` in
+  `server/lib/dbBootstrap.js`.
+- **Known bug:** the homepage hero section's background is a hardcoded SVG with fixed dark colors
+  — it does not respond to style-preset CSS variables. A light-palette style currently makes hero
+  text unreadable against the still-dark hero art. Don't set a light style live without fixing
+  this first (or warning the user clearly that the hero will look broken).
 
 ## Known unresolved / don't guess at these
 
