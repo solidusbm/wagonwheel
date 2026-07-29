@@ -167,5 +167,7 @@ CREATE TABLE IF NOT EXISTS styles (
 CREATE TABLE IF NOT EXISTS style_gallery_approvals (
   slug TEXT PRIMARY KEY,
   approved BOOLEAN NOT NULL DEFAULT false,
+  note TEXT NOT NULL DEFAULT '',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE style_gallery_approvals ADD COLUMN IF NOT EXISTS note TEXT NOT NULL DEFAULT '';

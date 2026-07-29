@@ -710,21 +710,33 @@ router.delete("/styles/:id", async (req, res, next) => {
 
 const STYLE_GALLERY_SLUG_RE = /^v(1[0-2]|[1-9])[bc]?$/;
 
+const STYLE_GALLERY_NOTE_MAX_LENGTH = 2000;
+
 router.patch("/style-gallery-approvals/:slug", async (req, res, next) => {
   const { slug } = req.params;
-  const { approved } = req.body ?? {};
+  const { approved, note } = req.body ?? {};
   if (!STYLE_GALLERY_SLUG_RE.test(slug)) {
     return res.status(400).json({ error: "Invalid style gallery slug" });
   }
-  if (typeof approved !== "boolean") {
-    return res.status(400).json({ error: "approved (boolean) is required" });
+  if (approved === undefined && note === undefined) {
+    return res.status(400).json({ error: "approved and/or note is required" });
+  }
+  if (approved !== undefined && typeof approved !== "boolean") {
+    return res.status(400).json({ error: "approved must be a boolean" });
+  }
+  if (note !== undefined && (typeof note !== "string" || note.length > STYLE_GALLERY_NOTE_MAX_LENGTH)) {
+    return res.status(400).json({ error: `note must be a string up to ${STYLE_GALLERY_NOTE_MAX_LENGTH} characters` });
   }
   try {
     const { rows } = await pool.query(
-      `INSERT INTO style_gallery_approvals (slug, approved, updated_at) VALUES ($1, $2, now())
-       ON CONFLICT (slug) DO UPDATE SET approved = $2, updated_at = now()
-       RETURNING slug, approved`,
-      [slug, approved]
+      `INSERT INTO style_gallery_approvals (slug, approved, note, updated_at)
+       VALUES ($1, COALESCE($2, false), COALESCE($3, ''), now())
+       ON CONFLICT (slug) DO UPDATE SET
+         approved = COALESCE($2, style_gallery_approvals.approved),
+         note = COALESCE($3, style_gallery_approvals.note),
+         updated_at = now()
+       RETURNING slug, approved, note`,
+      [slug, approved ?? null, note ?? null]
     );
     res.json(rows[0]);
   } catch (err) {

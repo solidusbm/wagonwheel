@@ -116,8 +116,8 @@ router.get("/live-style", async (req, res, next) => {
 // `style_gallery_approvals` table). A missing slug in this map means "not reviewed yet".
 router.get("/style-gallery-approvals", async (req, res, next) => {
   try {
-    const { rows } = await pool.query("SELECT slug, approved FROM style_gallery_approvals");
-    res.json(Object.fromEntries(rows.map((r) => [r.slug, r.approved])));
+    const { rows } = await pool.query("SELECT slug, approved, note FROM style_gallery_approvals");
+    res.json(Object.fromEntries(rows.map((r) => [r.slug, { approved: r.approved, note: r.note }])));
   } catch (err) {
     next(err);
   }
