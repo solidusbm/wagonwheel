@@ -176,3 +176,22 @@ There's no automated test suite. For anything touching the booking flow, admin p
 form, actually click through it — locally with `npm run dev`, or against the live Render URL for
 anything that depends on production-only config (Square sandbox, the live database). Screenshot
 or describe what you verified rather than assuming code review is sufficient.
+
+**Testing phone/tablet layouts:** the browser automation's `resize_window` doesn't actually change
+`window.innerWidth` in this environment (only the outer window bounds) — CSS media queries won't
+respond to it, so it can't be used to test responsive breakpoints. Instead, inject an `<iframe>`
+at the exact width you want to test (e.g. 390px for phone, 768px for tablet) pointing at the real
+URL — an iframe gets its own genuine viewport for media-query purposes, unlike the outer window.
+Screenshot/zoom into that iframe region rather than the full tab.
+
+**Fixed (2026-07-29):** two phone/tablet bugs found this way — (1) the homepage hero's SVG art
+(`viewBox` ~2.3:1) sized the hero box via `width:100%;height:auto`, so below 820px the box got too
+short for the vertically-centered hero text, which overflowed upward behind the sticky nav; fixed
+with an explicit `min-height` on `.hero` below 820px, with the art absolutely-filling it via its
+existing `preserveAspectRatio="xMidYMid slice"` (crop-to-cover). (2) The admin Reservations/Sites
+tables have more columns than a phone/tablet is wide and weren't wrapped in a scrollable container,
+so their overflow stretched the whole page sideways instead of staying contained — fixed by
+wrapping both `<table>`s in a `.table-scroll` (`overflow-x:auto`) div in `admin/js/admin.js`. **If
+you add a new admin table, wrap it in `.table-scroll` too** — don't let the page depend on
+`body{overflow-x:hidden}` alone to contain a wide table, that didn't fully prevent the page-level
+scroll in testing.
