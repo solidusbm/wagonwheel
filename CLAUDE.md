@@ -145,8 +145,12 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   requests (sent without credentials, per spec) don't get bounced by Basic Auth before ever
   reaching the route. If you add more cross-origin endpoints, follow the same
   registration-order pattern — don't just slap `adminAuth` in front and assume CORS still works.
-  The `style_gallery_approvals` table (see `db/schema.sql`) is a plain approval checklist for the
-  36-page static style gallery — unrelated to the `styles` table's real switchable color presets.
+  The `style_gallery_approvals` table (see `db/schema.sql`) is a plain approval + free-text-note
+  checklist for the 36-page static style gallery — unrelated to the `styles` table's real
+  switchable color presets. `GET /api/style-gallery-approvals` returns
+  `{slug: {approved, note}}` (not a flat boolean map — that was the shape before notes were added);
+  `PATCH /api/admin/style-gallery-approvals/:slug` accepts `approved` and/or `note` independently
+  via `COALESCE` in the upsert, so saving a note doesn't require also resending `approved`.
 
 ## Known unresolved / don't guess at these
 
