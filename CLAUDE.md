@@ -65,6 +65,10 @@ username/strong password before the park actually starts taking bookings; `/admi
 names, emails, and phone numbers. Rotating it means going into Render's Environment tab and
 setting new values — no code change needed.
 
+Every section below Reservations (Sites, Photos, Amenities, Content, Push notifications,
+RoverPass/Hipcamp sync, Danger zone) is a `<details class="sync-feeds">`, closed by default. Keep
+new admin sections consistent with that pattern rather than adding a plain always-open panel.
+
 ## Payments
 
 Square **sandbox** credentials (`SQUARE_ACCESS_TOKEN`, `SQUARE_APPLICATION_ID`,
@@ -111,10 +115,16 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   still hardcoded on purpose (not yet extended to the editable set).
 - Color themes live in the `styles` table (`css_vars` JSONB, a curated subset of the base
   stylesheet's CSS custom properties — bg, panel bg, gold ×2, rust, parchment text — plus an
-  optional `logo_url`), switchable from `/admin` → Styles. Only one style may be `is_live` at a
-  time (enforced in `server/routes/admin.js`, not a DB constraint). Both new tables are seeded via
-  `db/seed-content.sql`, applied unconditionally on every boot (unlike `db/seed.sql`, which needs
-  an empty `sites` table or a Danger Zone reseed) — see `applyContentSeed()` in
+  optional `logo_url`). **The `/admin` → Styles panel that edited this table was removed
+  (2026-07-29)** — style-gallery review moved to the static-site demo hub's approval checklist
+  instead (see "Cross-branch API surface" below), so this admin panel was redundant. The table,
+  its `server/routes/admin.js` CRUD routes, and the public `GET /api/live-style` (read by
+  `public/js/content.js` on every page load) are all still there and still work — there's just no
+  UI to change which style is live anymore, so it stays pinned to whatever's `is_live` in the DB
+  (currently the original "Dark Cowboy" look, seeded that way). If a style switcher is wanted
+  again later, re-add the admin panel rather than rebuilding the backend — it's untouched. Seeded
+  via `db/seed-content.sql`, applied unconditionally on every boot (unlike `db/seed.sql`, which
+  needs an empty `sites` table or a Danger Zone reseed) — see `applyContentSeed()` in
   `server/lib/dbBootstrap.js`.
 - **Fixed (2026-07-28):** the homepage hero section, nav bar, and the always-dark accent panels
   (`.nearby-item`, `.site-card`, `.order-summary` — all backed by the hardcoded `--bg-panel-2`,
