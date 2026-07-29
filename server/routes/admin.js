@@ -3,7 +3,7 @@ import multer from "multer";
 import { pool } from "../db.js";
 import { quote } from "../lib/pricing.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
-import { applySchema, applySeed, sitesCount } from "../lib/dbBootstrap.js";
+import { applySchema, applySeed, applyContentSeed, sitesCount } from "../lib/dbBootstrap.js";
 
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -568,6 +568,144 @@ router.delete("/photos/:id", async (req, res, next) => {
   }
 });
 
+/* ---------- editable content blocks ---------- */
+
+router.get("/content", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query("SELECT key, section, label, value FROM content_blocks ORDER BY section, key");
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.patch("/content/:key", async (req, res, next) => {
+  const { key } = req.params;
+  const { value } = req.body ?? {};
+  if (typeof value !== "string") {
+    return res.status(400).json({ error: "value is required" });
+  }
+  try {
+    const { rows } = await pool.query(
+      "UPDATE content_blocks SET value = $1, updated_at = now() WHERE key = $2 RETURNING key, section, label, value",
+      [value, key]
+    );
+    if (!rows[0]) {
+      return res.status(404).json({ error: "Unknown content key" });
+    }
+    res.json(rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* ---------- style presets ----------
+   Only one style may be is_live at a time -- enforced here, not by a DB constraint, since
+   "at most one true" isn't expressible as a simple column constraint in Postgres. */
+
+function mapStyle(row) {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    cssVars: row.css_vars,
+    logoUrl: row.logo_url,
+    approved: row.approved,
+    isLive: row.is_live,
+    sortOrder: row.sort_order,
+  };
+}
+
+router.get("/styles", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query("SELECT * FROM styles ORDER BY sort_order, name");
+    res.json(rows.map(mapStyle));
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/styles", async (req, res, next) => {
+  const { name, description, cssVars, logoUrl } = req.body ?? {};
+  if (!name?.trim()) {
+    return res.status(400).json({ error: "name is required" });
+  }
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO styles (name, description, css_vars, logo_url, sort_order)
+       VALUES ($1, $2, $3, $4, COALESCE((SELECT MAX(sort_order) + 1 FROM styles), 0))
+       RETURNING *`,
+      [name.trim(), description?.trim() || null, JSON.stringify(cssVars ?? {}), logoUrl?.trim() || null]
+    );
+    res.status(201).json(mapStyle(rows[0]));
+  } catch (err) {
+    if (err.code === "23505") {
+      return res.status(409).json({ error: "A style with that name already exists" });
+    }
+    next(err);
+  }
+});
+
+router.patch("/styles/:id", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({ error: "Invalid style id" });
+  }
+  const { name, description, cssVars, logoUrl, approved, isLive } = req.body ?? {};
+
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const existingResult = await client.query("SELECT * FROM styles WHERE id = $1 FOR UPDATE", [id]);
+    const existing = existingResult.rows[0];
+    if (!existing) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Style not found" });
+    }
+
+    if (isLive === true) {
+      await client.query("UPDATE styles SET is_live = false WHERE is_live = true AND id != $1", [id]);
+    }
+
+    const { rows } = await client.query(
+      `UPDATE styles SET name = $1, description = $2, css_vars = $3, logo_url = $4, approved = $5, is_live = $6
+       WHERE id = $7 RETURNING *`,
+      [
+        name?.trim() || existing.name,
+        description !== undefined ? description?.trim() || null : existing.description,
+        cssVars !== undefined ? JSON.stringify(cssVars) : JSON.stringify(existing.css_vars),
+        logoUrl !== undefined ? logoUrl?.trim() || null : existing.logo_url,
+        approved !== undefined ? approved : existing.approved,
+        isLive !== undefined ? isLive : existing.is_live,
+        id,
+      ]
+    );
+    await client.query("COMMIT");
+    res.json(mapStyle(rows[0]));
+  } catch (err) {
+    await client.query("ROLLBACK");
+    if (err.code === "23505") {
+      return res.status(409).json({ error: "A style with that name already exists" });
+    }
+    next(err);
+  } finally {
+    client.release();
+  }
+});
+
+router.delete("/styles/:id", async (req, res, next) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    return res.status(400).json({ error: "Invalid style id" });
+  }
+  try {
+    await pool.query("DELETE FROM styles WHERE id = $1", [id]);
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 /* ---------- danger zone: force a reseed of an already-provisioned database ----------
    bootstrapDatabase() in server/index.js only runs db/seed.sql when the sites table is
    completely empty, so an already-deployed database (like the live Render demo) doesn't
@@ -582,6 +720,7 @@ router.post("/db/reseed", async (req, res, next) => {
   try {
     await applySchema();
     await applySeed();
+    await applyContentSeed();
     const count = await sitesCount();
     res.json({ ok: true, sitesCount: count });
   } catch (err) {

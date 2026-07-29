@@ -18,6 +18,14 @@ export async function applySeed() {
   await pool.query(seedSql);
 }
 
+// Not destructive -- ON CONFLICT DO NOTHING throughout, so this is safe to run on every boot
+// regardless of whether sites/reservations already have data. Only ever fills in content_blocks/
+// styles rows that don't exist yet; never touches an edit made from /admin.
+export async function applyContentSeed() {
+  const seedSql = await readFile(path.join(DB_DIR, "seed-content.sql"), "utf8");
+  await pool.query(seedSql);
+}
+
 export async function sitesCount() {
   const { rows } = await pool.query("SELECT COUNT(*)::int AS count FROM sites");
   return rows[0].count;

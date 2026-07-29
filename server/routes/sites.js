@@ -90,4 +90,26 @@ router.get("/homepage-amenities", async (req, res, next) => {
   }
 });
 
+// Editable text (see /admin -> Content) as a flat { key: value } map for public/js/content.js
+// to apply to any element with a matching data-content-key attribute.
+router.get("/content", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query("SELECT key, value FROM content_blocks");
+    res.json(Object.fromEntries(rows.map((r) => [r.key, r.value])));
+  } catch (err) {
+    next(err);
+  }
+});
+
+// The currently-live style preset (see /admin -> Styles), or an empty override set if none is
+// live -- the base stylesheet's defaults apply either way, so this is always safe to render.
+router.get("/live-style", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query("SELECT css_vars, logo_url FROM styles WHERE is_live = true LIMIT 1");
+    res.json(rows[0] ?? { css_vars: {}, logo_url: null });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

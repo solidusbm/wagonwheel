@@ -45,3 +45,7 @@ INSERT INTO amenities (name, sort_order, show_on_homepage, show_per_site) VALUES
   ('Dog park — large & small', 11, true, false),
   ('10% military discount — active or retired', 12, true, false),
   ('Wired Ethernet', 13, false, true);
+
+-- Editable text and style defaults live in db/seed-content.sql instead -- that file runs
+-- unconditionally on every boot (safe, ON CONFLICT DO NOTHING), unlike this one which only
+-- runs once against a completely empty sites table. See server/lib/dbBootstrap.js.

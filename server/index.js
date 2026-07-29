@@ -8,7 +8,7 @@ import adminRouter from "./routes/admin.js";
 import calendarRouter from "./routes/calendar.js";
 import photosRouter from "./routes/photos.js";
 import { adminAuth } from "./middleware/adminAuth.js";
-import { applySchema, applySeed, sitesCount } from "./lib/dbBootstrap.js";
+import { applySchema, applySeed, applyContentSeed, sitesCount } from "./lib/dbBootstrap.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -25,6 +25,10 @@ async function bootstrapDatabase() {
     await applySeed();
     console.log("[bootstrap] sites table was empty -- applied db/seed.sql");
   }
+  // Non-destructive (ON CONFLICT DO NOTHING) -- safe to run every boot regardless of the
+  // above, so editable-content/style defaults exist even on an already-provisioned database
+  // that never had an empty sites table to trigger the block above.
+  await applyContentSeed();
 }
 
 app.use(express.json());

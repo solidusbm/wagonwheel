@@ -31,6 +31,7 @@ a{color:var(--gold-bright);}
 }
 .nav .brand{display:flex; align-items:center; gap:0.6rem; font-family:'Rye',serif; font-size:20px; color:var(--parchment); text-decoration:none;}
 .nav .brand-wheel{width:1.9rem; height:1.9rem; color:var(--gold);}
+.nav .brand-logo-img{object-fit:contain; border-radius:3px;}
 .nav .links{display:flex; gap:22px; font-family:'JetBrains Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.06em;}
 .nav .links a{color:var(--parchment-dim); text-decoration:none;}
 .nav .links a:hover{color:var(--gold-bright);}

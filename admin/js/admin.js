@@ -664,10 +664,183 @@ reseedBtn.addEventListener("click", async () => {
   }
 });
 
+/* ---------- content blocks ---------- */
+
+const contentList = document.getElementById("content-list");
+
+async function loadContent() {
+  const res = await fetch("/api/admin/content");
+  const blocks = res.ok ? await res.json() : [];
+  renderContentList(blocks);
+}
+
+function renderContentList(blocks) {
+  if (blocks.length === 0) {
+    contentList.innerHTML = `<p class="empty-note">No editable content registered yet.</p>`;
+    return;
+  }
+  contentList.innerHTML = blocks
+    .map(
+      (b) => `
+    <div class="content-row">
+      <div class="meta-line">
+        <span><span class="section-label">${escapeHtml(b.section)}</span> · <span class="field-label">${escapeHtml(b.label)}</span></span>
+        <span class="save-hint" data-hint="${escapeHtml(b.key)}">Saved</span>
+      </div>
+      <textarea rows="2" data-content-key="${escapeHtml(b.key)}">${escapeHtml(b.value)}</textarea>
+    </div>`
+    )
+    .join("");
+
+  contentList.querySelectorAll("textarea[data-content-key]").forEach((el) => {
+    el.addEventListener("change", () => onSaveContent(el.getAttribute("data-content-key"), el.value));
+  });
+}
+
+async function onSaveContent(key, value) {
+  const res = await fetch(`/api/admin/content/${encodeURIComponent(key)}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ value }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert(data.error ?? "Could not save.");
+    return;
+  }
+  const hint = contentList.querySelector(`[data-hint="${CSS.escape(key)}"]`);
+  if (hint) {
+    hint.classList.add("show");
+    setTimeout(() => hint.classList.remove("show"), 1500);
+  }
+}
+
+/* ---------- style presets ---------- */
+
+let styles = [];
+const styleList = document.getElementById("style-list");
+const styleAddForm = document.getElementById("style-add-form");
+const styleFormError = document.getElementById("style-form-error");
+
+styleAddForm.addEventListener("submit", onAddStyle);
+
+async function loadStyles() {
+  const res = await fetch("/api/admin/styles");
+  styles = res.ok ? await res.json() : [];
+  renderStyleList();
+}
+
+function renderStyleList() {
+  if (styles.length === 0) {
+    styleList.innerHTML = `<p class="empty-note">No styles yet — add one below.</p>`;
+    return;
+  }
+  styleList.innerHTML = styles
+    .map((s) => {
+      const swatchKeys = ["bg", "gold", "gold-bright", "rust", "parchment"];
+      const swatches = swatchKeys
+        .map((k) => s.cssVars?.[k])
+        .filter(Boolean)
+        .map((color) => `<span class="swatch" style="background:${escapeHtml(color)};"></span>`)
+        .join("");
+      return `
+    <div class="style-row">
+      <div class="swatches">${swatches}</div>
+      <div class="name-block">
+        <div class="n">${escapeHtml(s.name)}${s.isLive ? ' <span class="live-pill">Live</span>' : ""}</div>
+        ${s.description ? `<div class="d">${escapeHtml(s.description)}</div>` : ""}
+      </div>
+      <div class="flags">
+        <label><input type="checkbox" data-approved="${s.id}" ${s.approved ? "checked" : ""} /> Approved</label>
+      </div>
+      <button type="button" class="btn btn-ghost" data-set-live="${s.id}" ${s.isLive ? "disabled" : ""}>${s.isLive ? "Live now" : "Set live"}</button>
+      <button type="button" class="btn btn-ghost" data-delete-style="${s.id}">Delete</button>
+    </div>`;
+    })
+    .join("");
+
+  styleList.querySelectorAll("[data-approved]").forEach((el) => {
+    el.addEventListener("change", () => onUpdateStyle(Number(el.getAttribute("data-approved")), { approved: el.checked }));
+  });
+  styleList.querySelectorAll("[data-set-live]").forEach((btn) => {
+    btn.addEventListener("click", () => onUpdateStyle(Number(btn.getAttribute("data-set-live")), { isLive: true }));
+  });
+  styleList.querySelectorAll("[data-delete-style]").forEach((btn) => {
+    btn.addEventListener("click", () => onDeleteStyle(Number(btn.getAttribute("data-delete-style"))));
+  });
+}
+
+async function onUpdateStyle(id, patch) {
+  const res = await fetch(`/api/admin/styles/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert(data.error ?? "Could not update style.");
+  }
+  await loadStyles();
+}
+
+async function onDeleteStyle(id) {
+  const s = styles.find((x) => x.id === id);
+  if (!s) return;
+  if (!confirm(`Delete "${s.name}"?${s.isLive ? " It's currently live -- deleting it reverts the site to the default look." : ""}`)) return;
+  const res = await fetch(`/api/admin/styles/${id}`, { method: "DELETE" });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    alert(data.error ?? "Could not delete style.");
+    return;
+  }
+  await loadStyles();
+}
+
+async function onAddStyle(event) {
+  event.preventDefault();
+  styleFormError.hidden = true;
+
+  const name = document.getElementById("style-name-input").value.trim();
+  const description = document.getElementById("style-desc-input").value.trim();
+  const useLogo = document.getElementById("style-use-logo-input").checked;
+  const cssVars = {
+    bg: document.getElementById("style-bg").value,
+    "bg-panel": document.getElementById("style-bg-panel").value,
+    gold: document.getElementById("style-gold").value,
+    "gold-bright": document.getElementById("style-gold-bright").value,
+    rust: document.getElementById("style-rust").value,
+    parchment: document.getElementById("style-parchment").value,
+  };
+
+  try {
+    const res = await fetch("/api/admin/styles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name,
+        description: description || null,
+        cssVars,
+        logoUrl: useLogo ? "/assets/brand/wagon-wheel-logo-scan.jpg" : null,
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error ?? "Could not add style");
+    }
+    styleAddForm.reset();
+    await loadStyles();
+  } catch (err) {
+    styleFormError.textContent = err.message;
+    styleFormError.hidden = false;
+  }
+}
+
 (async function init() {
   await loadSites();
   await loadReservations();
   await loadAmenities();
   await loadAdminSites();
   await loadPhotos();
+  await loadContent();
+  await loadStyles();
 })();

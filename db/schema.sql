@@ -127,3 +127,33 @@ CREATE TABLE IF NOT EXISTS photos (
   sort_order INTEGER NOT NULL DEFAULT 0,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Editable text content. Every key referenced by public/js/content.js gets a row here; the
+-- frontend fetches this map on load and fills in any element with a matching data-content-key
+-- attribute. `label` and `section` are just for grouping/labeling in the admin UI -- the `key`
+-- is the only thing the frontend actually looks up.
+CREATE TABLE IF NOT EXISTS content_blocks (
+  key TEXT PRIMARY KEY,
+  section TEXT NOT NULL,
+  label TEXT NOT NULL,
+  value TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Named color-theme presets, switchable from /admin without a code change or redeploy. Only
+-- fields present in css_vars are overridden -- anything omitted falls back to the base
+-- stylesheet's defaults, so a style can tweak just a couple of colors or override the whole
+-- palette. approved is a curation flag (sort/dismiss candidates); is_live controls which single
+-- style (if any) is actually applied on the public site -- enforced as at-most-one-true by the
+-- application layer (server/routes/admin.js), not a DB constraint.
+CREATE TABLE IF NOT EXISTS styles (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  description TEXT,
+  css_vars JSONB NOT NULL DEFAULT '{}'::jsonb,
+  logo_url TEXT,
+  approved BOOLEAN NOT NULL DEFAULT false,
+  is_live BOOLEAN NOT NULL DEFAULT false,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
