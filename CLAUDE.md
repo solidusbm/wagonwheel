@@ -116,10 +116,16 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   `db/seed-content.sql`, applied unconditionally on every boot (unlike `db/seed.sql`, which needs
   an empty `sites` table or a Danger Zone reseed) — see `applyContentSeed()` in
   `server/lib/dbBootstrap.js`.
-- **Known bug:** the homepage hero section's background is a hardcoded SVG with fixed dark colors
-  — it does not respond to style-preset CSS variables. A light-palette style currently makes hero
-  text unreadable against the still-dark hero art. Don't set a light style live without fixing
-  this first (or warning the user clearly that the hero will look broken).
+- **Fixed (2026-07-28):** the homepage hero section, nav bar, and the always-dark accent panels
+  (`.nearby-item`, `.site-card`, `.order-summary` — all backed by the hardcoded `--bg-panel-2`,
+  which is not one of the 6 admin-overridable style vars) previously went dark-on-dark under a
+  light style preset, because their text was wired to the overridable `--parchment`/`--gold-bright`
+  vars while their backgrounds stayed fixed. Fixed by hardcoding those specific text-color
+  declarations to fixed literals (commits `cbae53d`, `66eeceb`, `0819391`) instead of tying them to
+  the variable system. **If you add a new component with a hardcoded/non-overridable background
+  (anything not using `--bg` or `--bg-panel`), give its text fixed literal colors too** — don't let
+  it inherit `--parchment`/`--gold`/`--gold-bright`, or it'll break the same way under a future
+  light style.
 
 ## Known unresolved / don't guess at these
 
