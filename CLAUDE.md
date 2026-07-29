@@ -145,12 +145,19 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   requests (sent without credentials, per spec) don't get bounced by Basic Auth before ever
   reaching the route. If you add more cross-origin endpoints, follow the same
   registration-order pattern — don't just slap `adminAuth` in front and assume CORS still works.
-  The `style_gallery_approvals` table (see `db/schema.sql`) is a plain approval + free-text-note
-  checklist for the 36-page static style gallery — unrelated to the `styles` table's real
-  switchable color presets. `GET /api/style-gallery-approvals` returns
-  `{slug: {approved, note}}` (not a flat boolean map — that was the shape before notes were added);
-  `PATCH /api/admin/style-gallery-approvals/:slug` accepts `approved` and/or `note` independently
-  via `COALESCE` in the upsert, so saving a note doesn't require also resending `approved`.
+  The `style_gallery_approvals` table (see `db/schema.sql`) is a plain approval/dismiss +
+  free-text-note checklist for the 36-page static style gallery — unrelated to the `styles`
+  table's real switchable color presets. `GET /api/style-gallery-approvals` returns
+  `{slug: {approved, dismissed, note}}` (shape has changed twice — started as a flat boolean map,
+  then gained `note`, then `dismissed`; don't trust old examples). `approved` and `dismissed` are
+  mutually exclusive — a slug is a favorite (`approved`), explicitly archived (`dismissed`), or
+  neither (still under review, the default, shown in the demo hub's "Needs review" bucket, not
+  hidden away). Setting one true always clears the other, enforced in the PATCH handler
+  (`server/routes/admin.js`), not a DB constraint. **Un-approving something must never set
+  `dismissed`** — that was a deliberate fix (2026-07-29): the two used to be conflated, so
+  toggling approval off silently archived a style the user might still be considering.
+  `PATCH /api/admin/style-gallery-approvals/:slug` accepts `approved`, `dismissed`, and/or `note`
+  independently via `COALESCE` in the upsert — a note-only save doesn't touch the other two.
 
 ## Known unresolved / don't guess at these
 
