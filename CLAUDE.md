@@ -165,6 +165,8 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   confirmed.
 - Which specific sites have "Wired Ethernet" — confirmed real, not confirmed which sites.
 - Per-site amp service and max rig length (see above).
+- A precise, to-scale site map — the current map is a schematic built from the row groupings in
+  the county-filed engineering plan (Front/Center/Back Row), not an actual to-scale drawing.
 
 These are tracked as open items on the `static-site` branch's `/todo/` action list
 (https://solidusbm.github.io/wagonwheel/todo/) — check there for the current launch checklist
