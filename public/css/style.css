@@ -178,7 +178,7 @@ legend{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:up
 .site-pin circle.base, .site-pin rect.base{fill:var(--cedar); stroke:var(--bg); stroke-width:3;}
 .site-pin.taken circle.base, .site-pin.taken rect.base{fill:var(--taken); cursor:not-allowed;}
 .site-pin.selected circle.base, .site-pin.selected rect.base{fill:var(--gold-bright);}
-.site-pin text{fill:var(--ink); font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:600; text-anchor:middle; pointer-events:none;}
+.site-pin text{fill:var(--ink); font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:600; text-anchor:middle; pointer-events:none;}
 .site-pin:hover circle.base, .site-pin:hover rect.base{filter:brightness(1.15);}
 .map-legend{display:flex; gap:22px; padding:14px 20px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--parchment-dim); flex-wrap:wrap; border-top:1px solid rgba(232,220,196,0.1);}
 .map-legend span{display:flex; align-items:center; gap:6px;}

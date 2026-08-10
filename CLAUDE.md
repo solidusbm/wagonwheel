@@ -167,8 +167,16 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   confirmed.
 - Which specific sites have "Wired Ethernet" — confirmed real, not confirmed which sites.
 - Max rig length per site (see above). Amp service is settled — 30 and 50 at every site.
-- A precise, to-scale site map — the current map is a schematic built from the row groupings in
-  the county-filed engineering plan (Front/Center/Back Row), not an actual to-scale drawing.
+- Real footages for the site map. The map was rebuilt on 2026-08-10 directly against the filed
+  plan (Mangold Engineering dwg 100-7799, sheet 2 of 5, "System Layout", 1" = 100'), supplied by
+  the park as a photo of the printed sheet. **Orientation, road topology, adjacency and numbering
+  are now correct and should not be re-guessed**: the block sits about 12° off north, the entrance
+  is off Polly Peak Dr. at the northeast, Broad Oak Drive bounds the northwest, the office and its
+  turnaround are at the north end, a two-way loop rings the block with a rung through the middle,
+  Sites 1–2 are an angled pair at the west end by the existing fence, and every site is a back-in.
+  What is *not* from the plan is dimensions — bay sizes and road widths are legible-on-a-phone
+  proportions, not measured off the sheet. Closing that needs either a scan/measurement of the
+  printed sheet at its stated scale or a few paced distances at the park.
 
 These are tracked as open items on the `static-site` branch's `/todo/` action list
 (https://solidusbm.github.io/wagonwheel/todo/) — check there for the current launch checklist

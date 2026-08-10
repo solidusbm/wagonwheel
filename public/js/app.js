@@ -256,27 +256,50 @@ function renderBookedRanges(ranges) {
 }
 
 /* ---------- site map ----------
-   Schematic of the park's real layout, from the county-filed septic/site engineering plan
-   (Mangold Engineering, drawing 100-7799): a 2-way road loop off the Polly Peak Dr.
-   entrance at the bottom, the office near the top, Sites 1-2 as a small angled pair right
-   by the office -- set apart from the rest, not a uniform third row -- and the rest of the
-   sites hanging in rows off the loop below. Row grouping and site count/numbering come
-   from that plan; it is not an illustrative placeholder.
+   Traced from the county-filed septic/site plan -- Mangold Engineering drawing 100-7799,
+   sheet 2 of 5, "System Layout", scale 1" = 100' -- photographed and supplied by the park
+   on 2026-08-10. What that plan establishes, and what this map therefore reproduces:
 
-   The first area in `sites` (by sort_order, i.e. Front Row) gets the special angled-pair
-   treatment whenever it has fewer sites than the widest row; any other areas render as
-   standard rows inside the loop. */
-const MAP_VW = 900;
-const LOOP_LEFT = 90;
-const LOOP_RIGHT = 810;
-const LOOP_WIDTH = LOOP_RIGHT - LOOP_LEFT;
-const ROW_INSET = 40; // rung road sits slightly inside the loop's own sides
-const BAY_H = 74;
-const GAP = 16;
-const ROW_PITCH = 156;
-const LOOP_TOP = 210;
-const FIRST_STD_ROW_Y = 300;
-const OFFICE_CENTER = { x: MAP_VW / 2, y: 66 };
+     - The developed block sits on a parcel bounded by Broad Oak Drive along the northwest
+       and Polly Peak Dr. along the east, and it is rotated roughly 12 degrees off north:
+       the rows run WSW-ENE, parallel to the Polly Peak frontage, NOT square to the page.
+     - The entrance comes off Polly Peak Dr. at the northeast corner and runs west to the
+       office, which sits at the north end with a turnaround loop beside it.
+     - A two-way road loops the whole block, with a two-way rung through the middle. Every
+       site is a back-in bay hanging off one of those roads -- there are no pull-throughs
+       in the plan, which matches `pull_through = false` on all twelve rows in the database.
+     - Sites 1-2 are a small angled pair at the west end against the existing fence, set
+       apart from the two uniform rows (3-7 north of the rung, 8-12 south of it).
+
+   Grade falls from about 1355 ft at the Polly Peak corner to 1335 ft at the south end. The
+   1250-gal septic tank and the drainfield occupy the south corner and are deliberately not
+   drawn -- they are on the plan, but they are not something a guest picks a site by.
+
+   NOT yet to scale: bay dimensions and road widths here are legible-on-a-phone proportions,
+   not measured off the 1" = 100' sheet. Orientation, topology, adjacency and numbering are
+   from the plan and are correct; the footages are not. Measuring the sheet (or pacing a
+   couple of pads at the park) is what closes that gap.
+
+   Row membership is still read from each site's `area`, so edits made in /admin flow
+   through: the smallest/first area renders as the angled pair, every other area as a row. */
+const PARK_TILT = -12; // degrees off north, per the plan
+const LOOP_LEFT = 132;
+const LOOP_RIGHT = 760;
+const ROW_LEFT = 292; // rows begin east of the sites 1-2 pair, leaving it a clear pocket
+const BAY_H = 88;
+const BAY_GAP = 12;
+const ROAD_GAP = 30; // two-way road width between a row's foot and the next road
+const FIRST_ROW_Y = 300;
+const ENTRY_Y = 216;
+const OFFICE = { x: 408, y: 150 };
+const TURNAROUND = { x: 540, y: ENTRY_Y - 52, r: 52 };
+
+const ROAD = `stroke="var(--line)" stroke-linecap="round" fill="none"`;
+
+function mapText(x, y, text, opts = {}) {
+  const { size = 17, fill = "var(--parchment-dim)", anchor = "middle", tilt = -PARK_TILT, ls = 1 } = opts;
+  return `<text x="${x}" y="${y}" transform="rotate(${tilt} ${x} ${y})" text-anchor="${anchor}" fill="${fill}" font-family="JetBrains Mono, monospace" font-size="${size}" letter-spacing="${ls}">${escapeHtml(text)}</text>`;
+}
 
 function renderSiteMap(sites) {
   const byArea = new Map();
@@ -285,74 +308,112 @@ function renderSiteMap(sites) {
     byArea.get(site.area).push(site);
   }
   const areas = [...byArea.keys()];
-  const stdAreas = areas.slice();
-  let frontSites = null;
+  const rowAreas = areas.slice();
+  let pairSites = null;
   if (areas.length > 1 && byArea.get(areas[0]).length < Math.max(...areas.map((a) => byArea.get(a).length))) {
-    frontSites = byArea.get(stdAreas.shift());
+    pairSites = byArea.get(rowAreas.shift());
   }
 
-  const rowWidth = LOOP_WIDTH - ROW_INSET * 2;
-  const rowLeft = LOOP_LEFT + ROW_INSET;
-  const maxPerRow = Math.max(1, ...stdAreas.map((a) => byArea.get(a).length));
-  const bayW = (rowWidth - (maxPerRow - 1) * GAP) / maxPerRow;
+  const rowWidth = LOOP_RIGHT - ROW_LEFT - 22;
+  const maxPerRow = Math.max(1, ...rowAreas.map((a) => byArea.get(a).length));
+  const bayW = (rowWidth - (maxPerRow - 1) * BAY_GAP) / maxPerRow;
 
   let roads = "";
   let bays = "";
-  let labels = "";
 
-  stdAreas.forEach((area, rowIndex) => {
+  rowAreas.forEach((area, i) => {
     const rowSites = byArea.get(area);
-    const rowY = FIRST_STD_ROW_Y + rowIndex * ROW_PITCH;
-    const rowTotalW = rowSites.length * bayW + (rowSites.length - 1) * GAP;
-    const startX = rowLeft + (rowWidth - rowTotalW) / 2;
-    const roadY = rowY - 24;
+    const roadY = FIRST_ROW_Y + i * (BAY_H + ROAD_GAP);
+    const totalW = rowSites.length * bayW + (rowSites.length - 1) * BAY_GAP;
+    const startX = ROW_LEFT + (rowWidth - totalW) / 2;
 
-    roads += `<line x1="${LOOP_LEFT}" y1="${roadY}" x2="${LOOP_RIGHT}" y2="${roadY}" stroke="var(--line)" stroke-width="9" stroke-linecap="round"/>`;
-    labels += `<text x="${LOOP_RIGHT + 6}" y="${roadY + 4}" fill="var(--parchment-dim)" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="0.5" text-anchor="start">${escapeHtml(area.toUpperCase())}</text>`;
+    roads += `<line x1="${LOOP_LEFT}" y1="${roadY}" x2="${LOOP_RIGHT}" y2="${roadY}" stroke-width="11" ${ROAD}/>`;
 
-    rowSites.forEach((site, i) => {
-      const x = startX + i * (bayW + GAP);
-      const cx = x + bayW / 2;
-      bays += bayMarkup(site, x, rowY, bayW, BAY_H, cx, roadY, rowY);
+    rowSites.forEach((site, j) => {
+      const x = startX + j * (bayW + BAY_GAP);
+      bays += bayMarkup(site, x, roadY + 7, bayW, BAY_H - 7, x + bayW / 2, roadY, roadY + 7);
     });
   });
 
-  const lastRowBottom = stdAreas.length ? FIRST_STD_ROW_Y + (stdAreas.length - 1) * ROW_PITCH + BAY_H : LOOP_TOP + 60;
-  const loopBottom = lastRowBottom + 30;
-  const entranceX = MAP_VW / 2;
+  const southY = FIRST_ROW_Y + rowAreas.length * (BAY_H + ROAD_GAP);
 
-  // Sites 1-2 (or whatever the front area is): a small, angled pair between the office and
-  // the loop's top edge, visually set apart from the uniform rows below.
-  let front = "";
-  if (frontSites) {
-    const fw = 118,
-      fh = 60;
-    const spacing = 190;
-    const startCx = entranceX - (spacing * (frontSites.length - 1)) / 2;
-    frontSites.forEach((site, i) => {
-      const cx = startCx + i * spacing;
-      const cy = LOOP_TOP - 55;
-      const angle = i % 2 === 0 ? -9 : 9;
-      const x = cx - fw / 2;
-      const y = cy - fh / 2;
-      front += `<line x1="${cx}" y1="${cy + fh / 2}" x2="${entranceX}" y2="${LOOP_TOP}" stroke="var(--line)" stroke-width="5"/>`;
-      front += `<g transform="rotate(${angle} ${cx} ${cy})">${bayMarkup(site, x, y, fw, fh, cx, cy, cy)}</g>`;
+  // Sites 1-2: angled pair against the existing fence at the west end, off the loop's west leg.
+  // They sit in the pocket west of ROW_LEFT, one per row band, so no road runs through them.
+  let pair = "";
+  if (pairSites) {
+    const pw = 100;
+    const ph = 58;
+    const span = southY - FIRST_ROW_Y;
+    pairSites.forEach((site, i) => {
+      const cy =
+        pairSites.length <= rowAreas.length
+          ? FIRST_ROW_Y + i * (BAY_H + ROAD_GAP) + BAY_H / 2
+          : FIRST_ROW_Y + (span * (i + 1)) / (pairSites.length + 1);
+      const cx = LOOP_LEFT + 28 + pw / 2;
+      const angle = i % 2 === 0 ? -14 : 14;
+      pair += `<line x1="${LOOP_LEFT}" y1="${cy}" x2="${cx - pw / 2}" y2="${cy}" stroke-width="4" ${ROAD}/>`;
+      pair += `<g transform="rotate(${angle} ${cx} ${cy})">${bayMarkup(
+        site,
+        cx - pw / 2,
+        cy - ph / 2,
+        pw,
+        ph,
+        cx,
+        cy,
+        cy,
+        -PARK_TILT - angle,
+      )}</g>`;
     });
   }
 
-  siteMap.setAttribute("viewBox", `0 0 ${MAP_VW} ${loopBottom + 70}`);
-  siteMap.innerHTML = `
-    <circle cx="${OFFICE_CENTER.x}" cy="${OFFICE_CENTER.y}" r="70" fill="none" stroke="var(--line)" stroke-width="1.5" stroke-dasharray="3 5" opacity="0.6"/>
-    <rect x="${OFFICE_CENTER.x - 56}" y="${OFFICE_CENTER.y - 24}" width="112" height="44" rx="6" fill="var(--bg-panel-2)" stroke="var(--gold)" stroke-width="2"/>
-    <text x="${OFFICE_CENTER.x}" y="${OFFICE_CENTER.y + 5}" text-anchor="middle" fill="var(--gold)" font-family="JetBrains Mono, monospace" font-size="13" letter-spacing="1">OFFICE</text>
-    <line x1="${entranceX}" y1="${OFFICE_CENTER.y + 20}" x2="${entranceX}" y2="${LOOP_TOP - 90}" stroke="var(--line)" stroke-width="5"/>
-    ${front}
-    <rect x="${LOOP_LEFT}" y="${LOOP_TOP}" width="${LOOP_WIDTH}" height="${loopBottom - LOOP_TOP}" rx="34" fill="none" stroke="var(--line)" stroke-width="9"/>
+  const park = `
+    <line x1="${LOOP_LEFT}" y1="${FIRST_ROW_Y}" x2="${LOOP_LEFT}" y2="${southY}" stroke-width="11" ${ROAD}/>
+    <line x1="${LOOP_RIGHT}" y1="${FIRST_ROW_Y}" x2="${LOOP_RIGHT}" y2="${southY}" stroke-width="11" ${ROAD}/>
+    <line x1="${LOOP_LEFT}" y1="${southY}" x2="${LOOP_RIGHT}" y2="${southY}" stroke-width="11" ${ROAD}/>
     ${roads}
+    <line x1="${LOOP_RIGHT}" y1="${FIRST_ROW_Y}" x2="${LOOP_RIGHT}" y2="${ENTRY_Y}" stroke-width="11" ${ROAD}/>
+    <line x1="${LOOP_RIGHT}" y1="${ENTRY_Y}" x2="${LOOP_RIGHT + 116}" y2="${ENTRY_Y}" stroke-width="11" ${ROAD}/>
+    <line x1="${TURNAROUND.x}" y1="${ENTRY_Y}" x2="${LOOP_RIGHT}" y2="${ENTRY_Y}" stroke-width="11" ${ROAD}/>
+    <circle cx="${TURNAROUND.x}" cy="${TURNAROUND.y}" r="${TURNAROUND.r}" stroke-width="11" ${ROAD}/>
+    <line x1="${TURNAROUND.x - TURNAROUND.r}" y1="${TURNAROUND.y}" x2="${OFFICE.x + 56}" y2="${OFFICE.y + 2}" stroke-width="6" ${ROAD}/>
+    <line x1="${LOOP_LEFT - 22}" y1="${FIRST_ROW_Y - 16}" x2="${LOOP_LEFT - 22}" y2="${southY + 16}" stroke="var(--parchment-dim)" stroke-width="1.5" stroke-dasharray="2 6" opacity="0.75"/>
+    ${mapText(LOOP_LEFT - 30, (FIRST_ROW_Y + southY) / 2, "EXISTING FENCE", { size: 15, anchor: "middle", tilt: -PARK_TILT - 90 })}
+    ${pair}
     ${bays}
-    ${labels}
-    <line x1="${entranceX}" y1="${loopBottom - 20}" x2="${entranceX}" y2="${loopBottom + 40}" stroke="var(--line)" stroke-width="10" stroke-linecap="round"/>
-    <text x="${entranceX}" y="${loopBottom + 58}" text-anchor="middle" fill="var(--parchment-dim)" font-family="JetBrains Mono, monospace" font-size="11" letter-spacing="1">ENTRANCE · POLLY PEAK DR.</text>
+    <rect x="${OFFICE.x - 56}" y="${OFFICE.y - 22}" width="112" height="44" rx="6" fill="var(--bg-panel-2)" stroke="var(--gold)" stroke-width="2"/>
+    ${mapText(OFFICE.x, OFFICE.y + 5, "OFFICE", { size: 22, fill: "var(--gold)" })}
+    ${mapText(LOOP_RIGHT + 116, ENTRY_Y - 16, "ENTRANCE", { size: 20, fill: "var(--gold)", anchor: "end" })}
+  `;
+
+  // Rotate the whole park to its real bearing, then size the viewBox to the rotated bounds.
+  const cx = (LOOP_LEFT + LOOP_RIGHT) / 2;
+  const cy = (FIRST_ROW_Y + southY) / 2;
+  const b = rotatedBounds(LOOP_LEFT - 60, OFFICE.y - 60, LOOP_RIGHT + 150, southY + 18, cx, cy, PARK_TILT);
+  const pad = 34;
+  const vx = b.minX - pad;
+  const vy = b.minY - pad;
+  const vw = b.maxX - b.minX + pad * 2;
+  const vh = b.maxY - b.minY + pad * 2;
+
+  // Boundary streets, drawn in page space (north is up) so they read against the tilted park.
+  const corner = { x: vx + vw * 0.66, y: vy + 10 };
+  const oak = { x: vx + 6, y: vy + vh * 0.42 };
+  const peak = { x: vx + vw - 6, y: vy + vh * 0.9 };
+  const bearing = (a, c) => (Math.atan2(c.y - a.y, c.x - a.x) * 180) / Math.PI;
+
+  siteMap.setAttribute("viewBox", `${vx} ${vy} ${vw} ${vh}`);
+  siteMap.innerHTML = `
+    <g stroke="var(--parchment-dim)" stroke-width="1.5" stroke-dasharray="7 6" opacity="0.5" fill="none">
+      <path d="M${oak.x} ${oak.y} L${corner.x} ${corner.y} L${peak.x} ${peak.y}"/>
+    </g>
+    ${mapText((oak.x + corner.x) / 2, (oak.y + corner.y) / 2 - 9, "BROAD OAK DRIVE", { size: 16, tilt: bearing(oak, corner) })}
+    ${mapText((corner.x + peak.x) / 2 + 12, (corner.y + peak.y) / 2, "POLLY PEAK DR.", { size: 16, tilt: bearing(corner, peak) })}
+    <g transform="translate(${vx + 34} ${vy + vh - 34})">
+      <line x1="0" y1="22" x2="0" y2="-22" stroke="var(--parchment-dim)" stroke-width="1.5"/>
+      <path d="M0 -30 L7 -14 L0 -18 L-7 -14 Z" fill="var(--parchment-dim)"/>
+      <text x="0" y="40" text-anchor="middle" fill="var(--parchment-dim)" font-family="JetBrains Mono, monospace" font-size="17" letter-spacing="1">N</text>
+    </g>
+    <g transform="rotate(${PARK_TILT} ${cx} ${cy})">${park}</g>
   `;
 
   siteMap.querySelectorAll("[data-site-id]").forEach((el) => {
@@ -365,14 +426,35 @@ function renderSiteMap(sites) {
   });
 }
 
-function bayMarkup(site, x, y, w, h, stubX, stubY1, stubY2) {
+function rotatedBounds(x0, y0, x1, y1, cx, cy, deg) {
+  const a = (deg * Math.PI) / 180;
+  const cos = Math.cos(a);
+  const sin = Math.sin(a);
+  const pts = [
+    [x0, y0],
+    [x1, y0],
+    [x1, y1],
+    [x0, y1],
+  ].map(([x, y]) => {
+    const dx = x - cx;
+    const dy = y - cy;
+    return [cx + dx * cos - dy * sin, cy + dx * sin + dy * cos];
+  });
+  const xs = pts.map((p) => p[0]);
+  const ys = pts.map((p) => p[1]);
+  return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
+}
+
+function bayMarkup(site, x, y, w, h, stubX, stubY1, stubY2, textTilt = -PARK_TILT) {
   const selected = state.selectedSite?.id === site.id;
   const cls = `site-pin ${site.available ? "" : "taken"} ${selected ? "selected" : ""}`;
   const num = site.name.replace(/[^0-9]/g, "") || "•";
-  const stub = stubY1 !== stubY2 ? `<line x1="${stubX}" y1="${stubY1}" x2="${stubX}" y2="${stubY2}" stroke="var(--line)" stroke-width="3"/>` : "";
+  const tx = x + w / 2;
+  const ty = y + h / 2 + 10;
+  const stub = stubY1 !== stubY2 ? `<line x1="${stubX}" y1="${stubY1}" x2="${stubX}" y2="${stubY2}" stroke="var(--line)" stroke-width="4"/>` : "";
   return `${stub}<g class="${cls}" data-site-id="${site.id}">
     <rect class="base" x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/>
-    <text x="${x + w / 2}" y="${y + h / 2 + 6}">${num}</text>
+    <text x="${tx}" y="${ty}" transform="rotate(${textTilt} ${tx} ${ty})">${num}</text>
   </g>`;
 }
 
