@@ -167,13 +167,23 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   confirmed.
 - Which specific sites have "Wired Ethernet" — confirmed real, not confirmed which sites.
 - Max rig length per site (see above). Amp service is settled — 30 and 50 at every site.
-- Real footages for the site map. The map was rebuilt on 2026-08-10 directly against the filed
-  plan (Mangold Engineering dwg 100-7799, sheet 2 of 5, "System Layout", 1" = 100'), supplied by
-  the park as a photo of the printed sheet. **Orientation, road topology, adjacency and numbering
-  are now correct and should not be re-guessed**: the block sits about 12° off north, the entrance
-  is off Polly Peak Dr. at the northeast, Broad Oak Drive bounds the northwest, the office and its
-  turnaround are at the north end, a two-way loop rings the block with a rung through the middle,
-  Sites 1–2 are an angled pair at the west end by the existing fence, and every site is a back-in.
+- Real footages for the site map. The map was rebuilt on 2026-08-10 against the filed plan
+  (Mangold Engineering dwg 100-7799, sheet 2 of 5, "System Layout", 1" = 100'), supplied by the
+  park first as a photo of the printed sheet and then as a copy marked up by hand — roads in
+  green, sites in yellow, office in red. **The marked-up copy is the authority; it corrected a
+  first pass that had the tilt, the position of Sites 1–2, and the number of street connections
+  wrong.** Orientation, road topology, adjacency and numbering are now correct and should not be
+  re-guessed:
+    - The block sits about **18° off north** (not 12°) — rows run roughly square to the Polly
+      Peak Dr. frontage rather than to the page. Broad Oak Drive bounds the northwest.
+    - **Two connections to Polly Peak Dr.**, not one: the north entrance that runs south past the
+      office, and a second access off the southeast corner.
+    - The roads are a **ladder, not a loop** — a spine down the east side (the entrance drive
+      continuing south), a leg down the west side, and three two-way rungs: above Sites 3–7,
+      between the rows, and below Sites 8–12.
+    - **Sites 1–2 are their own short row hanging north off the top rung** at the west end by the
+      existing fence — outside the ladder, not a pocket between the rows, and not angled.
+    - Every site is a back-in, matching `pull_through = false` on all twelve rows.
   What is *not* from the plan is dimensions — bay sizes and road widths are legible-on-a-phone
   proportions, not measured off the sheet. Closing that needs either a scan/measurement of the
   printed sheet at its stated scale or a few paced distances at the park.

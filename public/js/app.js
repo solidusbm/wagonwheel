@@ -258,18 +258,22 @@ function renderBookedRanges(ranges) {
 /* ---------- site map ----------
    Traced from the county-filed septic/site plan -- Mangold Engineering drawing 100-7799,
    sheet 2 of 5, "System Layout", scale 1" = 100' -- photographed and supplied by the park
-   on 2026-08-10. What that plan establishes, and what this map therefore reproduces:
+   on 2026-08-10, then re-supplied with the roads, sites and office marked up by hand. The
+   marked-up copy corrected three things the first read got wrong, so treat it as the
+   authority over any earlier description:
 
-     - The developed block sits on a parcel bounded by Broad Oak Drive along the northwest
-       and Polly Peak Dr. along the east, and it is rotated roughly 12 degrees off north:
-       the rows run WSW-ENE, parallel to the Polly Peak frontage, NOT square to the page.
-     - The entrance comes off Polly Peak Dr. at the northeast corner and runs west to the
-       office, which sits at the north end with a turnaround loop beside it.
-     - A two-way road loops the whole block, with a two-way rung through the middle. Every
-       site is a back-in bay hanging off one of those roads -- there are no pull-throughs
-       in the plan, which matches `pull_through = false` on all twelve rows in the database.
-     - Sites 1-2 are a small angled pair at the west end against the existing fence, set
-       apart from the two uniform rows (3-7 north of the rung, 8-12 south of it).
+     - The block sits about 18 degrees off north, not 12. Rows run WSW-ENE, roughly square
+       to the Polly Peak Dr. frontage rather than to the page.
+     - Sites 1-2 are their own short row hanging NORTH off the top road at the west end,
+       near the existing fence -- not a pair tucked into a pocket between the two long rows,
+       and not angled. They sit outside the ladder the other ten sites sit inside.
+     - There are TWO connections to Polly Peak Dr., not one: the north entrance that runs
+       down past the office, and a second access off the southeast corner.
+
+   The road network is a ladder, not a simple loop: a spine down the east side (the entrance
+   drive continuing south), a leg down the west side, and three two-way rungs -- above sites
+   3-7, between the two rows, and below sites 8-12. Every site is a back-in bay off a rung,
+   which matches `pull_through = false` on all twelve rows in the database.
 
    Grade falls from about 1355 ft at the Polly Peak corner to 1335 ft at the south end. The
    1250-gal septic tank and the drainfield occupy the south corner and are deliberately not
@@ -281,18 +285,17 @@ function renderBookedRanges(ranges) {
    couple of pads at the park) is what closes that gap.
 
    Row membership is still read from each site's `area`, so edits made in /admin flow
-   through: the smallest/first area renders as the angled pair, every other area as a row. */
-const PARK_TILT = -12; // degrees off north, per the plan
+   through: the smallest/first area renders as the short north row, the rest as rungs. */
+const PARK_TILT = -18; // degrees off north, per the marked-up plan
 const LOOP_LEFT = 132;
 const LOOP_RIGHT = 760;
-const ROW_LEFT = 292; // rows begin east of the sites 1-2 pair, leaving it a clear pocket
+const ROW_INSET = 26; // bays stop short of the west and east legs
 const BAY_H = 88;
 const BAY_GAP = 12;
-const ROAD_GAP = 30; // two-way road width between a row's foot and the next road
-const FIRST_ROW_Y = 300;
-const ENTRY_Y = 216;
-const OFFICE = { x: 408, y: 150 };
-const TURNAROUND = { x: 540, y: ENTRY_Y - 52, r: 52 };
+const ROAD_GAP = 30; // two-way road width between a row's foot and the next rung
+const FIRST_ROW_Y = 336; // the top rung; sites 1-2 hang above it
+const NORTH_ENTRY_Y = 96;
+const OFFICE = { x: 556, y: 156 };
 
 const ROAD = `stroke="var(--line)" stroke-linecap="round" fill="none"`;
 
@@ -309,25 +312,26 @@ function renderSiteMap(sites) {
   }
   const areas = [...byArea.keys()];
   const rowAreas = areas.slice();
-  let pairSites = null;
+  let northSites = null;
   if (areas.length > 1 && byArea.get(areas[0]).length < Math.max(...areas.map((a) => byArea.get(a).length))) {
-    pairSites = byArea.get(rowAreas.shift());
+    northSites = byArea.get(rowAreas.shift());
   }
 
-  const rowWidth = LOOP_RIGHT - ROW_LEFT - 22;
+  const rowLeft = LOOP_LEFT + ROW_INSET;
+  const rowWidth = LOOP_RIGHT - ROW_INSET - rowLeft;
   const maxPerRow = Math.max(1, ...rowAreas.map((a) => byArea.get(a).length));
   const bayW = (rowWidth - (maxPerRow - 1) * BAY_GAP) / maxPerRow;
 
-  let roads = "";
+  let rungs = "";
   let bays = "";
 
   rowAreas.forEach((area, i) => {
     const rowSites = byArea.get(area);
     const roadY = FIRST_ROW_Y + i * (BAY_H + ROAD_GAP);
     const totalW = rowSites.length * bayW + (rowSites.length - 1) * BAY_GAP;
-    const startX = ROW_LEFT + (rowWidth - totalW) / 2;
+    const startX = rowLeft + (rowWidth - totalW) / 2;
 
-    roads += `<line x1="${LOOP_LEFT}" y1="${roadY}" x2="${LOOP_RIGHT}" y2="${roadY}" stroke-width="11" ${ROAD}/>`;
+    rungs += `<line x1="${LOOP_LEFT}" y1="${roadY}" x2="${LOOP_RIGHT}" y2="${roadY}" stroke-width="11" ${ROAD}/>`;
 
     rowSites.forEach((site, j) => {
       const x = startX + j * (bayW + BAY_GAP);
@@ -337,58 +341,42 @@ function renderSiteMap(sites) {
 
   const southY = FIRST_ROW_Y + rowAreas.length * (BAY_H + ROAD_GAP);
 
-  // Sites 1-2: angled pair against the existing fence at the west end, off the loop's west leg.
-  // They sit in the pocket west of ROW_LEFT, one per row band, so no road runs through them.
-  let pair = "";
-  if (pairSites) {
-    const pw = 100;
-    const ph = 58;
-    const span = southY - FIRST_ROW_Y;
-    pairSites.forEach((site, i) => {
-      const cy =
-        pairSites.length <= rowAreas.length
-          ? FIRST_ROW_Y + i * (BAY_H + ROAD_GAP) + BAY_H / 2
-          : FIRST_ROW_Y + (span * (i + 1)) / (pairSites.length + 1);
-      const cx = LOOP_LEFT + 28 + pw / 2;
-      const angle = i % 2 === 0 ? -14 : 14;
-      pair += `<line x1="${LOOP_LEFT}" y1="${cy}" x2="${cx - pw / 2}" y2="${cy}" stroke-width="4" ${ROAD}/>`;
-      pair += `<g transform="rotate(${angle} ${cx} ${cy})">${bayMarkup(
-        site,
-        cx - pw / 2,
-        cy - ph / 2,
-        pw,
-        ph,
-        cx,
-        cy,
-        cy,
-        -PARK_TILT - angle,
-      )}</g>`;
+  // Sites 1-2: their own short row on the far side of the top rung, at the west end by the
+  // existing fence -- the only bays that sit outside the ladder.
+  let north = "";
+  if (northSites) {
+    const totalW = northSites.length * bayW + (northSites.length - 1) * BAY_GAP;
+    northSites.forEach((site, i) => {
+      const x = rowLeft + i * (bayW + BAY_GAP);
+      const y = FIRST_ROW_Y - BAY_H;
+      north += bayMarkup(site, x, y, bayW, BAY_H - 7, x + bayW / 2, y + BAY_H - 7, FIRST_ROW_Y);
     });
+    north += `<line x1="${LOOP_LEFT}" y1="${FIRST_ROW_Y}" x2="${LOOP_LEFT}" y2="${FIRST_ROW_Y - BAY_H / 2}" stroke-width="11" ${ROAD}/>`;
+    void totalW;
   }
 
   const park = `
     <line x1="${LOOP_LEFT}" y1="${FIRST_ROW_Y}" x2="${LOOP_LEFT}" y2="${southY}" stroke-width="11" ${ROAD}/>
     <line x1="${LOOP_RIGHT}" y1="${FIRST_ROW_Y}" x2="${LOOP_RIGHT}" y2="${southY}" stroke-width="11" ${ROAD}/>
-    <line x1="${LOOP_LEFT}" y1="${southY}" x2="${LOOP_RIGHT}" y2="${southY}" stroke-width="11" ${ROAD}/>
-    ${roads}
-    <line x1="${LOOP_RIGHT}" y1="${FIRST_ROW_Y}" x2="${LOOP_RIGHT}" y2="${ENTRY_Y}" stroke-width="11" ${ROAD}/>
-    <line x1="${LOOP_RIGHT}" y1="${ENTRY_Y}" x2="${LOOP_RIGHT + 116}" y2="${ENTRY_Y}" stroke-width="11" ${ROAD}/>
-    <line x1="${TURNAROUND.x}" y1="${ENTRY_Y}" x2="${LOOP_RIGHT}" y2="${ENTRY_Y}" stroke-width="11" ${ROAD}/>
-    <circle cx="${TURNAROUND.x}" cy="${TURNAROUND.y}" r="${TURNAROUND.r}" stroke-width="11" ${ROAD}/>
-    <line x1="${TURNAROUND.x - TURNAROUND.r}" y1="${TURNAROUND.y}" x2="${OFFICE.x + 56}" y2="${OFFICE.y + 2}" stroke-width="6" ${ROAD}/>
-    <line x1="${LOOP_LEFT - 22}" y1="${FIRST_ROW_Y - 16}" x2="${LOOP_LEFT - 22}" y2="${southY + 16}" stroke="var(--parchment-dim)" stroke-width="1.5" stroke-dasharray="2 6" opacity="0.75"/>
-    ${mapText(LOOP_LEFT - 30, (FIRST_ROW_Y + southY) / 2, "EXISTING FENCE", { size: 15, anchor: "middle", tilt: -PARK_TILT - 90 })}
-    ${pair}
+    ${rungs}
+    <line x1="${LOOP_RIGHT}" y1="${NORTH_ENTRY_Y}" x2="${LOOP_RIGHT}" y2="${FIRST_ROW_Y}" stroke-width="11" ${ROAD}/>
+    <line x1="${LOOP_RIGHT}" y1="${NORTH_ENTRY_Y}" x2="${LOOP_RIGHT + 150}" y2="${NORTH_ENTRY_Y}" stroke-width="11" ${ROAD}/>
+    <line x1="${LOOP_RIGHT}" y1="${southY}" x2="${LOOP_RIGHT + 122}" y2="${southY}" stroke-width="11" ${ROAD}/>
+    <line x1="${OFFICE.x + 56}" y1="${OFFICE.y}" x2="${LOOP_RIGHT}" y2="${OFFICE.y}" stroke-width="6" ${ROAD}/>
+    <line x1="${LOOP_LEFT - 24}" y1="${FIRST_ROW_Y - BAY_H - 20}" x2="${LOOP_LEFT - 24}" y2="${southY + 16}" stroke="var(--parchment-dim)" stroke-width="1.5" stroke-dasharray="2 6" opacity="0.75"/>
+    ${mapText(LOOP_LEFT - 34, (FIRST_ROW_Y + southY) / 2, "EXISTING FENCE", { size: 15, tilt: -PARK_TILT - 90 })}
+    ${north}
     ${bays}
     <rect x="${OFFICE.x - 56}" y="${OFFICE.y - 22}" width="112" height="44" rx="6" fill="var(--bg-panel-2)" stroke="var(--gold)" stroke-width="2"/>
-    ${mapText(OFFICE.x, OFFICE.y + 5, "OFFICE", { size: 22, fill: "var(--gold)" })}
-    ${mapText(LOOP_RIGHT + 116, ENTRY_Y - 16, "ENTRANCE", { size: 20, fill: "var(--gold)", anchor: "end" })}
+    ${mapText(OFFICE.x, OFFICE.y + 7, "OFFICE", { size: 22, fill: "var(--gold)" })}
+    ${mapText(LOOP_RIGHT + 150, NORTH_ENTRY_Y - 18, "ENTRANCE", { size: 20, fill: "var(--gold)", anchor: "end" })}
+    ${mapText(LOOP_RIGHT + 122, southY + 36, "SECOND ACCESS", { size: 16, anchor: "end" })}
   `;
 
   // Rotate the whole park to its real bearing, then size the viewBox to the rotated bounds.
   const cx = (LOOP_LEFT + LOOP_RIGHT) / 2;
   const cy = (FIRST_ROW_Y + southY) / 2;
-  const b = rotatedBounds(LOOP_LEFT - 60, OFFICE.y - 60, LOOP_RIGHT + 150, southY + 18, cx, cy, PARK_TILT);
+  const b = rotatedBounds(LOOP_LEFT - 70, OFFICE.y - 56, LOOP_RIGHT + 170, southY + 46, cx, cy, PARK_TILT);
   const pad = 34;
   const vx = b.minX - pad;
   const vy = b.minY - pad;
