@@ -90,9 +90,11 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
 - Site 12 is a separate premium unit ($350/week, electric **not** included, unlike sites 1–11's
   $45/night-with-electric / $210/week) — a former long-term tenant's site. Don't "normalize" its
   pricing to match the others without checking with the user first.
-- Per-site amp service and max rig length are **still not confirmed** per site — don't invent
-  specific values; the admin Sites panel is where real values get entered once the park provides
-  them.
+- Amp service is **confirmed park-wide (2026-08-10)**: every site is 30 *and* 50 amp. It is not a
+  per-site distinction and shouldn't be presented as one — the uniform `30/50` already in the
+  `sites` table is correct, and the amenity "30/50 amp electric" covers it.
+- Max rig length is **still not confirmed** per site — don't invent specific values; the admin
+  Sites panel is where real values get entered once the park provides them.
 - Amenities are a single unified catalog (`amenities` table) with two independent flags:
   `show_on_homepage` (the homepage "what every site includes" grid) and `show_per_site`
   (toggleable per individual site, like "Wired Ethernet"). An amenity can be either, both, or
@@ -164,7 +166,7 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
 - A monthly rate for sites 1–11 (as distinct from the automatic weekly-rate stacking) — not
   confirmed.
 - Which specific sites have "Wired Ethernet" — confirmed real, not confirmed which sites.
-- Per-site amp service and max rig length (see above).
+- Max rig length per site (see above). Amp service is settled — 30 and 50 at every site.
 - A precise, to-scale site map — the current map is a schematic built from the row groupings in
   the county-filed engineering plan (Front/Center/Back Row), not an actual to-scale drawing.
 
