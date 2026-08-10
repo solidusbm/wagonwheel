@@ -184,9 +184,16 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
     - **Sites 1–2 are their own short row hanging north off the top rung** at the west end by the
       existing fence — outside the ladder, not a pocket between the rows, and not angled.
     - Every site is a back-in, matching `pull_through = false` on all twelve rows.
-  What is *not* from the plan is dimensions — bay sizes and road widths are legible-on-a-phone
-  proportions, not measured off the sheet. Closing that needs either a scan/measurement of the
-  printed sheet at its stated scale or a few paced distances at the park.
+  **The layout now lives in `public/js/park-layout.js` — real feet, one object.** It was arranged
+  by hand in a layout editor against the marked-up plan; `renderSiteMap()` in `app.js` only draws
+  it, matching bays to sites by the number in the site name. To change where anything sits, edit
+  that file; don't reach into the renderer. A site with no bay in the layout is drawn in an
+  overflow row beneath the park rather than silently vanishing.
+
+  What is *not* measured is sizes: every pad is a uniform 20 × 55 ft and every road 24 ft wide.
+  Positions came off the plan; those two are defaults. The map says so on its face ("PAD SIZES NOT
+  YET MEASURED") — remove that caption once real figures land. Closing it needs a few paced
+  distances at the park or a measurement off the printed sheet at its stated 1" = 100'.
 
 These are tracked as open items on the `static-site` branch's `/todo/` action list
 (https://solidusbm.github.io/wagonwheel/todo/) — check there for the current launch checklist
