@@ -70,6 +70,18 @@ if (process.env.ADMIN_PASSWORD && WEAK_ADMIN_PASSWORDS.includes(process.env.ADMI
   );
 }
 
+// A From address on a reserved example domain is deliverable nowhere. The live deploy carried
+// bookings@wagonwheelrv.example over from an early placeholder, which would have surfaced as a
+// confusing relay rejection on the first real booking rather than as an obvious misconfiguration.
+const FROM = process.env.SMTP_FROM;
+if (FROM && /\.(example|invalid|test|localdomain|local)$/i.test(FROM.split("@").pop() ?? "")) {
+  console.warn(
+    `[startup] WARNING: SMTP_FROM is "${FROM}", which is on a reserved domain that can never receive ` +
+      `or authenticate mail. Most relays will reject the message outright. Set it to the mailbox the ` +
+      `app authenticates as, or unset it -- it falls back to SMTP_USER.`
+  );
+}
+
 const port = process.env.PORT ?? 3000;
 
 try {
