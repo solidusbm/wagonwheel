@@ -408,7 +408,7 @@ function renderSiteMap(sites) {
     </g>
     ${mapText((oak.x + corner.x) / 2, (oak.y + corner.y) / 2 - 9, "BROAD OAK DRIVE", { size: 16, tilt: bearing(oak, corner) })}
     ${mapText((corner.x + peak.x) / 2 + 12, (corner.y + peak.y) / 2, "POLLY PEAK DR.", { size: 16, tilt: bearing(corner, peak) })}
-    <g transform="translate(${vx + 34} ${vy + vh - 34})">
+    <g transform="translate(${vx + 34} ${vy + vh - 60})">
       <line x1="0" y1="22" x2="0" y2="-22" stroke="var(--parchment-dim)" stroke-width="1.5"/>
       <path d="M0 -30 L7 -14 L0 -18 L-7 -14 Z" fill="var(--parchment-dim)"/>
       <text x="0" y="40" text-anchor="middle" fill="var(--parchment-dim)" font-family="JetBrains Mono, monospace" font-size="17" letter-spacing="1">N</text>
