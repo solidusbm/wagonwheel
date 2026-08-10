@@ -258,6 +258,14 @@
     <div id="feed-list"></div>
   </details>
 
+  <details class="sync-feeds">
+    <summary><h2>Booking alert email</h2></summary>
+    <div class="sub">When a guest completes a booking, the park gets an email with the site, dates, guest details and total. Nothing else on the site sends mail yet &mdash; guests don't get a confirmation email, only the confirmation screen.</div>
+    <div id="email-status" class="sub">Checking&hellip;</div>
+    <button type="button" class="btn btn-primary" id="email-test-btn">Send a test email</button>
+    <p id="email-test-status" class="sub" style="margin-top:10px;"></p>
+  </details>
+
   <details class="danger-zone">
     <summary><h2>Danger zone</h2></summary>
     <div class="sub">Force-reload sites and amenities from <code>db/seed.sql</code> on the live database. Use this after a code update changes seed data (like this one) -- otherwise an already-provisioned database keeps its old rows and never picks up corrections. <strong>This deletes all current reservations, sites, and amenities and reloads them from scratch. Cannot be undone.</strong></div>

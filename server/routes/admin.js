@@ -4,6 +4,7 @@ import { pool } from "../db.js";
 import { quote } from "../lib/pricing.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
 import { applySchema, applySeed, applyContentSeed, sitesCount } from "../lib/dbBootstrap.js";
+import { mailConfigStatus, sendTestEmail } from "../lib/email.js";
 
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -762,6 +763,26 @@ router.post("/style-gallery-approvals/reset", async (req, res, next) => {
     res.json({ ok: true });
   } catch (err) {
     next(err);
+  }
+});
+
+/* ---------- email ----------
+   Booking alerts are the only mail the app sends, and they only fire on a completed,
+   paid reservation -- so without this, the only way to find out whether SMTP is configured
+   correctly is to take a real booking and charge a real card. These two let an admin see the
+   settings the server actually loaded and send itself a test message. */
+router.get("/email/status", (req, res) => {
+  res.json(mailConfigStatus());
+});
+
+router.post("/email/test", async (req, res) => {
+  try {
+    const result = await sendTestEmail();
+    res.json({ ok: true, sentTo: result.accepted, messageId: result.messageId });
+  } catch (err) {
+    // The SMTP error is the useful part here, so pass it through instead of a bare 500.
+    console.error("[email] Test send failed", err);
+    res.status(400).json({ ok: false, error: err.message, code: err.code ?? null });
   }
 });
 

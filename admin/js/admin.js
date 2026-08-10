@@ -630,6 +630,55 @@ async function onUploadPhoto(event) {
 
 /* ---------- danger zone: force reseed ---------- */
 
+/* ---------- booking alert email ---------- */
+const emailStatusEl = document.getElementById("email-status");
+const emailTestBtn = document.getElementById("email-test-btn");
+const emailTestStatus = document.getElementById("email-test-status");
+
+function describeMailConfig(c) {
+  if (!c.smtpHost) {
+    return "<strong>Not sending.</strong> No mail server is configured (<code>SMTP_HOST</code>), so booking alerts are only written to the server log.";
+  }
+  if (!c.adminEmail) {
+    return "<strong>Not sending.</strong> A mail server is set up, but <code>ADMIN_EMAIL</code> is empty, so there is no address to alert.";
+  }
+  const warn = c.hasPassword
+    ? ""
+    : " <strong>No password is set</strong> (<code>SMTP_PASS</code>) &mdash; most servers will refuse to send.";
+  return (
+    "Alerts go to <strong>" + escapeHtml(c.adminEmail) + "</strong>, sent from " +
+    escapeHtml(c.from) + " via " + escapeHtml(c.smtpHost) + ":" + c.smtpPort + "." + warn
+  );
+}
+
+async function loadEmailStatus() {
+  try {
+    const res = await fetch("/api/admin/email/status");
+    if (!res.ok) throw new Error("Could not read the mail settings.");
+    emailStatusEl.innerHTML = describeMailConfig(await res.json());
+  } catch (err) {
+    emailStatusEl.textContent = err.message;
+  }
+}
+
+emailTestBtn.addEventListener("click", async () => {
+  emailTestBtn.disabled = true;
+  emailTestStatus.textContent = "Sending…";
+  try {
+    const res = await fetch("/api/admin/email/test", { method: "POST" });
+    const data = await res.json();
+    emailTestStatus.textContent = data.ok
+      ? "Sent to " + (data.sentTo.join(", ") || "the alert address") + ". Check the inbox — and the spam folder."
+      : "Failed: " + data.error;
+  } catch (err) {
+    emailTestStatus.textContent = "Failed: " + err.message;
+  } finally {
+    emailTestBtn.disabled = false;
+  }
+});
+
+loadEmailStatus();
+
 const reseedBtn = document.getElementById("reseed-btn");
 const reseedStatus = document.getElementById("reseed-status");
 
