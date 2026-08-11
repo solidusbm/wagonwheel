@@ -82,6 +82,35 @@ if (FROM && /\.(example|invalid|test|localdomain|local)$/i.test(FROM.split("@").
   );
 }
 
+/* Square has four settings that must all agree, and getting them half-changed is the easy
+   mistake: SQUARE_ENVIRONMENT is matched against the exact string "production", so "Production"
+   or "prod" silently leaves the app in sandbox while the credentials say otherwise. The
+   application ID prefix is a reliable tell -- sandbox IDs start "sandbox-sq0idb-", live ones
+   "sq0idp-" -- so mismatches can be caught at boot rather than at the first real card. */
+const SQ_ENV = process.env.SQUARE_ENVIRONMENT;
+const SQ_APP = process.env.SQUARE_APPLICATION_ID ?? "";
+const sqLive = SQ_ENV === "production";
+if (SQ_ENV && !sqLive && /^prod/i.test(SQ_ENV)) {
+  console.warn(
+    `[startup] WARNING: SQUARE_ENVIRONMENT is "${SQ_ENV}", which is NOT the exact string ` +
+      `"production" -- the app is running against Square's SANDBOX and no card will be charged.`
+  );
+}
+if (sqLive && SQ_APP.startsWith("sandbox-")) {
+  console.warn(
+    `[startup] WARNING: SQUARE_ENVIRONMENT is "production" but SQUARE_APPLICATION_ID is a sandbox ` +
+      `ID ("${SQ_APP}"). Checkout will fail. The access token and location ID almost certainly ` +
+      `need changing too -- all four Square settings come from the same environment.`
+  );
+}
+if (!sqLive && SQ_APP.startsWith("sq0idp-")) {
+  console.warn(
+    `[startup] WARNING: SQUARE_APPLICATION_ID is a live ID ("${SQ_APP}") but SQUARE_ENVIRONMENT is ` +
+      `not "production", so the app is talking to Square's sandbox. Bookings will complete ` +
+      `without charging anyone.`
+  );
+}
+
 const port = process.env.PORT ?? 3000;
 
 try {
