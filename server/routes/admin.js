@@ -5,6 +5,7 @@ import { quote } from "../lib/pricing.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
 import { applySchema, applySeed, applyContentSeed, sitesCount } from "../lib/dbBootstrap.js";
 import { mailConfigStatus, sendTestEmail } from "../lib/email.js";
+import { listLocations } from "../lib/square.js";
 
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -783,6 +784,25 @@ router.post("/email/test", async (req, res) => {
     // The SMTP error is the useful part here, so pass it through instead of a bare 500.
     console.error("[email] Test send failed", err);
     res.status(400).json({ ok: false, error: err.message, code: err.code ?? null });
+  }
+});
+
+/* ---------- payments ----------
+   Asks Square which locations the configured token can see. Checkout failing with "not
+   authorized to take payments with location ID" is ambiguous on its own -- it means either the
+   wrong location, a location in a different Square account, or an account that has not finished
+   activation. This distinguishes them without putting a card through. */
+router.get("/square/locations", async (req, res) => {
+  try {
+    const result = await listLocations();
+    res.json({ ok: true, environment: process.env.SQUARE_ENVIRONMENT === "production" ? "production" : "sandbox", ...result });
+  } catch (err) {
+    console.error("[square] Could not list locations", err);
+    res.status(400).json({
+      ok: false,
+      error: err?.errors?.[0]?.detail ?? err.message,
+      code: err?.errors?.[0]?.code ?? err.code ?? null,
+    });
   }
 });
 

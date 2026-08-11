@@ -259,6 +259,13 @@
   </details>
 
   <details class="sync-feeds">
+    <summary><h2>Payments</h2></summary>
+    <div class="sub">Which Square locations the configured credentials can actually see, and whether the one this site is set to can take card payments. A location can exist, be active, and still not be cleared to process cards &mdash; that is what "not authorized to take payments" means at checkout.</div>
+    <button type="button" class="btn btn-primary" id="square-check-btn">Check Square setup</button>
+    <div id="square-result" class="sub" style="margin-top:12px;"></div>
+  </details>
+
+  <details class="sync-feeds">
     <summary><h2>Booking alert email</h2></summary>
     <div class="sub">When a guest completes a booking, the park gets an email with the site, dates, guest details and total. The alert address can be a <b>comma-separated list</b> if more than one person should get them. Nothing else on the site sends mail yet &mdash; guests don't get a confirmation email, only the confirmation screen.</div>
     <div id="email-status" class="sub">Checking&hellip;</div>
