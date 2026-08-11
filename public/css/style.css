@@ -13,6 +13,11 @@
   --parchment-dim:#b3a488;
   --taken:#4a3f33;
   --ink:#1c140d;
+  /* Text sitting on a solid accent fill (rust buttons, the nav CTA). Rust stays dark in every
+     palette, so this must NOT follow --parchment -- under a light style --parchment inverts to
+     near-black and every primary button drops to about 1.8:1. Light styles override this to
+     their own off-white. */
+  --btn-text:#e8dcc4;
   --radius:3px;
 }
 *{box-sizing:border-box;}
@@ -40,7 +45,7 @@ a{color:var(--gold-bright);}
 .nav .links a:hover{color:var(--gold-bright);}
 .nav .cta{
   font-family:'JetBrains Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.06em;
-  background:var(--rust); color:var(--parchment); padding:9px 16px; border-radius:var(--radius); text-decoration:none;
+  background:var(--rust); color:var(--btn-text); padding:9px 16px; border-radius:var(--radius); text-decoration:none;
 }
 .nav .cta:hover{background:var(--rust-bright);}
 @media(max-width:720px){ .nav .links{display:none;} }
@@ -162,7 +167,7 @@ legend{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:up
 
 .btn{display:inline-block; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.08em; font-size:13px; font-weight:600; padding:14px 28px; border-radius:var(--radius); border:none; cursor:pointer;}
 .btn:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
-.btn-primary{background:var(--rust); color:var(--parchment);}
+.btn-primary{background:var(--rust); color:var(--btn-text);}
 .btn-primary:hover{background:var(--rust-bright);}
 .btn-primary:disabled{opacity:0.5; cursor:not-allowed;}
 .btn-ghost{background:transparent; color:var(--parchment-dim); border:1px solid rgba(232,220,196,0.22);}
