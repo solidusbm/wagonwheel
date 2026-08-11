@@ -82,6 +82,10 @@ function mapReservation(row) {
     subtotalCents: row.subtotal_cents,
     bookingFeeCents: row.booking_fee_cents,
     totalCents: row.total_cents,
+    // Null for admin-entered walk-ins, which never touch Square. For a guest booking it is the
+    // only link back to the Square transaction -- without it, reconciling a disputed charge means
+    // matching on timestamp and amount alone.
+    squarePaymentId: row.square_payment_id ?? null,
     createdAt: row.created_at,
   };
 }
@@ -90,7 +94,7 @@ const SELECT_RESERVATION = `
   SELECT r.reservation_code, r.status, r.guest_name, r.guest_email, r.guest_phone, r.num_guests, r.notes,
          r.application_details,
          r.check_in::text AS check_in, r.check_out::text AS check_out,
-         r.subtotal_cents, r.booking_fee_cents, r.total_cents, r.created_at,
+         r.subtotal_cents, r.booking_fee_cents, r.total_cents, r.created_at, r.square_payment_id,
          s.id AS site_id, s.name AS site_name, s.area
   FROM reservations r
   JOIN sites s ON s.id = r.site_id

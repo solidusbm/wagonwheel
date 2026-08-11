@@ -120,7 +120,7 @@ async function loadReservations() {
       <td data-label="Dates">${formatDate(r.checkIn)} → ${formatDate(r.checkOut)}</td>
       <td data-label="Guest">${r.guest.name}<br><span style="color:var(--parchment-dim);font-size:11px;">${r.guest.email}${r.guest.phone ? " · " + r.guest.phone : ""}</span></td>
       <td data-label="Guests">${r.guest.numGuests}</td>
-      <td data-label="Total">${money(r.totalCents)}</td>
+      <td data-label="Total">${money(r.totalCents)}${r.squarePaymentId ? `<br><span style="color:var(--parchment-dim);font-size:10.5px;font-family:'JetBrains Mono',monospace;" title="Square payment ID — search this in Square to find the transaction">${escapeHtml(r.squarePaymentId)}</span>` : `<br><span style="color:var(--parchment-dim);font-size:10.5px;font-style:italic;">no card payment</span>`}</td>
       <td data-label="Notes">${r.notes ?? ""}${renderApplication(r.applicationDetails)}</td>
       <td class="row-actions">
         <button type="button" class="btn btn-ghost" data-edit="${r.reservationCode}">Edit</button>
