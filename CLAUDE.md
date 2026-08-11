@@ -12,20 +12,21 @@ PostgreSQL + Square booking app for Bandera Wagon Wheel RV Park. It is the chose
 an earlier static-site + third-party-widget alternative (see the `static-site` branch, which is
 now a design-reference hub only — not a competing implementation, don't merge the two).
 
-**Live URL:** https://wagonwheel-rv-park.onrender.com/
-**Admin:** https://wagonwheel-rv-park.onrender.com/admin (HTTP Basic Auth — see "Admin access" below)
-**Render service:** `wagonwheel-rv-park` (web service) + `wagonwheel-db` (Postgres), both on the free tier
+**Live URL:** https://banderawagonwheelrv.com/ (also served at https://wwrvb.sastx.net/)
+**Admin:** https://banderawagonwheelrv.com/admin (HTTP Basic Auth — see "Admin access" below)
+**Hosting:** Coolify app `wwrvb` on the SaStx IONOS VPS, against the shared `sastx-shared-pg`
+Postgres. **Render is gone** — decommissioned 2026-08-11, don't look for it.
 
-**⚠️ `wagonwheel-db` was created ~2026-07-21 and Render deletes free-tier Postgres databases 30
-days after creation (~2026-08-20) unless upgraded to a paid instance.** If this is still on the
-free tier as that date approaches, proactively flag it to the user — check Render → `wagonwheel-db`
-→ Info tab for the current expiry banner, since the exact date may have changed if it was ever
-upgraded, recreated, or reseeded.
+The domain is registered on the **client's** Cloudflare account and served through a second
+`cloudflared` tunnel owned by that account (a tunnel can only be routed from a zone in the same
+account, so the sastx tunnel cannot serve it). That connector runs on the VPS as the Docker
+container `cloudflared-bwrv`. `www` 301s to the apex, and `http://` 301s to `https://`.
 
 ## Before you push
 
-**Don't push to `origin/claude/rv-booking-project-6pigax` until the user explicitly asks.** Render
-auto-deploys on every push to this branch, so a push goes live immediately. Batch changes locally
+**Don't push to `origin/claude/rv-booking-project-6pigax` until the user explicitly asks.** Coolify
+auto-deploys on every push to this branch (GitHub webhook, wired 2026-08-11 — builds land in about
+40 seconds), so a push goes live immediately. Batch changes locally
 (commit freely — commits are cheap and don't deploy anything), and push only when told to. If the
 user's message *is* the go-ahead ("push it", "deploy this", "yes" in response to "should I push?"),
 that counts — you don't need to ask a second time in the same turn.
@@ -57,13 +58,12 @@ credentials at all.
 
 ## Admin access
 
-`/admin` is protected by HTTP Basic Auth via `ADMIN_USERNAME`/`ADMIN_PASSWORD`, set as Render
-environment variables (Dashboard → `wagonwheel-rv-park` → Environment) — never hardcoded in this
-repo. **As of this writing both are still set to the weak local-dev placeholder** (`admin`/`admin`)
+`/admin` is protected by HTTP Basic Auth via `ADMIN_USERNAME`/`ADMIN_PASSWORD`, set as Coolify
+environment variables (Coolify → `wwrvb` → Environment Variables) — never hardcoded in this repo. **As of this writing both are still set to the weak local-dev placeholder** (`admin`/`admin`)
 — the server prints a startup warning about this every boot. This must be changed to a real
 username/strong password before the park actually starts taking bookings; `/admin` exposes guest
-names, emails, and phone numbers. Rotating it means going into Render's Environment tab and
-setting new values — no code change needed.
+names, emails, and phone numbers. **This is now urgent, not theoretical:** the app is on a public, guessable domain and real
+bookings exist. Rotating means setting new values in Coolify and redeploying — no code change.
 
 Every section below Reservations (Sites, Photos, Amenities, Content, Push notifications,
 RoverPass/Hipcamp sync, Danger zone) is a `<details class="sync-feeds">`, closed by default. Keep
@@ -71,12 +71,27 @@ new admin sections consistent with that pattern rather than adding a plain alway
 
 ## Payments
 
-Square **sandbox** credentials (`SQUARE_ACCESS_TOKEN`, `SQUARE_APPLICATION_ID`,
-`SQUARE_LOCATION_ID`) are configured in Render's environment and have been tested end-to-end with
-a real sandbox checkout. `SQUARE_ENVIRONMENT=sandbox`. Going live for real means: get
-**production** credentials from the Square Developer Dashboard, set the same three env vars to
-the production values, and flip `SQUARE_ENVIRONMENT=production`. Test card for sandbox:
-`4111 1111 1111 1111`, any future expiry, any CVV.
+Square is **live**. `SQUARE_ENVIRONMENT=production` with production `SQUARE_ACCESS_TOKEN`,
+`SQUARE_APPLICATION_ID` (`sq0idp-`…) and `SQUARE_LOCATION_ID` (`LWB7T9H0GY58E`) in Coolify.
+Verified end to end on 2026-08-11 with a real card. Sandbox test numbers like
+`4111 1111 1111 1111` are **declined in production** — there is no test card any more.
+
+All four settings must come from the same environment. `SQUARE_ENVIRONMENT` is compared against
+the exact string `"production"`, so `Production` silently leaves the app in sandbox, taking
+bookings and charging nobody; `server/index.js` warns at boot about that and about an
+environment/application-ID mismatch.
+
+**Diagnose payment failures with `/admin` → Payments → "Check Square setup"** before assuming
+anything. It asks Square which locations the token can actually see and whether the configured one
+carries `CREDIT_CARD_PROCESSING`. "Not authorized to take payments with location ID" means one of
+three things — wrong location, location in a different Square account, or an account not cleared
+for cards — and they are indistinguishable at checkout. Both times it looked like an activation
+problem it was a **truncated location ID**; Square location IDs are 13 characters.
+
+There is **no refund path in the app**. Refunds are manual in the Square dashboard, and refunding
+there does not touch the reservation — the row must also be cancelled in `/admin` or the dates
+stay blocked. Each reservation now shows its `squarePaymentId` under the total so a booking can be
+matched to its Square transaction.
 
 Square's card entry fields are rendered in a cross-origin iframe (Square's Web Payments SDK) —
 this is intentional PCI-compliance isolation. Browser automation cannot read or fill those fields,
@@ -160,6 +175,20 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   toggling approval off silently archived a style the user might still be considering.
   `PATCH /api/admin/style-gallery-approvals/:slug` accepts `approved`, `dismissed`, and/or `note`
   independently via `COALESCE` in the upsert — a note-only save doesn't touch the other two.
+
+## Settled — don't "fix" these back
+
+- **No booking fee.** `BOOKING_FEE_CENTS=0` on the live deploy, and the code now defaults to 0 to
+  match. Confirmed by the user 2026-08-11 after the first live card came through at the bare
+  nightly rate ($45.00 for one night on Site 4, no fee added). This is the park's decision, not a
+  misconfiguration — a reservation showing `bookingFeeCents: 0` is correct. Do not restore the old
+  $5 default.
+- **Square is live.** Production credentials since 2026-08-11, verified end to end with a real card
+  (reservation `8YLQCZ5`, Square payment `fn2lStJEApIXYYPArBO1YUgxhgEZY`, refunded afterward).
+  `/admin` -> Payments -> "Check Square setup" asks Square which locations the token can see and
+  whether the configured one carries `CREDIT_CARD_PROCESSING` — use it before assuming a payment
+  failure is an account-activation problem. It was a truncated location ID both times it looked
+  like one (`LWB7T9H` vs the real 13-character `LWB7T9H0GY58E`).
 
 ## Known unresolved / don't guess at these
 

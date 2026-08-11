@@ -11,7 +11,11 @@ export function nightsBetween(checkIn, checkOut) {
 // weekly rate is configured for the site.
 export function quote({ pricePerNightCents, pricePerWeekCents, checkIn, checkOut }) {
   const nights = nightsBetween(checkIn, checkOut);
-  const bookingFeeCents = Number(process.env.BOOKING_FEE_CENTS ?? 500);
+  // The park charges no booking fee -- confirmed 2026-08-11 after the first live payment came
+  // through at the bare nightly rate. Defaulting to 0 rather than 500 means an environment that
+  // loses BOOKING_FEE_CENTS quietly matches the park's actual policy instead of quietly
+  // overcharging every guest by $5.
+  const bookingFeeCents = Number(process.env.BOOKING_FEE_CENTS ?? 0);
 
   let subtotalCents;
   if (pricePerWeekCents) {
