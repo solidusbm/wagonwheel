@@ -267,9 +267,10 @@
 
   <details class="sync-feeds">
     <summary><h2>Booking alert email</h2></summary>
-    <div class="sub">When a guest completes a booking, the park gets an email with the site, dates, guest details and total. The alert address can be a <b>comma-separated list</b> if more than one person should get them. Nothing else on the site sends mail yet &mdash; guests don't get a confirmation email, only the confirmation screen.</div>
+    <div class="sub">When a guest completes a booking, the park gets an email with the site, dates, guest details and total. The alert address can be a <b>comma-separated list</b> if more than one person should get them. Guests also get their own confirmation with the site, dates, arrival times, the office rule and the cancellation terms &mdash; "Preview the guest email" sends you a copy of exactly what they receive, using a fake booking.</div>
     <div id="email-status" class="sub">Checking&hellip;</div>
     <button type="button" class="btn btn-primary" id="email-test-btn">Send a test email</button>
+    <button type="button" class="btn btn-ghost" id="email-guest-btn" style="margin-left:8px;">Preview the guest email</button>
     <p id="email-test-status" class="sub" style="margin-top:10px;"></p>
   </details>
 

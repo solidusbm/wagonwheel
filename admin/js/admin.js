@@ -711,6 +711,23 @@ async function loadEmailStatus() {
   }
 }
 
+const emailGuestBtn = document.getElementById("email-guest-btn");
+emailGuestBtn.addEventListener("click", async () => {
+  emailGuestBtn.disabled = true;
+  emailTestStatus.textContent = "Sending the guest preview…";
+  try {
+    const res = await fetch("/api/admin/email/guest-preview", { method: "POST" });
+    const data = await res.json();
+    emailTestStatus.textContent = data.ok
+      ? "Guest preview sent to " + (data.sentTo.join(", ") || "the alert address") + ". It is marked [SAMPLE]."
+      : "Failed: " + data.error;
+  } catch (err) {
+    emailTestStatus.textContent = "Failed: " + err.message;
+  } finally {
+    emailGuestBtn.disabled = false;
+  }
+});
+
 emailTestBtn.addEventListener("click", async () => {
   emailTestBtn.disabled = true;
   emailTestStatus.textContent = "Sending…";

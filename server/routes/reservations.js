@@ -2,7 +2,7 @@ import { Router } from "express";
 import { pool } from "../db.js";
 import { quote } from "../lib/pricing.js";
 import { chargeCard, SquareError } from "../lib/square.js";
-import { notifyAdminOfBooking } from "../lib/email.js";
+import { notifyAdminOfBooking, sendGuestConfirmation } from "../lib/email.js";
 import { notifyAdminPush } from "../lib/push.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
 
@@ -115,6 +115,7 @@ router.post("/", async (req, res, next) => {
       };
 
       await notifyAdminOfBooking(confirmedReservation);
+      await sendGuestConfirmation(confirmedReservation);
       await notifyAdminPush(confirmedReservation);
 
       return res.status(201).json(confirmedReservation);

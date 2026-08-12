@@ -4,7 +4,7 @@ import { pool } from "../db.js";
 import { quote } from "../lib/pricing.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
 import { applySchema, applySeed, applyContentSeed, sitesCount } from "../lib/dbBootstrap.js";
-import { mailConfigStatus, sendTestEmail } from "../lib/email.js";
+import { mailConfigStatus, sendTestEmail, sendSampleGuestEmail } from "../lib/email.js";
 import { listLocations } from "../lib/square.js";
 
 const router = Router();
@@ -778,6 +778,16 @@ router.post("/style-gallery-approvals/reset", async (req, res, next) => {
    settings the server actually loaded and send itself a test message. */
 router.get("/email/status", (req, res) => {
   res.json(mailConfigStatus());
+});
+
+router.post("/email/guest-preview", async (req, res) => {
+  try {
+    const result = await sendSampleGuestEmail();
+    res.json({ ok: true, sentTo: result.accepted, messageId: result.messageId });
+  } catch (err) {
+    console.error("[email] Guest preview failed", err);
+    res.status(400).json({ ok: false, error: err.message, code: err.code ?? null });
+  }
 });
 
 router.post("/email/test", async (req, res) => {
