@@ -3,6 +3,9 @@ import { pool } from "../db.js";
 import { quote } from "../lib/pricing.js";
 import { chargeCard, SquareError } from "../lib/square.js";
 import { notifyAdminOfBooking, sendGuestConfirmation } from "../lib/email.js";
+import { cancelTokenValid } from "../lib/cancelToken.js";
+import { cancellationQuote } from "../lib/pricing.js";
+import { refundPayment } from "../lib/square.js";
 import { notifyAdminPush } from "../lib/push.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
 
@@ -168,6 +171,106 @@ router.get("/:code", async (req, res, next) => {
     });
   } catch (err) {
     next(err);
+  }
+});
+
+/* ---------- guest self-service cancellation ----------
+   Reached from the link in the confirmation email. The token is an HMAC of the reservation code
+   (see lib/cancelToken.js) -- codes are short and guessable, so the code alone must never be
+   enough to cancel someone's stay and move their money.
+
+   Self-service stops once the stay has started: after check-in day a cancellation is a
+   conversation with the office, not a button. The office can still cancel or refund any booking
+   from /admin at any time. */
+function guestFacing(r) {
+  return {
+    reservationCode: r.reservation_code,
+    status: r.status,
+    site: r.site_name,
+    checkIn: r.check_in,
+    checkOut: r.check_out,
+    totalCents: r.total_cents,
+  };
+}
+
+async function loadForCancel(code, token) {
+  if (!cancelTokenValid(code, token)) return { error: "This cancellation link is not valid.", status: 403 };
+  const { rows } = await pool.query(
+    `SELECT r.*, r.check_in::text AS check_in, r.check_out::text AS check_out, s.name AS site_name
+       FROM reservations r JOIN sites s ON s.id = r.site_id
+      WHERE r.reservation_code = $1`,
+    [code]
+  );
+  const r = rows[0];
+  if (!r) return { error: "We could not find that reservation.", status: 404 };
+  if (r.status === "cancelled") return { error: "This reservation has already been cancelled.", status: 409, r };
+  const today = new Date().toISOString().slice(0, 10);
+  if (r.check_in <= today) {
+    return {
+      error: "This stay has already started, so it cannot be cancelled online. Please call the office on (830) 850-0805.",
+      status: 409,
+      r,
+    };
+  }
+  return { r };
+}
+
+router.get("/:code/cancel-quote", async (req, res, next) => {
+  try {
+    const { r, error, status } = await loadForCancel(req.params.code, req.query.t);
+    if (error) return res.status(status).json({ error, ...(r ? { reservation: guestFacing(r) } : {}) });
+    const policy = cancellationQuote({ totalCents: r.total_cents, monthlyRateApplied: r.monthly_rate_applied });
+    res.json({ reservation: guestFacing(r), ...policy });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/:code/cancel", async (req, res, next) => {
+  const client = await pool.connect();
+  try {
+    const pre = await loadForCancel(req.params.code, req.query.t ?? req.body?.t);
+    if (pre.error) return res.status(pre.status).json({ error: pre.error });
+
+    await client.query("BEGIN");
+    const { rows } = await client.query("SELECT * FROM reservations WHERE reservation_code = $1 FOR UPDATE", [req.params.code]);
+    const r = rows[0];
+    if (!r || r.status === "cancelled" || r.refunded_cents) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "This reservation has already been cancelled." });
+    }
+
+    const { feeCents, refundCents } = cancellationQuote({
+      totalCents: r.total_cents,
+      monthlyRateApplied: r.monthly_rate_applied,
+    });
+
+    let refund = null;
+    if (refundCents > 0 && r.square_payment_id) {
+      refund = await refundPayment({
+        paymentId: r.square_payment_id,
+        amountCents: refundCents,
+        idempotencyKey: `refund-${r.reservation_code}-${refundCents}`,
+        reason: `Guest cancellation of ${r.reservation_code}`,
+      });
+    }
+
+    await client.query(
+      `UPDATE reservations
+          SET status = 'cancelled', square_refund_id = $1, refunded_cents = $2,
+              cancellation_fee_cents = $3, updated_at = now()
+        WHERE id = $4`,
+      [refund?.refundId ?? null, refundCents, feeCents, r.id]
+    );
+    await client.query("COMMIT");
+
+    res.json({ ok: true, reservationCode: r.reservation_code, feeCents, refundCents });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    if (err?.errors?.length) return res.status(400).json({ error: err.errors[0].detail ?? err.message });
+    next(err);
+  } finally {
+    client.release();
   }
 });
 

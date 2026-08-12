@@ -192,6 +192,14 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   is decided at booking time and stored on the reservation, so a later rate change cannot
   retroactively alter what a guest was told. Note the policy has a cliff: cancelling a 10-night
   stay costs $38.33 but an 11-night stay costs $100.
+- **Guests can cancel themselves.** The confirmation email carries a link to `/cancel.html`
+  holding an HMAC of the reservation code (`server/lib/cancelToken.js`). Reservation codes are
+  short and guessable, so **the code alone must never be enough to cancel a booking and move
+  money** -- don't add a "look up by code" flow without the token. The secret is
+  `CANCEL_TOKEN_SECRET`, falling back to a hash of `SQUARE_ACCESS_TOKEN` so links survive restarts;
+  rotating the Square token invalidates outstanding links, and the office can still cancel from
+  `/admin`. Self-service stops once `check_in` has arrived -- after that it is a phone call, since
+  the policy says nothing about refunding a stay already under way.
 - **No booking fee.** `BOOKING_FEE_CENTS=0` on the live deploy, and the code now defaults to 0 to
   match. Confirmed by the user 2026-08-11 after the first live card came through at the bare
   nightly rate ($45.00 for one night on Site 4, no fee added). This is the park's decision, not a

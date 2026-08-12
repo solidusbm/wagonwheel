@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cancel your reservation — Bandera Wagon Wheel RV Park</title>
+<!-- Reached only from the link in a confirmation email, and only with a valid token. Nothing
+     should index it or follow it into a state-changing action. -->
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=Zilla+Slab:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/css/style.css" />
+<style>
+  .cancel-wrap{max-width:600px; margin:0 auto; padding:48px 22px 80px;}
+  .cancel-wrap h1{font-size:26px; margin:0 0 6px;}
+  .lede{color:var(--parchment-dim); margin:0 0 26px;}
+  .card{background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; margin-bottom:20px;}
+  .card h2{font-size:15px; margin:0 0 14px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.1em; color:var(--gold);}
+  dl{display:grid; grid-template-columns:auto 1fr; gap:9px 18px; margin:0;}
+  dt{color:var(--parchment-dim); font-size:14px;}
+  dd{margin:0; font-weight:600; font-variant-numeric:tabular-nums;}
+  .money{border-top:1px solid var(--line); margin-top:16px; padding-top:16px;}
+  .money .refund{font-size:22px; color:var(--cedar-light);}
+  .warn{background:var(--bg-panel-2); border-left:3px solid var(--rust); padding:13px 16px; margin:0 0 20px; font-size:14.5px;}
+  .btn-row{display:flex; gap:12px; flex-wrap:wrap;}
+  .msg{padding:16px 18px; border-radius:var(--radius); margin-bottom:20px;}
+  .msg.err{background:var(--bg-panel-2); border-left:3px solid var(--rust-bright);}
+  .msg.ok{background:var(--bg-panel-2); border-left:3px solid var(--cedar);}
+  .quiet{color:var(--parchment-dim); font-size:14px;}
+</style>
+</head>
+<body>
+
+<div class="cancel-wrap">
+  <h1>Cancel your reservation</h1>
+  <p class="lede">Bandera Wagon Wheel RV Park</p>
+
+  <div id="state" class="quiet">Loading your reservation…</div>
+
+  <div id="detail" hidden>
+    <div class="card">
+      <h2>Your booking</h2>
+      <dl>
+        <dt>Confirmation</dt><dd id="d-code"></dd>
+        <dt>Site</dt><dd id="d-site"></dd>
+        <dt>Arriving</dt><dd id="d-in"></dd>
+        <dt>Leaving</dt><dd id="d-out"></dd>
+      </dl>
+      <div class="money">
+        <dl>
+          <dt>You paid</dt><dd id="d-paid"></dd>
+          <dt id="d-fee-label">Service fee</dt><dd id="d-fee"></dd>
+          <dt>Refund</dt><dd class="refund" id="d-refund"></dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="warn" id="d-basis"></div>
+
+    <div class="btn-row">
+      <button type="button" class="btn btn-primary" id="confirm">Cancel this reservation</button>
+      <a class="btn btn-ghost" href="/">Keep my reservation</a>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+const params = new URLSearchParams(location.search);
+const code = params.get("code");
+const token = params.get("t");
+const stateEl = document.getElementById("state");
+const detail = document.getElementById("detail");
+const money = (c) => `$${(c / 100).toFixed(2)}`;
+
+function prettyDate(iso) {
+  const [y, m, d] = String(iso).split("-").map(Number);
+  if (!y) return iso;
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-US", {
+    weekday: "short", month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
+  });
+}
+
+function show(kind, text) {
+  stateEl.className = `msg ${kind}`;
+  stateEl.textContent = text;
+  stateEl.hidden = false;
+}
+
+async function load() {
+  if (!code || !token) {
+    show("err", "This link is incomplete. Please use the cancellation link from your confirmation email.");
+    return;
+  }
+  const res = await fetch(`/api/reservations/${encodeURIComponent(code)}/cancel-quote?t=${encodeURIComponent(token)}`);
+  const data = await res.json();
+  if (!res.ok) {
+    show("err", data.error || "We could not load that reservation.");
+    return;
+  }
+  const r = data.reservation;
+  document.getElementById("d-code").textContent = r.reservationCode;
+  document.getElementById("d-site").textContent = r.site;
+  document.getElementById("d-in").textContent = prettyDate(r.checkIn);
+  document.getElementById("d-out").textContent = prettyDate(r.checkOut);
+  document.getElementById("d-paid").textContent = money(r.totalCents);
+  document.getElementById("d-fee").textContent = money(data.feeCents);
+  document.getElementById("d-refund").textContent = money(data.refundCents);
+  document.getElementById("d-basis").textContent =
+    data.basis === "monthly"
+      ? `This booking was charged at the monthly rate, so the service fee is a flat ${money(data.feeCents)}. Cancelling cannot be undone.`
+      : `The service fee is 11.11% of what you paid. Cancelling cannot be undone.`;
+  stateEl.hidden = true;
+  detail.hidden = false;
+}
+
+document.getElementById("confirm").addEventListener("click", async (e) => {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  btn.textContent = "Cancelling…";
+  try {
+    const res = await fetch(`/api/reservations/${encodeURIComponent(code)}/cancel?t=${encodeURIComponent(token)}`, {
+      method: "POST",
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "We could not cancel that reservation.");
+    detail.hidden = true;
+    show("ok", `Your reservation is cancelled. ${money(data.refundCents)} is on its way back to your card — refunds usually take a few business days to appear. A ${money(data.feeCents)} service fee was kept.`);
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = "Cancel this reservation";
+    show("err", err.message);
+  }
+});
+
+load();
+</script>
+</body>
+</html>

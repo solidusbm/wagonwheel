@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { cancellationQuote } from "./pricing.js";
+import { cancelUrl } from "./cancelToken.js";
 
 let transporter;
 
@@ -137,6 +138,9 @@ export function guestConfirmation(reservation) {
     `  ${PARK.phone}`,
     ``,
     `Cancelling: ${cancelSentence(r)}`,
+    ...(cancelUrl(r.reservationCode)
+      ? [``, `You can cancel online here:`, `  ${cancelUrl(r.reservationCode)}`]
+      : []),
     ``,
     `Quiet hours are 10:00pm to 6:00am. Speed limit is 5mph throughout the park.`,
     ``,
@@ -167,6 +171,7 @@ export function guestConfirmation(reservation) {
   </p>
   <p style="font-size:14px;color:#5c5245;">
     <b>Cancelling:</b> ${escapeHtml(cancelSentence(r))}
+    ${cancelUrl(r.reservationCode) ? `<br><a href="${escapeHtml(cancelUrl(r.reservationCode))}" style="color:#8c3a2b;">Cancel this reservation online</a>` : ""}
   </p>
   <p style="font-size:14px;color:#5c5245;">Quiet hours are 10:00pm to 6:00am. Speed limit is 5mph throughout the park.</p>
   <p>Just reply to this email if you need anything before your stay.</p>
