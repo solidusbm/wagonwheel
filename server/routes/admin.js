@@ -364,7 +364,7 @@ router.patch("/sites/:id", async (req, res, next) => {
   if (!Number.isInteger(id)) {
     return res.status(400).json({ error: "Invalid site id" });
   }
-  const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, notes, active, sortOrder, amenityIds, permanentlyOccupied } =
+  const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, pricePerMonthCents, notes, active, sortOrder, amenityIds, permanentlyOccupied } =
     req.body ?? {};
 
   if (pricePerWeekCents !== undefined && !Number.isInteger(pricePerWeekCents)) {
