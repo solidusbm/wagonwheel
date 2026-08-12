@@ -8,6 +8,7 @@ import adminRouter from "./routes/admin.js";
 import calendarRouter from "./routes/calendar.js";
 import photosRouter from "./routes/photos.js";
 import { adminAuth } from "./middleware/adminAuth.js";
+import { makeAssetVersioner } from "./lib/assetVersion.js";
 import { styleGalleryCors } from "./middleware/styleGalleryCors.js";
 import { applySchema, applySeed, applyContentSeed, sitesCount } from "./lib/dbBootstrap.js";
 
@@ -50,11 +51,14 @@ app.use("/api/admin/style-gallery-approvals", styleGalleryCors);
 app.use("/api", sitesRouter);
 app.use("/api/reservations", reservationsRouter);
 app.use("/api/admin", adminAuth, adminRouter);
-app.use("/admin", adminAuth, express.static(path.join(__dirname, "..", "admin")));
+const adminDir = path.join(__dirname, "..", "admin");
+app.use("/admin", adminAuth, makeAssetVersioner(adminDir), express.static(adminDir));
 app.use("/calendar", calendarRouter);
 app.use(photosRouter);
 
-app.use(express.static(path.join(__dirname, "..", "public")));
+const publicDir = path.join(__dirname, "..", "public");
+app.use(makeAssetVersioner(publicDir));
+app.use(express.static(publicDir));
 
 app.use((err, req, res, next) => {
   console.error(err);
