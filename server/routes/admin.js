@@ -1,11 +1,11 @@
 import { Router } from "express";
 import multer from "multer";
 import { pool } from "../db.js";
-import { quote } from "../lib/pricing.js";
+import { quote, cancellationQuote } from "../lib/pricing.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
 import { applySchema, applySeed, applyContentSeed, sitesCount } from "../lib/dbBootstrap.js";
 import { mailConfigStatus, sendTestEmail, sendSampleGuestEmail } from "../lib/email.js";
-import { listLocations } from "../lib/square.js";
+import { listLocations, refundPayment } from "../lib/square.js";
 
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -87,6 +87,10 @@ function mapReservation(row) {
     // only link back to the Square transaction -- without it, reconciling a disputed charge means
     // matching on timestamp and amount alone.
     squarePaymentId: row.square_payment_id ?? null,
+    monthlyRateApplied: row.monthly_rate_applied ?? false,
+    squareRefundId: row.square_refund_id ?? null,
+    refundedCents: row.refunded_cents ?? null,
+    cancellationFeeCents: row.cancellation_fee_cents ?? null,
     createdAt: row.created_at,
   };
 }
@@ -96,6 +100,7 @@ const SELECT_RESERVATION = `
          r.application_details,
          r.check_in::text AS check_in, r.check_out::text AS check_out,
          r.subtotal_cents, r.booking_fee_cents, r.total_cents, r.created_at, r.square_payment_id,
+         r.monthly_rate_applied, r.square_refund_id, r.refunded_cents, r.cancellation_fee_cents,
          s.id AS site_id, s.name AS site_name, s.area
   FROM reservations r
   JOIN sites s ON s.id = r.site_id
@@ -806,6 +811,110 @@ router.post("/email/test", async (req, res) => {
     // The SMTP error is the useful part here, so pass it through instead of a bare 500.
     console.error("[email] Test send failed", err);
     res.status(400).json({ ok: false, error: err.message, code: err.code ?? null });
+  }
+});
+
+/* ---------- refunds ----------
+   The park's policy, applied by the machine instead of by memory: a booking charged at the monthly
+   rate carries a flat $100 fee, anything else 11.11% of what was taken, and the balance goes back.
+   `monthly_rate_applied` was recorded when the booking was made, so changing a rate later cannot
+   alter what an existing guest was quoted.
+
+   The quote is a separate GET so the office can see the numbers before committing to anything.
+   The POST takes an explicit amount -- defaulting to "refund everything" on an irreversible money
+   movement is how accidents happen -- which is also what lets the office override the policy for
+   an edge case without touching code. */
+router.get("/reservations/:code/refund-quote", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      "SELECT reservation_code, status, total_cents, monthly_rate_applied, square_payment_id, refunded_cents FROM reservations WHERE reservation_code = $1",
+      [req.params.code]
+    );
+    const r = rows[0];
+    if (!r) return res.status(404).json({ error: "Reservation not found" });
+    const policy = cancellationQuote({ totalCents: r.total_cents, monthlyRateApplied: r.monthly_rate_applied });
+    res.json({
+      reservationCode: r.reservation_code,
+      status: r.status,
+      totalCents: r.total_cents,
+      alreadyRefundedCents: r.refunded_cents ?? 0,
+      cardPayment: Boolean(r.square_payment_id),
+      ...policy,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/reservations/:code/refund", async (req, res, next) => {
+  const { amountCents, reason } = req.body ?? {};
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const { rows } = await client.query(
+      "SELECT * FROM reservations WHERE reservation_code = $1 FOR UPDATE",
+      [req.params.code]
+    );
+    const r = rows[0];
+    if (!r) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Reservation not found" });
+    }
+    if (r.refunded_cents) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: `Already refunded ${(r.refunded_cents / 100).toFixed(2)} on this reservation.` });
+    }
+
+    const policy = cancellationQuote({ totalCents: r.total_cents, monthlyRateApplied: r.monthly_rate_applied });
+    const amount = Number.isInteger(amountCents) ? amountCents : policy.refundCents;
+    if (amount < 0 || amount > r.total_cents) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: `Refund must be between $0.00 and ${(r.total_cents / 100).toFixed(2)}.` });
+    }
+
+    let refund = null;
+    if (amount > 0) {
+      if (!r.square_payment_id) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({
+          error: "This booking has no card payment -- it was entered by hand. Cancel it instead; there is nothing for Square to refund.",
+        });
+      }
+      // Square dedupes on this key, so a double-click cannot refund twice.
+      refund = await refundPayment({
+        paymentId: r.square_payment_id,
+        amountCents: amount,
+        idempotencyKey: `refund-${r.reservation_code}-${amount}`,
+        reason: reason || `Cancellation of ${r.reservation_code}`,
+      });
+    }
+
+    await client.query(
+      `UPDATE reservations
+          SET status = 'cancelled', square_refund_id = $1, refunded_cents = $2,
+              cancellation_fee_cents = $3, updated_at = now()
+        WHERE id = $4`,
+      [refund?.refundId ?? null, amount, r.total_cents - amount, r.id]
+    );
+    await client.query("COMMIT");
+
+    res.json({
+      ok: true,
+      reservationCode: r.reservation_code,
+      refundedCents: amount,
+      feeCents: r.total_cents - amount,
+      followedPolicy: amount === policy.refundCents,
+      squareRefundId: refund?.refundId ?? null,
+      squareStatus: refund?.status ?? null,
+    });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    if (err?.errors?.length) {
+      return res.status(400).json({ error: err.errors[0].detail ?? err.message, code: err.errors[0].code ?? null });
+    }
+    next(err);
+  } finally {
+    client.release();
   }
 });
 

@@ -69,4 +69,26 @@ export async function chargeCard({ sourceId, amountCents, idempotencyKey, refere
   return { paymentId: payment.id };
 }
 
+/* Refunds part or all of a captured payment. Square is the source of truth for what was actually
+   refunded, so the caller stores what comes back rather than what it asked for. Refunds are
+   irreversible -- there is no un-refund -- which is why the admin route makes the caller state the
+   amount explicitly instead of defaulting to "everything". */
+export async function refundPayment({ paymentId, amountCents, idempotencyKey, reason }) {
+  const square = getClient();
+  const response = await square.refunds.refundPayment({
+    paymentId,
+    idempotencyKey,
+    amountMoney: { amount: BigInt(amountCents), currency: "USD" },
+    reason,
+  });
+  const refund = response.refund;
+  if (!refund) throw new Error("Square returned no refund object");
+  if (refund.status === "FAILED") throw new Error(`Square refund failed: ${refund.status}`);
+  return {
+    refundId: refund.id,
+    status: refund.status,
+    amountCents: Number(refund.amountMoney?.amount ?? amountCents),
+  };
+}
+
 export { SquareError };

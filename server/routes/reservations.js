@@ -58,8 +58,9 @@ router.post("/", async (req, res, next) => {
       const insertResult = await client.query(
         `INSERT INTO reservations
            (site_id, reservation_code, guest_name, guest_email, guest_phone, num_guests, notes,
-            application_details, check_in, check_out, subtotal_cents, booking_fee_cents, total_cents, status)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,'pending')
+            application_details, check_in, check_out, subtotal_cents, booking_fee_cents, total_cents,
+            monthly_rate_applied, status)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,'pending')
          RETURNING id`,
         [
           siteId,
@@ -75,6 +76,7 @@ router.post("/", async (req, res, next) => {
           subtotalCents,
           bookingFeeCents,
           totalCents,
+          monthlyRateApplied,
         ]
       );
       reservationId = insertResult.rows[0].id;

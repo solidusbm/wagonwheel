@@ -120,11 +120,12 @@ async function loadReservations() {
       <td data-label="Dates">${formatDate(r.checkIn)} → ${formatDate(r.checkOut)}</td>
       <td data-label="Guest">${r.guest.name}<br><span style="color:var(--parchment-dim);font-size:11px;">${r.guest.email}${r.guest.phone ? " · " + r.guest.phone : ""}</span></td>
       <td data-label="Guests">${r.guest.numGuests}</td>
-      <td data-label="Total">${money(r.totalCents)}${r.squarePaymentId ? `<br><span style="color:var(--parchment-dim);font-size:10.5px;font-family:'JetBrains Mono',monospace;" title="Square payment ID — search this in Square to find the transaction">${escapeHtml(r.squarePaymentId)}</span>` : `<br><span style="color:var(--parchment-dim);font-size:10.5px;font-style:italic;">no card payment</span>`}</td>
+      <td data-label="Total">${money(r.totalCents)}${r.squarePaymentId ? `<br><span style="color:var(--parchment-dim);font-size:10.5px;font-family:'JetBrains Mono',monospace;" title="Square payment ID — search this in Square to find the transaction">${escapeHtml(r.squarePaymentId)}</span>` : `<br><span style="color:var(--parchment-dim);font-size:10.5px;font-style:italic;">no card payment</span>`}${r.refundedCents != null ? `<br><span style="color:var(--rust-bright);font-size:11px;">refunded ${money(r.refundedCents)}${r.cancellationFeeCents ? ` &middot; fee ${money(r.cancellationFeeCents)}` : ""}</span>` : ""}</td>
       <td data-label="Notes">${r.notes ?? ""}${renderApplication(r.applicationDetails)}</td>
       <td class="row-actions">
         <button type="button" class="btn btn-ghost" data-edit="${r.reservationCode}">Edit</button>
         <button type="button" class="btn btn-ghost" data-cancel="${r.reservationCode}">Cancel</button>
+        ${r.squarePaymentId && !r.refundedCents ? `<button type="button" class="btn btn-ghost" data-refund="${r.reservationCode}" style="color:var(--rust-bright);">Refund &amp; cancel</button>` : ""}
       </td>
     </tr>`
     )
@@ -151,6 +152,9 @@ async function loadReservations() {
   });
   content.querySelectorAll("[data-cancel]").forEach((btn) => {
     btn.addEventListener("click", () => onCancel(btn.getAttribute("data-cancel")));
+  });
+  content.querySelectorAll("[data-refund]").forEach((btn) => {
+    btn.addEventListener("click", () => refundReservation(btn.getAttribute("data-refund")));
   });
 }
 
@@ -634,6 +638,69 @@ async function onUploadPhoto(event) {
 }
 
 /* ---------- danger zone: force reseed ---------- */
+
+/* ---------- refunds ----------
+   Two steps on purpose: fetch the policy figures and show them, then act only on a confirmation
+   that names the amount. A refund cannot be undone, so the office should never be one stray click
+   away from sending money back. */
+async function refundReservation(code) {
+  let q;
+  try {
+    const res = await fetch(`/api/admin/reservations/${encodeURIComponent(code)}/refund-quote`);
+    q = await res.json();
+    if (!res.ok) throw new Error(q.error || "Could not read the refund figures.");
+  } catch (err) {
+    alert(err.message);
+    return;
+  }
+
+  const basis =
+    q.basis === "monthly"
+      ? "charged at the monthly rate, so a flat $100 fee"
+      : "a fee of 11.11% of what was charged";
+  const typed = prompt(
+    `Refund ${code}
+
+` +
+      `Paid: ${money(q.totalCents)}
+` +
+      `This booking was ${basis}.
+` +
+      `Fee ${money(q.feeCents)}, refund ${money(q.refundCents)}.
+
+` +
+      `This sends money back through Square and cannot be undone, and it cancels the booking.
+
+` +
+      `Amount to refund in dollars (edit for an edge case):`,
+    (q.refundCents / 100).toFixed(2)
+  );
+  if (typed === null) return;
+  const cents = Math.round(Number(typed) * 100);
+  if (!Number.isInteger(cents) || cents < 0 || cents > q.totalCents) {
+    alert(`That is not a valid amount. It must be between $0.00 and ${money(q.totalCents)}.`);
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/admin/reservations/${encodeURIComponent(code)}/refund`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amountCents: cents }),
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "Refund failed.");
+    alert(
+      `Refunded ${money(data.refundedCents)} for ${code}${data.followedPolicy ? "" : " (overriding the policy figure)"}.
+` +
+        `Fee kept: ${money(data.feeCents)}.
+The booking is cancelled.`
+    );
+    loadReservations();
+  } catch (err) {
+    alert("Refund failed: " + err.message);
+  }
+}
 
 /* ---------- payments ---------- */
 const squareCheckBtn = document.getElementById("square-check-btn");

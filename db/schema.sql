@@ -33,6 +33,12 @@ ALTER TABLE sites ADD COLUMN IF NOT EXISTS permanently_occupied BOOLEAN NOT NULL
 -- costs more than one month, two months never more than two, and so on. Placeholder $350 set
 -- 2026-08-11 at the user's direction pending the real per-site figures.
 ALTER TABLE sites ADD COLUMN IF NOT EXISTS price_per_month_cents INTEGER;
+-- Refund bookkeeping. monthly_rate_applied is captured at booking time because it decides
+-- which cancellation fee applies -- a later rate change must not alter what a guest was told.
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS monthly_rate_applied BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS square_refund_id TEXT;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS refunded_cents INTEGER;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS cancellation_fee_cents INTEGER;
 UPDATE sites SET price_per_month_cents = 35000 WHERE price_per_month_cents IS NULL;
 
 -- Unified, admin-managed amenity catalog. Each amenity independently controls where it
