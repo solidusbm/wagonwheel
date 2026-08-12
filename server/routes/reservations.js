@@ -39,9 +39,10 @@ router.post("/", async (req, res, next) => {
       return res.status(409).json({ error: "That site is not available for booking" });
     }
 
-    const { nights, subtotalCents, bookingFeeCents, totalCents } = quote({
+    const { nights, subtotalCents, bookingFeeCents, totalCents, monthlyRateApplied } = quote({
       pricePerNightCents: site.price_per_night_cents,
       pricePerWeekCents: site.price_per_week_cents,
+      pricePerMonthCents: site.price_per_month_cents,
       checkIn,
       checkOut,
     });
@@ -112,6 +113,7 @@ router.post("/", async (req, res, next) => {
         subtotalCents,
         bookingFeeCents,
         totalCents,
+        monthlyRateApplied,
       };
 
       await notifyAdminOfBooking(confirmedReservation);

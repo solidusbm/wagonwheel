@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { cancellationQuote } from "./pricing.js";
 
 let transporter;
 
@@ -95,6 +96,21 @@ function prettyDate(iso) {
   });
 }
 
+/* The guest is told what cancelling THEIR booking costs, in money, rather than being handed the
+   policy to work out. Which branch applies is decided at booking time and travels on the
+   reservation, so a later rate change can't retroactively alter what someone was told. */
+function cancelSentence(r) {
+  const { feeCents, refundCents, basis } = cancellationQuote({
+    totalCents: r.totalCents,
+    monthlyRateApplied: r.monthlyRateApplied,
+  });
+  const why =
+    basis === "monthly"
+      ? "this booking was charged at the monthly rate, so the service fee is a flat " + money(feeCents)
+      : "the service fee is 11.11% of what you paid, or " + money(feeCents);
+  return `if you cancel, ${why}, and ${money(refundCents)} is refunded.`;
+}
+
 export function guestConfirmation(reservation) {
   const r = reservation;
   const nights = r.nights === 1 ? "1 night" : `${r.nights} nights`;
@@ -120,11 +136,7 @@ export function guestConfirmation(reservation) {
     `  ${PARK.address}`,
     `  ${PARK.phone}`,
     ``,
-    `Cancelling: nightly and weekly reservations include a non-refundable`,
-    `one-night deposit. Cancel 14 or more days before you arrive and anything`,
-    `paid above that deposit is refunded. Cancel inside 14 days and you'll get`,
-    `camping credit instead, minus the deposit -- credit is good for a year and`,
-    `can't be used on holiday or event weekends.`,
+    `Cancelling: ${cancelSentence(r)}`,
     ``,
     `Quiet hours are 10:00pm to 6:00am. Speed limit is 5mph throughout the park.`,
     ``,
@@ -154,10 +166,7 @@ export function guestConfirmation(reservation) {
     ${escapeHtml(PARK.phone)}
   </p>
   <p style="font-size:14px;color:#5c5245;">
-    <b>Cancelling:</b> nightly and weekly reservations include a non-refundable one-night deposit.
-    Cancel 14 or more days before you arrive and anything paid above that deposit is refunded.
-    Cancel inside 14 days and you'll get camping credit instead, minus the deposit &mdash; credit is
-    good for a year and can't be used on holiday or event weekends.
+    <b>Cancelling:</b> ${escapeHtml(cancelSentence(r))}
   </p>
   <p style="font-size:14px;color:#5c5245;">Quiet hours are 10:00pm to 6:00am. Speed limit is 5mph throughout the park.</p>
   <p>Just reply to this email if you need anything before your stay.</p>

@@ -29,6 +29,11 @@ CREATE TABLE IF NOT EXISTS sites (
 ALTER TABLE sites ADD COLUMN IF NOT EXISTS price_per_week_cents INTEGER;
 ALTER TABLE sites ADD COLUMN IF NOT EXISTS notes TEXT;
 ALTER TABLE sites ADD COLUMN IF NOT EXISTS permanently_occupied BOOLEAN NOT NULL DEFAULT false;
+-- Monthly rate. The park caps any stay at this figure PER MONTH: a month-long stay never
+-- costs more than one month, two months never more than two, and so on. Placeholder $350 set
+-- 2026-08-11 at the user's direction pending the real per-site figures.
+ALTER TABLE sites ADD COLUMN IF NOT EXISTS price_per_month_cents INTEGER;
+UPDATE sites SET price_per_month_cents = 35000 WHERE price_per_month_cents IS NULL;
 
 -- Unified, admin-managed amenity catalog. Each amenity independently controls where it
 -- shows: show_on_homepage puts it in the homepage's "What every site includes" grid;

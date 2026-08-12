@@ -21,7 +21,7 @@ router.get("/sites", async (req, res, next) => {
   try {
     const { rows } = await pool.query(
       `SELECT s.id, s.name, s.area, s.amp_service, s.pull_through, s.max_rig_length, s.pet_friendly,
-              s.price_per_night_cents, s.price_per_week_cents, s.notes, s.permanently_occupied, am.names AS amenities
+              s.price_per_night_cents, s.price_per_week_cents, s.price_per_month_cents, s.notes, s.permanently_occupied, am.names AS amenities
        FROM sites s
        ${AMENITIES_JOIN}
        WHERE s.active = true ORDER BY s.sort_order`
@@ -43,7 +43,7 @@ router.get("/availability", async (req, res, next) => {
   try {
     const { rows } = await pool.query(
       `SELECT s.id, s.name, s.area, s.amp_service, s.pull_through, s.max_rig_length,
-              s.pet_friendly, s.price_per_night_cents, s.price_per_week_cents, s.notes,
+              s.pet_friendly, s.price_per_night_cents, s.price_per_week_cents, s.price_per_month_cents, s.notes,
               s.permanently_occupied, am.names AS amenities,
               (NOT s.permanently_occupied AND NOT EXISTS (
                 SELECT 1 FROM reservations r

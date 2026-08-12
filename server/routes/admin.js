@@ -46,6 +46,7 @@ function mapSite(row) {
     petFriendly: row.pet_friendly,
     pricePerNightCents: row.price_per_night_cents,
     pricePerWeekCents: row.price_per_week_cents,
+    pricePerMonthCents: row.price_per_month_cents,
     notes: row.notes,
     active: row.active,
     permanentlyOccupied: row.permanently_occupied,
@@ -132,7 +133,7 @@ router.post("/reservations", async (req, res, next) => {
   const client = await pool.connect();
   try {
     const siteResult = await client.query(
-      "SELECT id, price_per_night_cents, price_per_week_cents FROM sites WHERE id = $1 AND active = true",
+      "SELECT id, price_per_night_cents, price_per_week_cents, price_per_month_cents FROM sites WHERE id = $1 AND active = true",
       [siteId]
     );
     const site = siteResult.rows[0];
@@ -143,6 +144,7 @@ router.post("/reservations", async (req, res, next) => {
     const { nights, subtotalCents, bookingFeeCents, totalCents } = quote({
       pricePerNightCents: site.price_per_night_cents,
       pricePerWeekCents: site.price_per_week_cents,
+      pricePerMonthCents: site.price_per_month_cents,
       checkIn,
       checkOut,
     });
@@ -210,7 +212,7 @@ router.patch("/reservations/:code", async (req, res, next) => {
   try {
     const existingResult = await client.query(
       `SELECT r.*, r.check_in::text AS check_in_text, r.check_out::text AS check_out_text,
-              s.price_per_night_cents, s.price_per_week_cents
+              s.price_per_night_cents, s.price_per_week_cents, s.price_per_month_cents
        FROM reservations r JOIN sites s ON s.id = r.site_id WHERE r.reservation_code = $1`,
       [code]
     );
@@ -229,9 +231,10 @@ router.patch("/reservations/:code", async (req, res, next) => {
 
     let pricePerNightCents = existing.price_per_night_cents;
     let pricePerWeekCents = existing.price_per_week_cents;
+    let pricePerMonthCents = existing.price_per_month_cents;
     if (siteId !== undefined && siteId !== existing.site_id) {
       const siteResult = await client.query(
-        "SELECT price_per_night_cents, price_per_week_cents FROM sites WHERE id = $1 AND active = true",
+        "SELECT price_per_night_cents, price_per_week_cents, price_per_month_cents FROM sites WHERE id = $1 AND active = true",
         [siteId]
       );
       if (!siteResult.rows[0]) {
@@ -239,11 +242,13 @@ router.patch("/reservations/:code", async (req, res, next) => {
       }
       pricePerNightCents = siteResult.rows[0].price_per_night_cents;
       pricePerWeekCents = siteResult.rows[0].price_per_week_cents;
+      pricePerMonthCents = siteResult.rows[0].price_per_month_cents;
     }
 
     const { nights, subtotalCents, bookingFeeCents, totalCents } = quote({
       pricePerNightCents,
       pricePerWeekCents,
+      pricePerMonthCents,
       checkIn: nextCheckIn,
       checkOut: nextCheckOut,
     });
@@ -299,7 +304,7 @@ router.get("/sites", async (req, res, next) => {
 });
 
 router.post("/sites", async (req, res, next) => {
-  const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, notes, sortOrder, amenityIds, permanentlyOccupied } =
+  const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, pricePerMonthCents, notes, sortOrder, amenityIds, permanentlyOccupied } =
     req.body ?? {};
 
   if (!name?.trim() || !area?.trim()) {
@@ -316,8 +321,8 @@ router.post("/sites", async (req, res, next) => {
   try {
     await client.query("BEGIN");
     const { rows } = await client.query(
-      `INSERT INTO sites (name, area, amp_service, pull_through, max_rig_length, pet_friendly, price_per_night_cents, price_per_week_cents, notes, sort_order, permanently_occupied)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
+      `INSERT INTO sites (name, area, amp_service, pull_through, max_rig_length, pet_friendly, price_per_night_cents, price_per_week_cents, price_per_month_cents, notes, sort_order, permanently_occupied)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
       [
         name.trim(),
         area.trim(),
@@ -327,6 +332,7 @@ router.post("/sites", async (req, res, next) => {
         petFriendly ?? true,
         pricePerNightCents,
         pricePerWeekCents,
+        pricePerMonthCents ?? null,
         notes ?? null,
         Number.isInteger(sortOrder) ? sortOrder : 0,
         !!permanentlyOccupied,
@@ -374,8 +380,9 @@ router.patch("/sites/:id", async (req, res, next) => {
       `UPDATE sites SET
          name = $1, area = $2, amp_service = $3, pull_through = $4, max_rig_length = $5,
          pet_friendly = $6, price_per_night_cents = $7, price_per_week_cents = $8,
-         notes = $9, active = $10, sort_order = $11, permanently_occupied = $12
-       WHERE id = $13`,
+         price_per_month_cents = $9,
+         notes = $10, active = $11, sort_order = $12, permanently_occupied = $13
+       WHERE id = $14`,
       [
         name?.trim() || existing.name,
         area?.trim() || existing.area,
@@ -385,6 +392,7 @@ router.patch("/sites/:id", async (req, res, next) => {
         petFriendly !== undefined ? petFriendly : existing.pet_friendly,
         pricePerNightCents ?? existing.price_per_night_cents,
         pricePerWeekCents !== undefined ? pricePerWeekCents : existing.price_per_week_cents,
+        pricePerMonthCents !== undefined ? pricePerMonthCents : existing.price_per_month_cents,
         notes !== undefined ? notes : existing.notes,
         active !== undefined ? active : existing.active,
         Number.isInteger(sortOrder) ? sortOrder : existing.sort_order,

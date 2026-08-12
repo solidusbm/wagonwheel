@@ -265,6 +265,7 @@ const sRigField = document.getElementById("s-rig");
 const sPullThroughField = document.getElementById("s-pullthrough");
 const sNightField = document.getElementById("s-night");
 const sWeekField = document.getElementById("s-week");
+const sMonthField = document.getElementById("s-month");
 const sActiveField = document.getElementById("s-active");
 const sOccupiedField = document.getElementById("s-occupied");
 const sNotesField = document.getElementById("s-notes");
@@ -417,7 +418,7 @@ function renderSitesTable() {
       return `
     <tr${s.active ? "" : ' style="opacity:0.5;"'}>
       <td data-label="Site">${escapeHtml(s.name)}<br><span style="color:var(--parchment-dim);font-size:11px;">${escapeHtml(s.area)}</span></td>
-      <td data-label="Rate">${money(s.pricePerNightCents)}/night${s.pricePerWeekCents ? `<br>${money(s.pricePerWeekCents)}/week` : ""}</td>
+      <td data-label="Rate">${money(s.pricePerNightCents)}/night${s.pricePerWeekCents ? `<br>${money(s.pricePerWeekCents)}/week` : ""}${s.pricePerMonthCents ? `<br>${money(s.pricePerMonthCents)}/month cap` : ""}</td>
       <td data-label="Amp">${escapeHtml(s.ampService)} amp</td>
       <td data-label="Amenities">${siteAmenities.map((n) => `<span class="tag">${escapeHtml(n)}</span>`).join(" ") || "—"}</td>
       <td data-label="Status">${s.active ? (s.permanentlyOccupied ? "Occupied (not bookable)" : "Active") : "Inactive"}</td>
@@ -456,6 +457,7 @@ function openSiteForm(site) {
     sPullThroughField.value = String(site.pullThrough);
     sNightField.value = (site.pricePerNightCents / 100).toFixed(2);
     sWeekField.value = site.pricePerWeekCents ? (site.pricePerWeekCents / 100).toFixed(2) : "";
+    sMonthField.value = site.pricePerMonthCents ? (site.pricePerMonthCents / 100).toFixed(2) : "";
     sActiveField.value = String(site.active);
     sOccupiedField.value = String(site.permanentlyOccupied);
     sNotesField.value = site.notes ?? "";
@@ -491,6 +493,9 @@ async function onSiteSubmit(event) {
     pullThrough: sPullThroughField.value === "true",
     pricePerNightCents: Math.round(Number(sNightField.value) * 100),
     pricePerWeekCents: Math.round(Number(sWeekField.value) * 100),
+    // Blank means "no monthly rate", which switches the per-month cap off for this site
+    // rather than capping every stay at $0.
+    pricePerMonthCents: sMonthField.value.trim() === "" ? null : Math.round(Number(sMonthField.value) * 100),
     active: sActiveField.value === "true",
     permanentlyOccupied: sOccupiedField.value === "true",
     notes: sNotesField.value.trim() || null,

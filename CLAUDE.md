@@ -178,6 +178,20 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
 
 ## Settled — don't "fix" these back
 
+- **Rates are capped at the monthly rate, PER MONTH.** `quote()` bills whole months at
+  `price_per_month_cents` and the remainder the normal weekly/nightly way, never charging more
+  than one further month for the remainder. A single flat ceiling on the whole stay would make a
+  year cost the same as a fortnight -- don't "simplify" it to that. Set by the user 2026-08-11.
+  **All twelve sites are currently $350/month, a placeholder** pending the real per-site figures
+  from the Tuesday meeting. With that value the cap bites at about 11 nights, so an 11-night stay
+  and a 29-night stay both cost $350.
+- **Cancellation: $100 flat if the booking was charged at the monthly rate** (including a shorter
+  stay that hit the cap), **otherwise 11.11% of the amount charged.** The rest is refunded. This
+  **replaced** the earlier deposit / 14-day / camping-credit terms entirely on 2026-08-11 -- those
+  are gone from `/hours` and from the guest email, and should not come back. `monthlyRateApplied`
+  is decided at booking time and stored on the reservation, so a later rate change cannot
+  retroactively alter what a guest was told. Note the policy has a cliff: cancelling a 10-night
+  stay costs $38.33 but an 11-night stay costs $100.
 - **No booking fee.** `BOOKING_FEE_CENTS=0` on the live deploy, and the code now defaults to 0 to
   match. Confirmed by the user 2026-08-11 after the first live card came through at the bare
   nightly rate ($45.00 for one night on Site 4, no fee added). This is the park's decision, not a
