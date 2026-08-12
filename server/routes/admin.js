@@ -6,6 +6,7 @@ import { generateReservationCode } from "../lib/reservationCode.js";
 import { applySchema, applySeed, applyContentSeed, sitesCount } from "../lib/dbBootstrap.js";
 import { mailConfigStatus, sendTestEmail, sendSampleGuestEmail } from "../lib/email.js";
 import { listLocations, refundPayment } from "../lib/square.js";
+import { shrinkImage } from "../lib/imageResize.js";
 
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -533,11 +534,18 @@ router.post(
     }
     const { caption, showOnHomepage } = req.body ?? {};
     try {
+      // Shrink before storing, not on the way out: the resize happens once per photo instead of
+      // once per page view, and the database stops growing by a megabyte per upload.
+      const shrunk = await shrinkImage(req.file.buffer);
+      console.log(
+        `[photos] ${req.file.originalname}: ${(shrunk.before / 1024).toFixed(0)}KB -> ` +
+          `${(shrunk.after / 1024).toFixed(0)}KB${shrunk.resized ? "" : " (kept original)"}`
+      );
       const { rows } = await pool.query(
         `INSERT INTO photos (caption, mime_type, data, show_on_homepage, sort_order)
          VALUES ($1, $2, $3, $4, COALESCE((SELECT MAX(sort_order) + 1 FROM photos), 0))
          RETURNING id, caption, show_on_homepage, sort_order`,
-        [caption?.trim() || null, req.file.mimetype, req.file.buffer, showOnHomepage === "true" || showOnHomepage === true]
+        [caption?.trim() || null, shrunk.mimeType ?? req.file.mimetype, shrunk.buffer, showOnHomepage === "true" || showOnHomepage === true]
       );
       res.status(201).json(mapPhoto(rows[0]));
     } catch (err) {
@@ -915,6 +923,30 @@ router.post("/reservations/:code/refund", async (req, res, next) => {
     next(err);
   } finally {
     client.release();
+  }
+});
+
+/* Re-encodes photos already stored at full resolution. Uploads are shrunk on the way in now,
+   but anything added before that lands as a ~1MB original -- and the homepage pulls all of them.
+   Idempotent: a photo that is already small comes back unchanged and is left alone. */
+router.post("/photos/optimize", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query("SELECT id, caption, mime_type, data FROM photos ORDER BY id");
+    const results = [];
+    let saved = 0;
+    for (const p of rows) {
+      const shrunk = await shrinkImage(p.data);
+      if (!shrunk.resized || shrunk.after >= p.data.length) {
+        results.push({ id: p.id, caption: p.caption, beforeKb: Math.round(p.data.length / 1024), afterKb: Math.round(p.data.length / 1024), changed: false });
+        continue;
+      }
+      await pool.query("UPDATE photos SET data = $1, mime_type = $2 WHERE id = $3", [shrunk.buffer, shrunk.mimeType ?? p.mime_type, p.id]);
+      saved += p.data.length - shrunk.after;
+      results.push({ id: p.id, caption: p.caption, beforeKb: Math.round(shrunk.before / 1024), afterKb: Math.round(shrunk.after / 1024), changed: true });
+    }
+    res.json({ ok: true, photos: results.length, savedKb: Math.round(saved / 1024), results });
+  } catch (err) {
+    next(err);
   }
 });
 
