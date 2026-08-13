@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { pool } from "../db.js";
+import { quote, isPriceable } from "../lib/pricing.js";
 
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -45,7 +46,11 @@ router.get("/availability", async (req, res, next) => {
       `SELECT s.id, s.name, s.area, s.amp_service, s.pull_through, s.max_rig_length,
               s.pet_friendly, s.price_per_night_cents, s.price_per_week_cents, s.price_per_month_cents, s.notes,
               s.permanently_occupied, am.names AS amenities,
-              (NOT s.permanently_occupied AND NOT EXISTS (
+              -- A site with every rate set to N/A can't be priced, so it can't be offered --
+              -- better greyed out in the list than failing at checkout.
+              ((s.price_per_night_cents IS NOT NULL OR s.price_per_week_cents IS NOT NULL
+                OR s.price_per_month_cents IS NOT NULL)
+               AND NOT s.permanently_occupied AND NOT EXISTS (
                 SELECT 1 FROM reservations r
                 WHERE r.site_id = s.id
                   AND r.status IN ('pending', 'confirmed')
@@ -74,6 +79,42 @@ router.get("/availability", async (req, res, next) => {
         booked_ranges: undefined,
       }))
     );
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* Prices a stay for the order summary on the booking page. The browser used to work this out for
+   itself -- stacking weeks and nights, knowing nothing about the monthly cap, and adding a $5
+   booking fee the park had stopped charging -- so the "estimated total" a guest agreed to could
+   differ from what their card was charged. It asks the same quote() the checkout uses now, and
+   there is exactly one place rates are interpreted. */
+router.get("/quote", async (req, res, next) => {
+  const { siteId, checkIn, checkOut } = req.query;
+  if (!/^\d+$/.test(siteId ?? "")) {
+    return res.status(400).json({ error: "siteId is required" });
+  }
+  if (!DATE_RE.test(checkIn ?? "") || !DATE_RE.test(checkOut ?? "") || checkOut <= checkIn) {
+    return res.status(400).json({ error: "Invalid checkIn/checkOut" });
+  }
+  try {
+    const { rows } = await pool.query(
+      `SELECT price_per_night_cents, price_per_week_cents, price_per_month_cents
+       FROM sites WHERE id = $1 AND active = true`,
+      [Number(siteId)]
+    );
+    if (!rows[0]) {
+      return res.status(404).json({ error: "Site not found" });
+    }
+    const rates = {
+      pricePerNightCents: rows[0].price_per_night_cents,
+      pricePerWeekCents: rows[0].price_per_week_cents,
+      pricePerMonthCents: rows[0].price_per_month_cents,
+    };
+    if (!isPriceable(rates)) {
+      return res.status(409).json({ error: "That site has no rates set, so it can't be booked online right now." });
+    }
+    res.json(quote({ ...rates, checkIn, checkOut }));
   } catch (err) {
     next(err);
   }

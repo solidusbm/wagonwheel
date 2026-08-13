@@ -1,7 +1,7 @@
 import { Router } from "express";
 import multer from "multer";
 import { pool } from "../db.js";
-import { quote, cancellationQuote } from "../lib/pricing.js";
+import { quote, cancellationQuote, isPriceable } from "../lib/pricing.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
 import { applySchema, applySeed, applyContentSeed, sitesCount } from "../lib/dbBootstrap.js";
 import { mailConfigStatus, sendTestEmail, sendSampleGuestEmail } from "../lib/email.js";
@@ -54,6 +54,24 @@ function mapSite(row) {
     sortOrder: row.sort_order,
     amenityIds: row.amenity_ids,
   };
+}
+
+/* null on a rate means "N/A -- this site isn't sold by that term": Site 1 is rented by the month
+   only, so its nightly and weekly rates are null. None of the three is individually required.
+   What IS required is that at least one survives -- a site with all three N/A is inventory
+   nobody can price, and it would fail at checkout rather than at save time. Returns a message
+   fit to show the office, or null if the rates are fine. */
+function rateProblem(rates) {
+  for (const [key, value] of Object.entries(rates)) {
+    if (value === null || value === undefined) continue;
+    if (!Number.isInteger(value) || value < 0) {
+      return `${key} must be a whole number of cents, or N/A`;
+    }
+  }
+  if (!isPriceable(rates)) {
+    return "A site needs at least one rate — nightly, weekly, or monthly. They can't all be N/A.";
+  }
+  return null;
 }
 
 function mapAmenity(row) {
@@ -147,10 +165,17 @@ router.post("/reservations", async (req, res, next) => {
       return res.status(404).json({ error: "Site not found" });
     }
 
-    const { nights, subtotalCents, bookingFeeCents, totalCents } = quote({
+    const rates = {
       pricePerNightCents: site.price_per_night_cents,
       pricePerWeekCents: site.price_per_week_cents,
       pricePerMonthCents: site.price_per_month_cents,
+    };
+    if (!isPriceable(rates)) {
+      return res.status(400).json({ error: "That site has no rates set, so a stay can't be priced." });
+    }
+
+    const { nights, subtotalCents, bookingFeeCents, totalCents, monthlyRateApplied } = quote({
+      ...rates,
       checkIn,
       checkOut,
     });
@@ -158,12 +183,16 @@ router.post("/reservations", async (req, res, next) => {
       return res.status(400).json({ error: "Stay must be at least 1 night" });
     }
 
+    // monthly_rate_applied decides which cancellation fee this booking carries ($100 flat vs
+    // 11.11%). A phone-in keyed here has to record it just like a web booking does, or a
+    // long-stay guest gets refunded on the wrong terms.
     const reservationCode = generateReservationCode();
     await client.query(
       `INSERT INTO reservations
          (site_id, reservation_code, guest_name, guest_email, guest_phone, num_guests, notes,
-          application_details, check_in, check_out, subtotal_cents, booking_fee_cents, total_cents, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+          application_details, check_in, check_out, subtotal_cents, booking_fee_cents, total_cents,
+          monthly_rate_applied, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
       [
         siteId,
         reservationCode,
@@ -178,6 +207,7 @@ router.post("/reservations", async (req, res, next) => {
         subtotalCents,
         bookingFeeCents,
         totalCents,
+        monthlyRateApplied,
         status ?? "confirmed",
       ]
     );
@@ -251,7 +281,11 @@ router.patch("/reservations/:code", async (req, res, next) => {
       pricePerMonthCents = siteResult.rows[0].price_per_month_cents;
     }
 
-    const { nights, subtotalCents, bookingFeeCents, totalCents } = quote({
+    if (!isPriceable({ pricePerNightCents, pricePerWeekCents, pricePerMonthCents })) {
+      return res.status(400).json({ error: "That site has no rates set, so a stay can't be priced." });
+    }
+
+    const { nights, subtotalCents, bookingFeeCents, totalCents, monthlyRateApplied } = quote({
       pricePerNightCents,
       pricePerWeekCents,
       pricePerMonthCents,
@@ -267,8 +301,9 @@ router.patch("/reservations/:code", async (req, res, next) => {
          site_id = $1, check_in = $2, check_out = $3,
          guest_name = $4, guest_email = $5, guest_phone = $6, num_guests = $7, notes = $8,
          subtotal_cents = $9, booking_fee_cents = $10, total_cents = $11,
-         status = $12, updated_at = now()
-       WHERE reservation_code = $13`,
+         monthly_rate_applied = $12,
+         status = $13, updated_at = now()
+       WHERE reservation_code = $14`,
       [
         nextSiteId,
         nextCheckIn,
@@ -281,6 +316,7 @@ router.patch("/reservations/:code", async (req, res, next) => {
         subtotalCents,
         bookingFeeCents,
         totalCents,
+        monthlyRateApplied,
         nextStatus,
         code,
       ]
@@ -316,11 +352,13 @@ router.post("/sites", async (req, res, next) => {
   if (!name?.trim() || !area?.trim()) {
     return res.status(400).json({ error: "name and area are required" });
   }
-  if (!Number.isInteger(pricePerNightCents)) {
-    return res.status(400).json({ error: "pricePerNightCents is required" });
-  }
-  if (!Number.isInteger(pricePerWeekCents)) {
-    return res.status(400).json({ error: "pricePerWeekCents is required" });
+  const badRates = rateProblem({
+    pricePerNightCents: pricePerNightCents ?? null,
+    pricePerWeekCents: pricePerWeekCents ?? null,
+    pricePerMonthCents: pricePerMonthCents ?? null,
+  });
+  if (badRates) {
+    return res.status(400).json({ error: badRates });
   }
 
   const client = await pool.connect();
@@ -336,8 +374,8 @@ router.post("/sites", async (req, res, next) => {
         !!pullThrough,
         maxRigLength ?? null,
         petFriendly ?? true,
-        pricePerNightCents,
-        pricePerWeekCents,
+        pricePerNightCents ?? null,
+        pricePerWeekCents ?? null,
         pricePerMonthCents ?? null,
         notes ?? null,
         Number.isInteger(sortOrder) ? sortOrder : 0,
@@ -368,10 +406,6 @@ router.patch("/sites/:id", async (req, res, next) => {
   const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, pricePerMonthCents, notes, active, sortOrder, amenityIds, permanentlyOccupied } =
     req.body ?? {};
 
-  if (pricePerWeekCents !== undefined && !Number.isInteger(pricePerWeekCents)) {
-    return res.status(400).json({ error: "pricePerWeekCents must be a whole number of cents" });
-  }
-
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -380,6 +414,21 @@ router.patch("/sites/:id", async (req, res, next) => {
     if (!existing) {
       await client.query("ROLLBACK");
       return res.status(404).json({ error: "Site not found" });
+    }
+
+    /* Every rate is `!== undefined ? incoming : existing`, never `incoming ?? existing`: a null
+       here is the office deliberately setting that term to N/A, and `??` would treat it as
+       "unchanged" and silently keep the old rate. The check runs against the MERGED rates, since
+       clearing one field is only invalid in light of what the other two already are. */
+    const nextRates = {
+      pricePerNightCents: pricePerNightCents !== undefined ? pricePerNightCents : existing.price_per_night_cents,
+      pricePerWeekCents: pricePerWeekCents !== undefined ? pricePerWeekCents : existing.price_per_week_cents,
+      pricePerMonthCents: pricePerMonthCents !== undefined ? pricePerMonthCents : existing.price_per_month_cents,
+    };
+    const badRates = rateProblem(nextRates);
+    if (badRates) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({ error: badRates });
     }
 
     await client.query(
@@ -396,9 +445,9 @@ router.patch("/sites/:id", async (req, res, next) => {
         pullThrough !== undefined ? pullThrough : existing.pull_through,
         maxRigLength !== undefined ? maxRigLength : existing.max_rig_length,
         petFriendly !== undefined ? petFriendly : existing.pet_friendly,
-        pricePerNightCents ?? existing.price_per_night_cents,
-        pricePerWeekCents !== undefined ? pricePerWeekCents : existing.price_per_week_cents,
-        pricePerMonthCents !== undefined ? pricePerMonthCents : existing.price_per_month_cents,
+        nextRates.pricePerNightCents,
+        nextRates.pricePerWeekCents,
+        nextRates.pricePerMonthCents,
         notes !== undefined ? notes : existing.notes,
         active !== undefined ? active : existing.active,
         Number.isInteger(sortOrder) ? sortOrder : existing.sort_order,

@@ -231,36 +231,45 @@
             </div>
           </div>
 
-          <fieldset>
-            <legend>Spouse / co-applicant (optional)</legend>
-            <div class="field">
-              <label for="spouseName">Full name</label>
-              <input type="text" id="spouseName" />
+          <!-- Everything from here to the office notes is the park's paper application. It's all
+               optional, and it starts collapsed so the phone view isn't forty fields deep before
+               the card entry. Fields stay in the DOM when a section is shut, so anything already
+               typed still submits. -->
+          <details class="form-section">
+            <summary>Spouse / co-applicant<span class="opt">Optional</span></summary>
+            <div class="form-section-body">
+              <div class="field">
+                <label for="spouseName">Full name</label>
+                <input type="text" id="spouseName" />
+              </div>
+              <div class="grid-3">
+                <div class="field">
+                  <label for="spouseDob">Date of birth</label>
+                  <input type="date" id="spouseDob" />
+                </div>
+                <div class="field">
+                  <label for="spousePhone">Phone</label>
+                  <input type="tel" id="spousePhone" />
+                </div>
+                <div class="field">
+                  <label for="spouseLicenseNumber">License #</label>
+                  <input type="text" id="spouseLicenseNumber" />
+                </div>
+              </div>
             </div>
-            <div class="grid-3">
-              <div class="field">
-                <label for="spouseDob">Date of birth</label>
-                <input type="date" id="spouseDob" />
-              </div>
-              <div class="field">
-                <label for="spousePhone">Phone</label>
-                <input type="tel" id="spousePhone" />
-              </div>
-              <div class="field">
-                <label for="spouseLicenseNumber">License #</label>
-                <input type="text" id="spouseLicenseNumber" />
-              </div>
+          </details>
+
+          <details class="form-section">
+            <summary>Additional occupants<span class="opt">Optional</span></summary>
+            <div class="form-section-body">
+              <div id="occupants-list"></div>
+              <button type="button" class="btn btn-ghost" id="add-occupant" style="margin-bottom:18px;">+ Add occupant</button>
             </div>
-          </fieldset>
+          </details>
 
-          <fieldset>
-            <legend>Additional occupants</legend>
-            <div id="occupants-list"></div>
-            <button type="button" class="btn btn-ghost" id="add-occupant" style="margin-bottom:18px;">+ Add occupant</button>
-          </fieldset>
-
-          <fieldset>
-            <legend>Vehicles (up to 2, not counting the RV)</legend>
+          <details class="form-section">
+            <summary>Vehicles<span class="opt">Up to 2, not counting the RV</span></summary>
+            <div class="form-section-body">
             <div class="grid-4">
               <div class="field"><label for="v1Make">Make</label><input type="text" id="v1Make" /></div>
               <div class="field"><label for="v1Model">Model</label><input type="text" id="v1Model" /></div>
@@ -273,10 +282,12 @@
               <div class="field"><label for="v2Year">Year</label><input type="text" id="v2Year" inputmode="numeric" /></div>
               <div class="field"><label for="v2Plate">Plate</label><input type="text" id="v2Plate" /></div>
             </div>
-          </fieldset>
+            </div>
+          </details>
 
-          <fieldset>
-            <legend>RV information</legend>
+          <details class="form-section">
+            <summary>RV information<span class="opt">Helps us put you on the right site</span></summary>
+            <div class="form-section-body">
             <div class="grid-3">
               <div class="field"><label for="rvMake">Make</label><input type="text" id="rvMake" /></div>
               <div class="field"><label for="rvModel">Model</label><input type="text" id="rvModel" /></div>
@@ -302,10 +313,12 @@
                 <select id="rvTrailerType"><option value="">—</option><option>Bumper Pull</option><option>Fifth Wheel</option></select>
               </div>
             </div>
-          </fieldset>
+            </div>
+          </details>
 
-          <fieldset>
-            <legend>Pets (up to 2)</legend>
+          <details class="form-section">
+            <summary>Pets<span class="opt">Up to 2</span></summary>
+            <div class="form-section-body">
             <div class="pet-block">
               <div class="grid-4">
                 <div class="field"><label for="pet1Type">Type &amp; breed</label><input type="text" id="pet1Type" /></div>
@@ -346,7 +359,8 @@
                 </div>
               </div>
             </div>
-          </fieldset>
+            </div>
+          </details>
 
           <div class="field">
             <label for="guestNotes">Notes for the office (optional)</label>
@@ -354,7 +368,7 @@
           </div>
 
           <div class="field">
-            <label for="card-container">Card details (Square sandbox)</label>
+            <label for="card-container" id="card-label">Card details</label>
             <div id="card-container" class="card-mock"></div>
           </div>
 
@@ -363,7 +377,11 @@
             <button type="button" class="btn btn-ghost" id="backSite">Back</button>
             <button type="submit" class="btn btn-primary" id="pay-btn">Pay &amp; reserve</button>
           </div>
-          <p class="demo-note">Payments are processed by Square. This site is running against Square's <strong>sandbox</strong> environment until real API keys are configured — no real card will be charged.</p>
+          <!-- Shown only when the app is actually pointed at Square's sandbox. It used to be
+               unconditional, so the live site was telling guests at checkout that no real card
+               would be charged while charging their card. app.js reveals it from /api/config. -->
+          <p class="demo-note" id="sandbox-note" hidden>This site is running against Square's <strong>sandbox</strong> environment — no real card will be charged.</p>
+          <p class="pay-note">Payments are processed securely by Square. Your card details go straight to Square and are never stored on this site.</p>
         </form>
 
         <aside class="order-summary" id="order-summary"></aside>

@@ -43,6 +43,13 @@ async function init() {
 
   state.config = await fetch("/api/config").then((r) => r.json());
 
+  // Only warn about the sandbox when we are genuinely in it. The warning was hardcoded into the
+  // page, so the live site was promising guests at checkout that no real card would be charged.
+  if (state.config.squareEnvironment !== "production") {
+    document.getElementById("sandbox-note").hidden = false;
+    document.getElementById("card-label").textContent = "Card details (Square sandbox)";
+  }
+
   availabilityForm.addEventListener("submit", onCheckAvailability);
   bookingForm.addEventListener("submit", onSubmitBooking);
   document.getElementById("backDates").addEventListener("click", () => goToStep(0));
@@ -222,6 +229,25 @@ function renderSites(sites) {
   }
 }
 
+/* Shows only the terms a site is actually rented by. A rate of null is N/A -- Site 1 is let by
+   the month only -- so leading with a nightly figure would advertise a price the park won't sell.
+   The first available term is shown large, the rest as an aside. */
+function siteRates(site) {
+  const small = (t) => `<span style="font-size:11px;color:var(--parchment-dim);">${t}</span>`;
+  const rates = [
+    [site.price_per_night_cents, "night"],
+    [site.price_per_week_cents, "week"],
+    [site.price_per_month_cents, "month"],
+  ].filter(([cents]) => cents);
+
+  if (rates.length === 0) return small("Rates not set");
+  const [[leadCents, leadUnit], ...rest] = rates;
+  return (
+    `${money(leadCents)} ${small(`/${leadUnit}`)}` +
+    rest.map(([cents, unit]) => ` ${small(`· ${money(cents)}/${unit}`)}`).join("")
+  );
+}
+
 function renderSiteCard(site, nights) {
   const card = document.createElement("div");
   card.className = `site-card${site.available ? "" : " unavailable"}${state.selectedSite?.id === site.id ? " selected" : ""}`;
@@ -235,7 +261,7 @@ function renderSiteCard(site, nights) {
   card.innerHTML = `
     <h4>${escapeHtml(site.name)}</h4>
     <div class="site-tags">${tags.map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>
-    <div class="site-price">${money(site.price_per_night_cents)} <span style="font-size:11px;color:var(--parchment-dim);">/night</span>${site.price_per_week_cents ? ` <span style="font-size:11px;color:var(--parchment-dim);">· ${money(site.price_per_week_cents)}/week</span>` : ""}</div>
+    <div class="site-price">${siteRates(site)}</div>
     ${site.notes ? `<div class="site-notes">${escapeHtml(site.notes)}</div>` : ""}
     <div class="availability-flag ${site.available ? "available" : "unavailable"}">
       ${site.available ? "Available" : site.permanently_occupied ? "Occupied — not bookable" : "Booked for these dates"}
@@ -244,7 +270,7 @@ function renderSiteCard(site, nights) {
   `;
 
   if (site.available) {
-    card.addEventListener("click", () => selectSite(site, nights));
+    card.addEventListener("click", () => selectSite(site));
   }
 
   return card;
@@ -409,7 +435,7 @@ function renderSiteMap(sites) {
     el.addEventListener("click", () => {
       const id = Number(el.getAttribute("data-site-id"));
       const site = sites.find((s) => s.id === id);
-      if (site) selectSite(site, nightsBetween(state.checkIn, state.checkOut));
+      if (site) selectSite(site);
     });
   });
 }
@@ -513,6 +539,9 @@ function resetApplicationFields() {
   occupantsList.innerHTML = "";
   occupantRowCount = 0;
   addOccupantRow();
+  // Re-collapse the optional application sections. form.reset() clears the inputs inside them but
+  // leaves a section the previous guest opened standing open for the next one.
+  document.querySelectorAll("details.form-section").forEach((d) => d.removeAttribute("open"));
 }
 
 function val(id) {
@@ -575,29 +604,49 @@ function buildApplication() {
   };
 }
 
-async function selectSite(site, nights) {
+async function renderOrderSummary(site) {
+  const head = `<h3>${escapeHtml(site.name)}</h3><p>${escapeHtml(site.area)}</p>`;
+  const params = new URLSearchParams({ siteId: site.id, checkIn: state.checkIn, checkOut: state.checkOut });
+
+  let q;
+  try {
+    const res = await fetch(`/api/quote?${params}`);
+    q = await res.json();
+    if (!res.ok) throw new Error(q.error ?? "Could not price this stay");
+  } catch (err) {
+    orderSummary.innerHTML = `${head}<div class="summary-row"><span>${escapeHtml(err.message)}</span><span></span></div>`;
+    return;
+  }
+
+  // A stay billed at the monthly rate is worth saying out loud: it is both a saving on the
+  // nightly arithmetic and the thing that decides the guest's cancellation terms ($100 flat
+  // rather than 11.11%), which the confirmation email then repeats back to them.
+  const monthlyNote = q.monthlyRateApplied
+    ? `<p style="font-size:0.75rem;opacity:0.8;margin-top:8px;">Charged at the monthly rate — a stay is never billed more than the monthly rate for each month.</p>`
+    : "";
+
+  orderSummary.innerHTML = `
+    ${head}
+    <div class="summary-row"><span>${formatDate(state.checkIn)} → ${formatDate(state.checkOut)}</span><span>${q.nights} night${q.nights === 1 ? "" : "s"}</span></div>
+    ${q.lines.map((l) => `<div class="summary-row"><span>${escapeHtml(l.label)}</span><span>${money(l.amountCents)}</span></div>`).join("")}
+    ${q.bookingFeeCents ? `<div class="summary-row"><span>Booking fee</span><span>${money(q.bookingFeeCents)}</span></div>` : ""}
+    <div class="summary-row total"><span>Total</span><span>${money(q.totalCents)}</span></div>
+    ${monthlyNote}
+  `;
+}
+
+async function selectSite(site) {
   state.selectedSite = site;
   renderSites(state.sites);
 
-  const weeks = site.price_per_week_cents ? Math.floor(nights / 7) : 0;
-  const remainderNights = site.price_per_week_cents ? nights % 7 : nights;
-  const subtotal = weeks * site.price_per_week_cents + remainderNights * site.price_per_night_cents;
-  const bookingFee = 500;
-  const total = subtotal + bookingFee;
-
-  const rateRows = [
-    weeks > 0 ? `<div class="summary-row"><span>${money(site.price_per_week_cents)} × ${weeks} week${weeks === 1 ? "" : "s"}</span><span>${money(weeks * site.price_per_week_cents)}</span></div>` : "",
-    remainderNights > 0 ? `<div class="summary-row"><span>${money(site.price_per_night_cents)} × ${remainderNights} night${remainderNights === 1 ? "" : "s"}</span><span>${money(remainderNights * site.price_per_night_cents)}</span></div>` : "",
-  ].join("");
-
+  /* The price comes from the server, which is the only thing that prices a stay. This used to be
+     worked out here -- stacking weeks and nights, unaware of the monthly cap, and adding a $5
+     booking fee the park had already dropped -- so the total a guest agreed to could differ from
+     what their card was charged. Anything with a rate in it belongs on the server side now. */
   orderSummary.innerHTML = `
     <h3>${escapeHtml(site.name)}</h3>
     <p>${escapeHtml(site.area)}</p>
-    <div class="summary-row"><span>${formatDate(state.checkIn)} → ${formatDate(state.checkOut)}</span><span>${nights} night${nights === 1 ? "" : "s"}</span></div>
-    ${rateRows}
-    <div class="summary-row"><span>Booking fee</span><span>${money(bookingFee)}</span></div>
-    <div class="summary-row total"><span>Estimated total</span><span>${money(total)}</span></div>
-    <p style="font-size:0.75rem;opacity:0.75;margin-top:8px;">Final total is confirmed by the server at checkout.</p>
+    <div class="summary-row"><span>Working out your total…</span><span></span></div>
   `;
 
   bookingError.hidden = true;
@@ -605,7 +654,7 @@ async function selectSite(site, nights) {
   resetApplicationFields();
   goToStep(2);
 
-  await mountCard();
+  await Promise.all([renderOrderSummary(site), mountCard()]);
 }
 
 async function mountCard() {

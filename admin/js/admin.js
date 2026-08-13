@@ -270,6 +270,9 @@ const sPullThroughField = document.getElementById("s-pullthrough");
 const sNightField = document.getElementById("s-night");
 const sWeekField = document.getElementById("s-week");
 const sMonthField = document.getElementById("s-month");
+const sNightNa = document.getElementById("s-night-na");
+const sWeekNa = document.getElementById("s-week-na");
+const sMonthNa = document.getElementById("s-month-na");
 const sActiveField = document.getElementById("s-active");
 const sOccupiedField = document.getElementById("s-occupied");
 const sNotesField = document.getElementById("s-notes");
@@ -279,6 +282,43 @@ document.getElementById("new-site-btn").addEventListener("click", () => openSite
 document.getElementById("cancel-site-btn").addEventListener("click", closeSiteForm);
 siteForm.addEventListener("submit", onSiteSubmit);
 amenityAddForm.addEventListener("submit", onAddAmenity);
+
+/* Each rate is a number box plus an N/A tick. Ticking N/A clears and disables the box, so a term
+   the park doesn't rent by can't be mistaken for one nobody has filled in yet -- and typing a
+   figure back in unticks it, rather than leaving a number sitting greyed-out and ignored. */
+const RATE_FIELDS = [
+  [sNightField, sNightNa],
+  [sWeekField, sWeekNa],
+  [sMonthField, sMonthNa],
+];
+
+function applyNaState(input, na) {
+  input.disabled = na.checked;
+  if (na.checked) input.value = "";
+}
+
+RATE_FIELDS.forEach(([input, na]) => {
+  na.addEventListener("change", () => {
+    applyNaState(input, na);
+    if (!na.checked) input.focus();
+  });
+});
+
+// Reads a rate box as cents, or null when it's marked N/A (or simply left empty -- an empty box
+// and a ticked N/A mean the same thing to the server, and the tick is just the legible way of
+// saying it).
+function rateCents(input, na) {
+  if (na.checked) return null;
+  const raw = input.value.trim();
+  if (raw === "") return null;
+  return Math.round(Number(raw) * 100);
+}
+
+function setRate(input, na, cents) {
+  na.checked = !cents;
+  input.value = cents ? (cents / 100).toFixed(2) : "";
+  applyNaState(input, na);
+}
 
 async function loadAmenities() {
   const res = await fetch("/api/admin/amenities");
@@ -411,6 +451,19 @@ async function loadAdminSites() {
   renderSitesTable();
 }
 
+// Lists only the terms this site is actually rented by, so an N/A rate reads as absent rather
+// than as $0.00. A monthly-only site shows one line, and says so.
+function rateSummary(s) {
+  const parts = [
+    s.pricePerNightCents ? `${money(s.pricePerNightCents)}/night` : null,
+    s.pricePerWeekCents ? `${money(s.pricePerWeekCents)}/week` : null,
+    s.pricePerMonthCents ? `${money(s.pricePerMonthCents)}/month cap` : null,
+  ].filter(Boolean);
+  if (parts.length === 0) return `<span style="color:var(--rust-bright);">No rates — not bookable</span>`;
+  const onlyMonthly = parts.length === 1 && s.pricePerMonthCents;
+  return parts.join("<br>") + (onlyMonthly ? `<br><span style="color:var(--parchment-dim);font-size:11px;">monthly only</span>` : "");
+}
+
 function renderSitesTable() {
   if (adminSites.length === 0) {
     sitesContent.innerHTML = `<p class="empty-note">No sites yet.</p>`;
@@ -422,7 +475,7 @@ function renderSitesTable() {
       return `
     <tr${s.active ? "" : ' style="opacity:0.5;"'}>
       <td data-label="Site">${escapeHtml(s.name)}<br><span style="color:var(--parchment-dim);font-size:11px;">${escapeHtml(s.area)}</span></td>
-      <td data-label="Rate">${money(s.pricePerNightCents)}/night${s.pricePerWeekCents ? `<br>${money(s.pricePerWeekCents)}/week` : ""}${s.pricePerMonthCents ? `<br>${money(s.pricePerMonthCents)}/month cap` : ""}</td>
+      <td data-label="Rate">${rateSummary(s)}</td>
       <td data-label="Amp">${escapeHtml(s.ampService)} amp</td>
       <td data-label="Amenities">${siteAmenities.map((n) => `<span class="tag">${escapeHtml(n)}</span>`).join(" ") || "—"}</td>
       <td data-label="Status">${s.active ? (s.permanentlyOccupied ? "Occupied (not bookable)" : "Active") : "Inactive"}</td>
@@ -459,9 +512,9 @@ function openSiteForm(site) {
     sAmpField.value = site.ampService;
     sRigField.value = site.maxRigLength ?? "";
     sPullThroughField.value = String(site.pullThrough);
-    sNightField.value = (site.pricePerNightCents / 100).toFixed(2);
-    sWeekField.value = site.pricePerWeekCents ? (site.pricePerWeekCents / 100).toFixed(2) : "";
-    sMonthField.value = site.pricePerMonthCents ? (site.pricePerMonthCents / 100).toFixed(2) : "";
+    setRate(sNightField, sNightNa, site.pricePerNightCents);
+    setRate(sWeekField, sWeekNa, site.pricePerWeekCents);
+    setRate(sMonthField, sMonthNa, site.pricePerMonthCents);
     sActiveField.value = String(site.active);
     sOccupiedField.value = String(site.permanentlyOccupied);
     sNotesField.value = site.notes ?? "";
@@ -472,15 +525,22 @@ function openSiteForm(site) {
     sActiveField.value = "true";
     sOccupiedField.value = "false";
     sPullThroughField.value = "false";
+    // form.reset() restores each checkbox's HTML default (unticked) but leaves the disabled
+    // state it was last put in, so the boxes have to be re-synced by hand either way.
+    RATE_FIELDS.forEach(([input, na]) => applyNaState(input, na));
     renderAmenityChecks([]);
   }
   sitePanel.classList.add("open");
+  // The panel lives inside the collapsed <details> for Sites; opening the form without opening
+  // the section it sits in would scroll to nothing.
+  sitePanel.closest("details")?.setAttribute("open", "");
   sitePanel.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function closeSiteForm() {
   sitePanel.classList.remove("open");
   siteForm.reset();
+  RATE_FIELDS.forEach(([input, na]) => applyNaState(input, na));
 }
 
 async function onSiteSubmit(event) {
@@ -495,16 +555,23 @@ async function onSiteSubmit(event) {
     ampService: sAmpField.value,
     maxRigLength: sRigField.value ? Number(sRigField.value) : null,
     pullThrough: sPullThroughField.value === "true",
-    pricePerNightCents: Math.round(Number(sNightField.value) * 100),
-    pricePerWeekCents: Math.round(Number(sWeekField.value) * 100),
-    // Blank means "no monthly rate", which switches the per-month cap off for this site
-    // rather than capping every stay at $0.
-    pricePerMonthCents: sMonthField.value.trim() === "" ? null : Math.round(Number(sMonthField.value) * 100),
+    // null means N/A -- the site isn't rented by that term, and the server prices a stay with
+    // whichever terms are left. Sent explicitly rather than omitted, because the PATCH treats a
+    // missing key as "leave this one alone".
+    pricePerNightCents: rateCents(sNightField, sNightNa),
+    pricePerWeekCents: rateCents(sWeekField, sWeekNa),
+    pricePerMonthCents: rateCents(sMonthField, sMonthNa),
     active: sActiveField.value === "true",
     permanentlyOccupied: sOccupiedField.value === "true",
     notes: sNotesField.value.trim() || null,
     amenityIds,
   };
+
+  if (!payload.pricePerNightCents && !payload.pricePerWeekCents && !payload.pricePerMonthCents) {
+    siteFormError.textContent = "A site needs at least one rate — nightly, weekly, or monthly. They can't all be N/A.";
+    siteFormError.hidden = false;
+    return;
+  }
 
   const editingId = sIdField.value;
   const url = editingId ? `/api/admin/sites/${editingId}` : "/api/admin/sites";

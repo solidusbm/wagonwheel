@@ -59,15 +59,21 @@ credentials at all.
 ## Admin access
 
 `/admin` is protected by HTTP Basic Auth via `ADMIN_USERNAME`/`ADMIN_PASSWORD`, set as Coolify
-environment variables (Coolify → `wwrvb` → Environment Variables) — never hardcoded in this repo. **As of this writing both are still set to the weak local-dev placeholder** (`admin`/`admin`)
-— the server prints a startup warning about this every boot. This must be changed to a real
-username/strong password before the park actually starts taking bookings; `/admin` exposes guest
-names, emails, and phone numbers. **This is now urgent, not theoretical:** the app is on a public, guessable domain and real
-bookings exist. Rotating means setting new values in Coolify and redeploying — no code change.
+environment variables (Coolify → `wwrvb` → Environment Variables) — never hardcoded in this repo.
+**Rotated off the `admin`/`admin` placeholder by the user on 2026-08-11.** Claude does not hold
+these credentials, so anything that needs to be checked or changed inside `/admin` has to be done
+by the user — don't ask for the password unprompted. `server/index.js` still warns at boot if
+`ADMIN_PASSWORD` is ever set back to a known-weak value; `/admin` exposes guest names, emails and
+phone numbers, so that warning is worth heeding.
 
 Every section below Reservations (Sites, Photos, Amenities, Content, Push notifications,
 RoverPass/Hipcamp sync, Danger zone) is a `<details class="sync-feeds">`, closed by default. Keep
 new admin sections consistent with that pattern rather than adding a plain always-open panel.
+
+The **site editor lives inside the Sites section**, above the table it edits. It used to sit at
+the bottom of the page, after Photos/Amenities/Content, so pressing Edit scrolled the user away
+from the sites list into what looked like an unrelated part of the admin. `openSiteForm()` also
+opens the enclosing `<details>` — a panel revealed inside a collapsed section is invisible.
 
 ## Payments
 
@@ -88,10 +94,14 @@ three things — wrong location, location in a different Square account, or an a
 for cards — and they are indistinguishable at checkout. Both times it looked like an activation
 problem it was a **truncated location ID**; Square location IDs are 13 characters.
 
-There is **no refund path in the app**. Refunds are manual in the Square dashboard, and refunding
-there does not touch the reservation — the row must also be cancelled in `/admin` or the dates
-stay blocked. Each reservation now shows its `squarePaymentId` under the total so a booking can be
-matched to its Square transaction.
+**Refunds run through the app** (built 2026-08-11 — this section used to say there was no refund
+path; there is). `/admin` has a refund-quote + refund action per reservation, and guests can
+cancel themselves from the link in their confirmation email (`/cancel.html`, HMAC-token gated).
+Both call Square, record `square_refund_id` / `refunded_cents` / `cancellation_fee_cents`, and
+cancel the reservation in the same step, so the dates are released rather than left blocked.
+Refunding directly in the Square dashboard still does *not* touch the reservation — if anyone does
+that, the row must also be cancelled in `/admin`. Each reservation shows its `squarePaymentId`
+under the total so a booking can be matched to its Square transaction.
 
 Square's card entry fields are rendered in a cross-origin iframe (Square's Web Payments SDK) —
 this is intentional PCI-compliance isolation. Browser automation cannot read or fill those fields,
@@ -185,6 +195,35 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   **All twelve sites are currently $350/month, a placeholder** pending the real per-site figures
   from the Tuesday meeting. With that value the cap bites at about 11 nights, so an 11-night stay
   and a 29-night stay both cost $350.
+- **Any rate may be N/A (NULL) -- a site need not be sold by every term.** Site 1 is rented by the
+  month only, so its nightly and weekly rates are NULL. `quote()` bills a stay with whatever terms
+  the site does sell, **rounding up to the smallest one available**: at a monthly-only site a
+  three-night stay is a month's rent, and at a weekly-only site eight nights is two weeks. That is
+  how such a site is actually let, not a rounding bug. What is *not* allowed is all three being
+  N/A -- `rateProblem()` in `server/routes/admin.js` refuses it, the admin form refuses it, and the
+  `sites_has_a_rate` CHECK constraint is the backstop. A site with no rates is also excluded from
+  `/availability` rather than failing at checkout.
+- **`db/schema.sql` runs on EVERY boot, so it must never carry data defaults.** It used to end
+  with `UPDATE sites SET price_per_month_cents = 35000 WHERE price_per_month_cents IS NULL`,
+  which became a trap once NULL started meaning N/A: a rate the office cleared in `/admin` came
+  back as $350 on the next deploy. Placeholder values belong in `db/seed.sql`, which only runs on
+  an empty database. Backfill `ALTER`s must also sit *below* the `CREATE TABLE` they alter --
+  four `ALTER TABLE reservations` statements sat above it, which worked only because the live
+  table already existed and would have failed the whole bootstrap on a fresh database.
+- **Only the server prices a stay.** The browser asks `GET /api/quote?siteId=&checkIn=&checkOut=`
+  and renders the `lines` it returns. It used to do the arithmetic itself and drifted: it stacked
+  weeks and nights unaware of the monthly cap, and added a $5 booking fee the park had dropped, so
+  the "estimated total" a guest agreed to was not what their card was charged. Don't reintroduce
+  rate arithmetic in `public/js/app.js`.
+- **The optional application sections start collapsed.** Spouse/co-applicant, occupants, vehicles,
+  RV information and pets are `<details class="form-section">`, closed on load -- about forty
+  fields that otherwise buried the card entry and Pay button on a phone (measured: the form is
+  1450px tall closed vs 5629px open at 390px wide). The inputs stay in the DOM either way, so a
+  section filled in and then closed still submits.
+- **The sandbox warning at checkout is conditional.** `public/index.html` carries a hidden
+  `#sandbox-note` that `app.js` reveals only when `/api/config` reports a non-production Square
+  environment. It used to be hardcoded, so the live site told guests "no real card will be
+  charged" while charging their card.
 - **Cancellation: $100 flat if the booking was charged at the monthly rate** (including a shorter
   stay that hit the cap), **otherwise 11.11% of the amount charged.** The rest is refunded. This
   **replaced** the earlier deposit / 14-day / camping-credit terms entirely on 2026-08-11 -- those

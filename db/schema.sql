@@ -9,10 +9,11 @@ CREATE TABLE IF NOT EXISTS sites (
   pull_through BOOLEAN NOT NULL DEFAULT false,
   max_rig_length INTEGER,
   pet_friendly BOOLEAN NOT NULL DEFAULT true,
-  price_per_night_cents INTEGER NOT NULL,
-  -- Nullable (not NOT NULL): lets this column be added to an already-deployed sites table
-  -- via ALTER TABLE below without a backfill. quote() in pricing.js falls back to pure
-  -- nightly pricing when it's null.
+  -- All three rate columns are nullable, and NULL means "N/A -- this site isn't sold by that
+  -- term" (see /admin -> Sites). Site 1 is rented by the month only, so its nightly and weekly
+  -- rates are NULL; quote() in pricing.js bills a stay with whatever terms the site does sell.
+  -- At least one of the three must be set -- see the sites_has_a_rate constraint below.
+  price_per_night_cents INTEGER,
   price_per_week_cents INTEGER,
   active BOOLEAN NOT NULL DEFAULT true,
   sort_order INTEGER NOT NULL DEFAULT 0,
@@ -33,13 +34,28 @@ ALTER TABLE sites ADD COLUMN IF NOT EXISTS permanently_occupied BOOLEAN NOT NULL
 -- costs more than one month, two months never more than two, and so on. Placeholder $350 set
 -- 2026-08-11 at the user's direction pending the real per-site figures.
 ALTER TABLE sites ADD COLUMN IF NOT EXISTS price_per_month_cents INTEGER;
--- Refund bookkeeping. monthly_rate_applied is captured at booking time because it decides
--- which cancellation fee applies -- a later rate change must not alter what a guest was told.
-ALTER TABLE reservations ADD COLUMN IF NOT EXISTS monthly_rate_applied BOOLEAN NOT NULL DEFAULT false;
-ALTER TABLE reservations ADD COLUMN IF NOT EXISTS square_refund_id TEXT;
-ALTER TABLE reservations ADD COLUMN IF NOT EXISTS refunded_cents INTEGER;
-ALTER TABLE reservations ADD COLUMN IF NOT EXISTS cancellation_fee_cents INTEGER;
-UPDATE sites SET price_per_month_cents = 35000 WHERE price_per_month_cents IS NULL;
+-- price_per_night_cents was NOT NULL until N/A rates arrived. No-op once already dropped.
+ALTER TABLE sites ALTER COLUMN price_per_night_cents DROP NOT NULL;
+
+-- There used to be an unconditional `UPDATE sites SET price_per_month_cents = 35000 WHERE
+-- price_per_month_cents IS NULL` here, to give the column a value when it was first added. That
+-- became a trap the moment NULL started meaning "N/A": this file runs on EVERY boot, so a rate
+-- the office deliberately cleared in /admin would silently come back as $350 on the next deploy.
+-- The $350 placeholder now lives in db/seed.sql, which only runs on an empty database.
+
+-- A site nobody can price is inventory that fails at checkout instead of at save time. The API
+-- rejects it with a readable message (server/routes/admin.js); this is the backstop that keeps a
+-- future code path from creating one quietly. ADD CONSTRAINT has no IF NOT EXISTS, hence the block.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'sites_has_a_rate') THEN
+    ALTER TABLE sites ADD CONSTRAINT sites_has_a_rate CHECK (
+      price_per_night_cents IS NOT NULL
+      OR price_per_week_cents IS NOT NULL
+      OR price_per_month_cents IS NOT NULL
+    );
+  END IF;
+END $$;
 
 -- Unified, admin-managed amenity catalog. Each amenity independently controls where it
 -- shows: show_on_homepage puts it in the homepage's "What every site includes" grid;
@@ -107,6 +123,18 @@ CREATE TABLE IF NOT EXISTS reservations (
 );
 
 ALTER TABLE reservations ADD COLUMN IF NOT EXISTS application_details JSONB;
+
+/* These four sat further up the file, above the CREATE TABLE they depend on. Against the live
+   database that worked -- the table was already there -- but provisioning a BRAND NEW one would
+   have failed at "relation reservations does not exist", and since applySchema() sends the whole
+   file as a single implicit transaction, the failure would have taken the entire bootstrap with
+   it. Backfill ALTERs have to sit below the table they alter. */
+-- Refund bookkeeping. monthly_rate_applied is captured at booking time because it decides which
+-- cancellation fee applies -- a later rate change must not alter what a guest was told.
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS monthly_rate_applied BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS square_refund_id TEXT;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS refunded_cents INTEGER;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS cancellation_fee_cents INTEGER;
 
 CREATE INDEX IF NOT EXISTS idx_reservations_site ON reservations(site_id);
 CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);

@@ -159,6 +159,25 @@ input:focus, select:focus, textarea:focus{outline:none; border-color:var(--gold)
 
 fieldset{border:1px solid rgba(232,220,196,0.14); border-radius:var(--radius); padding:18px 18px 4px; margin:0 0 22px; min-width:0;}
 legend{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--gold); padding:0 8px;}
+
+/* The guest application's optional sections -- spouse, occupants, vehicles, RV, pets -- come to
+   about forty fields between them. Left expanded, they buried the card entry and the Pay button
+   under a wall of inputs on a phone, and the form read as far more work than it is. They start
+   closed and open on tap. Nothing collected has changed: the inputs stay in the DOM whether the
+   section is open or shut, so a section filled in and then closed still submits normally. */
+details.form-section{border:1px solid var(--line); border-radius:var(--radius); margin:0 0 14px; min-width:0;}
+details.form-section > summary{list-style:none; cursor:pointer; display:flex; align-items:center; gap:9px; padding:13px 16px; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--gold);}
+details.form-section > summary::-webkit-details-marker{display:none;}
+details.form-section > summary::before{content:"\25B8"; font-size:12px; line-height:1; transition:transform 0.15s;}
+details.form-section[open] > summary::before{transform:rotate(90deg);}
+/* Pushed to the right on a roomy screen, dropped onto its own line on a phone rather than
+   squeezing the section name down to a couple of words per line. */
+details.form-section > summary .opt{font-family:'Zilla Slab',serif; text-transform:none; letter-spacing:0; font-size:12.5px; font-style:italic; color:var(--parchment-dim); margin-left:auto;}
+@media(max-width:560px){
+  details.form-section > summary{flex-wrap:wrap;}
+  details.form-section > summary .opt{margin-left:21px; width:100%;}
+}
+.form-section-body{padding:16px 16px 0; border-top:1px solid var(--line);}
 .pet-block{padding-bottom:6px; margin-bottom:12px; border-bottom:1px dashed rgba(232,220,196,0.12);}
 .pet-block:last-child{border-bottom:none; margin-bottom:0;}
 .occupant-row{display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:14px; align-items:start;}
@@ -217,6 +236,7 @@ legend{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:up
 @media(max-width:760px){.booking-grid{grid-template-columns:1fr;}}
 .card-mock{background:var(--bg); border:1px solid rgba(232,220,196,0.2); border-radius:var(--radius); padding:10px 14px; margin-bottom:18px; min-height:44px;}
 .demo-note{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--parchment-dim); background:rgba(201,138,43,0.1); border:1px solid rgba(201,138,43,0.3); padding:10px 14px; border-radius:var(--radius); margin:8px 0 0;}
+.pay-note{font-size:12px; color:var(--parchment-dim); margin:10px 0 0;}
 
 .order-summary{background:var(--bg-panel-2); border:1px solid var(--line); border-radius:var(--radius); padding:22px; position:sticky; top:88px;}
 

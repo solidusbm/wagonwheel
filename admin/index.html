@@ -59,8 +59,14 @@
   #booking-panel{display:none;}
   #booking-panel.open{display:block;}
   #admin-form-error{margin:0 0 14px;}
-  #site-panel{display:none;}
+  #site-panel{display:none; margin-bottom:20px;}
   #site-panel.open{display:block;}
+  .rates-note{font-size:12.5px; color:var(--parchment-dim); font-style:italic; margin:4px 0 12px;}
+  /* The N/A tick sits under its own rate box, not beside it, so it stays attached to the field
+     it clears when grid-3 collapses to one column on a phone. */
+  .na-check{display:flex; align-items:center; gap:6px; margin:-6px 0 10px; font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:var(--parchment-dim); cursor:pointer;}
+  .na-check input{width:auto; margin:0;}
+  .field input:disabled{opacity:0.45; cursor:not-allowed;}
   .amenity-catalog h3, .sites-panel h3{font-size:15px; margin:0 0 12px;}
   .amenity-row{display:flex; align-items:center; gap:14px; padding:8px 0; font-size:13px; flex-wrap:wrap; border-bottom:1px solid rgba(232,220,196,0.06);}
   .amenity-row .name{flex:1;}
@@ -164,6 +170,74 @@
     <div class="admin-toolbar">
       <button type="button" class="btn btn-primary" id="new-site-btn">+ New site</button>
     </div>
+
+    <!-- The site editor lives INSIDE this section, above the table it edits. It used to sit far
+         down the page, after Photos/Amenities/Content, so pressing Edit scrolled you away from
+         the sites list into what looked like an unrelated part of the admin. -->
+    <div class="panel" id="site-panel">
+      <h2 id="site-panel-title">Edit site</h2>
+      <form id="site-form">
+        <input type="hidden" id="s-id" value="" />
+        <div class="grid-2">
+          <div class="field"><label for="s-name">Name</label><input type="text" id="s-name" required /></div>
+          <div class="field"><label for="s-area">Row / area</label><input type="text" id="s-area" required /></div>
+        </div>
+        <div class="grid-3">
+          <div class="field">
+            <label for="s-amp">Amp service</label>
+            <select id="s-amp"><option value="30">30</option><option value="50">50</option><option value="30/50" selected>30/50</option></select>
+          </div>
+          <div class="field"><label for="s-rig">Max rig length (ft)</label><input type="number" id="s-rig" placeholder="Not set" /></div>
+          <div class="field">
+            <label for="s-pullthrough">Pull-through</label>
+            <select id="s-pullthrough"><option value="false">Back-in</option><option value="true">Pull-through</option></select>
+          </div>
+        </div>
+
+        <!-- Any rate can be N/A: a site rented by the month only has no nightly or weekly rate to
+             quote. Ticking N/A greys the box out so a rate that isn't offered can't be confused
+             with one nobody has typed in yet. At least one must stay set. -->
+        <div class="rates-note">Tick <b>N/A</b> for any term this site isn't rented by — a monthly-only site has no nightly or weekly rate. At least one rate must be set.</div>
+        <div class="grid-3">
+          <div class="field">
+            <label for="s-night">Price per night ($)</label>
+            <input type="number" step="0.01" min="0" id="s-night" />
+            <label class="na-check"><input type="checkbox" id="s-night-na" /> N/A — not rented nightly</label>
+          </div>
+          <div class="field">
+            <label for="s-week">Price per week ($)</label>
+            <input type="number" step="0.01" min="0" id="s-week" />
+            <label class="na-check"><input type="checkbox" id="s-week-na" /> N/A — not rented weekly</label>
+          </div>
+          <div class="field">
+            <label for="s-month">Price per month ($)</label>
+            <input type="number" step="0.01" min="0" id="s-month" />
+            <label class="na-check"><input type="checkbox" id="s-month-na" /> N/A — not rented monthly</label>
+          </div>
+        </div>
+        <div class="grid-3">
+          <div class="field">
+            <label for="s-active">Active</label>
+            <select id="s-active"><option value="true">Active</option><option value="false">Inactive</option></select>
+          </div>
+          <div class="field">
+            <label for="s-occupied">Permanently occupied</label>
+            <select id="s-occupied"><option value="false">No — bookable</option><option value="true">Yes — long-term resident, not bookable</option></select>
+          </div>
+        </div>
+        <div class="field"><label for="s-notes">Notes (shown to guests on the booking page)</label><textarea id="s-notes" rows="2"></textarea></div>
+        <div class="field">
+          <label>Amenities</label>
+          <div id="site-amenity-checks" class="amenity-checks"></div>
+        </div>
+        <p id="site-form-error" class="error-msg" hidden></p>
+        <div class="btn-row">
+          <button type="button" class="btn btn-ghost" id="cancel-site-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="save-site-btn">Save site</button>
+        </div>
+      </form>
+    </div>
+
     <div id="sites-content">Loading…</div>
   </details>
 
@@ -195,53 +269,6 @@
     <div class="sub">Edit the homepage and hours-page text directly. Changes apply the next time a visitor loads the page — no code change or redeploy needed.</div>
     <div id="content-list"></div>
   </details>
-
-  <div class="panel" id="site-panel">
-    <h2 id="site-panel-title">Edit site</h2>
-    <form id="site-form">
-      <input type="hidden" id="s-id" value="" />
-      <div class="grid-2">
-        <div class="field"><label for="s-name">Name</label><input type="text" id="s-name" required /></div>
-        <div class="field"><label for="s-area">Row / area</label><input type="text" id="s-area" required /></div>
-      </div>
-      <div class="grid-3">
-        <div class="field">
-          <label for="s-amp">Amp service</label>
-          <select id="s-amp"><option value="30">30</option><option value="50">50</option><option value="30/50" selected>30/50</option></select>
-        </div>
-        <div class="field"><label for="s-rig">Max rig length (ft)</label><input type="number" id="s-rig" /></div>
-        <div class="field">
-          <label for="s-pullthrough">Pull-through</label>
-          <select id="s-pullthrough"><option value="false">Back-in</option><option value="true">Pull-through</option></select>
-        </div>
-      </div>
-      <div class="grid-3">
-        <div class="field"><label for="s-night">Price per night ($)</label><input type="number" step="0.01" id="s-night" required /></div>
-        <div class="field"><label for="s-week">Price per week ($)</label><input type="number" step="0.01" id="s-week" required /></div>
-        <div class="field"><label for="s-month">Price per month ($)</label><input type="number" step="0.01" id="s-month" /></div>
-        <div class="field">
-          <label for="s-active">Active</label>
-          <select id="s-active"><option value="true">Active</option><option value="false">Inactive</option></select>
-        </div>
-      </div>
-      <div class="grid-2">
-        <div class="field">
-          <label for="s-occupied">Permanently occupied</label>
-          <select id="s-occupied"><option value="false">No — bookable</option><option value="true">Yes — long-term resident, not bookable</option></select>
-        </div>
-      </div>
-      <div class="field"><label for="s-notes">Notes (shown to guests on the booking page)</label><textarea id="s-notes" rows="2"></textarea></div>
-      <div class="field">
-        <label>Amenities</label>
-        <div id="site-amenity-checks" class="amenity-checks"></div>
-      </div>
-      <p id="site-form-error" class="error-msg" hidden></p>
-      <div class="btn-row">
-        <button type="button" class="btn btn-ghost" id="cancel-site-btn">Cancel</button>
-        <button type="submit" class="btn btn-primary" id="save-site-btn">Save site</button>
-      </div>
-    </form>
-  </div>
 
   <details class="sync-feeds">
     <summary><h2>Push notifications</h2></summary>

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { pool } from "../db.js";
-import { quote } from "../lib/pricing.js";
+import { quote, isPriceable } from "../lib/pricing.js";
 import { chargeCard, SquareError } from "../lib/square.js";
 import { notifyAdminOfBooking, sendGuestConfirmation } from "../lib/email.js";
 import { cancelTokenValid } from "../lib/cancelToken.js";
@@ -30,8 +30,14 @@ router.post("/", async (req, res, next) => {
 
   const client = await pool.connect();
   try {
+    // price_per_month_cents was missing from this SELECT until 2026-08-12, so site.price_per_
+    // month_cents was undefined and the per-month cap silently never applied to a guest booking
+    // -- only to one keyed in from /admin, whose query did select it. Keep all three rate
+    // columns here and in the quote() call in step.
     const siteResult = await client.query(
-      "SELECT id, name, area, price_per_night_cents, price_per_week_cents, permanently_occupied FROM sites WHERE id = $1 AND active = true",
+      `SELECT id, name, area, price_per_night_cents, price_per_week_cents, price_per_month_cents,
+              permanently_occupied
+       FROM sites WHERE id = $1 AND active = true`,
       [siteId]
     );
     const site = siteResult.rows[0];
@@ -42,10 +48,17 @@ router.post("/", async (req, res, next) => {
       return res.status(409).json({ error: "That site is not available for booking" });
     }
 
-    const { nights, subtotalCents, bookingFeeCents, totalCents, monthlyRateApplied } = quote({
+    const rates = {
       pricePerNightCents: site.price_per_night_cents,
       pricePerWeekCents: site.price_per_week_cents,
       pricePerMonthCents: site.price_per_month_cents,
+    };
+    if (!isPriceable(rates)) {
+      return res.status(409).json({ error: "That site has no rates set, so it can't be booked online right now." });
+    }
+
+    const { nights, subtotalCents, bookingFeeCents, totalCents, monthlyRateApplied } = quote({
+      ...rates,
       checkIn,
       checkOut,
     });

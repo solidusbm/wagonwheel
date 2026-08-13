@@ -11,19 +11,23 @@
 -- unset here rather than guessed.
 TRUNCATE reservations, sites, amenities, site_amenities RESTART IDENTITY CASCADE;
 
-INSERT INTO sites (name, area, amp_service, pull_through, max_rig_length, pet_friendly, price_per_night_cents, price_per_week_cents, notes, sort_order) VALUES
-  ('Site 1',  'Front Row',  '30/50', false, NULL, true, 4500, 21000, NULL, 1),
-  ('Site 2',  'Front Row',  '30/50', false, NULL, true, 4500, 21000, NULL, 2),
-  ('Site 3',  'Center Row', '30/50', false, NULL, true, 4500, 21000, NULL, 3),
-  ('Site 4',  'Center Row', '30/50', false, NULL, true, 4500, 21000, NULL, 4),
-  ('Site 5',  'Center Row', '30/50', false, NULL, true, 4500, 21000, NULL, 5),
-  ('Site 6',  'Center Row', '30/50', false, NULL, true, 4500, 21000, NULL, 6),
-  ('Site 7',  'Center Row', '30/50', false, NULL, true, 4500, 21000, NULL, 7),
-  ('Site 8',  'Back Row',   '30/50', false, NULL, true, 4500, 21000, NULL, 8),
-  ('Site 9',  'Back Row',   '30/50', false, NULL, true, 4500, 21000, NULL, 9),
-  ('Site 10', 'Back Row',   '30/50', false, NULL, true, 4500, 21000, NULL, 10),
-  ('Site 11', 'Back Row',   '30/50', false, NULL, true, 4500, 21000, NULL, 11),
-  ('Site 12', 'Back Row',   '30/50', false, NULL, true, 5000, 35000,
+-- Any rate column may be NULL, meaning "N/A -- not sold by that term" (a monthly-only site sets
+-- nightly and weekly to NULL). The $350/month figure below is the placeholder set 2026-08-11
+-- pending the real per-site figures; it lives here, not in schema.sql, because schema.sql runs on
+-- every boot and would overwrite a rate the office had deliberately changed or cleared.
+INSERT INTO sites (name, area, amp_service, pull_through, max_rig_length, pet_friendly, price_per_night_cents, price_per_week_cents, price_per_month_cents, notes, sort_order) VALUES
+  ('Site 1',  'Front Row',  '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 1),
+  ('Site 2',  'Front Row',  '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 2),
+  ('Site 3',  'Center Row', '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 3),
+  ('Site 4',  'Center Row', '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 4),
+  ('Site 5',  'Center Row', '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 5),
+  ('Site 6',  'Center Row', '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 6),
+  ('Site 7',  'Center Row', '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 7),
+  ('Site 8',  'Back Row',   '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 8),
+  ('Site 9',  'Back Row',   '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 9),
+  ('Site 10', 'Back Row',   '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 10),
+  ('Site 11', 'Back Row',   '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 11),
+  ('Site 12', 'Back Row',   '30/50', false, NULL, true, 5000, 35000, 35000,
     'Premium site (formerly "Brady''s"). Electric is metered separately and NOT included in the rate -- unlike sites 1-11.', 12);
 
 -- Unified amenity catalog. show_on_homepage puts an amenity in the homepage's "What every
