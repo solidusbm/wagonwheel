@@ -182,11 +182,12 @@
           <div class="field"><label for="s-name">Name</label><input type="text" id="s-name" required /></div>
           <div class="field"><label for="s-area">Row / area</label><input type="text" id="s-area" required /></div>
         </div>
-        <div class="grid-3">
-          <div class="field">
-            <label for="s-amp">Amp service</label>
-            <select id="s-amp"><option value="30">30</option><option value="50">50</option><option value="30/50" selected>30/50</option></select>
-          </div>
+        <!-- No amp-service selector: every site in the park is 30 AND 50 amp (confirmed
+             2026-08-10), so offering it per site invited someone to make a distinction that
+             doesn't exist. The sites.amp_service column stays, uniformly "30/50" -- the guest
+             site cards read it, and new sites default to it server-side. The homepage amenity
+             "30/50 amp electric" is where the park states it. -->
+        <div class="grid-2">
           <div class="field"><label for="s-rig">Max rig length (ft)</label><input type="number" id="s-rig" placeholder="Not set" /></div>
           <div class="field">
             <label for="s-pullthrough">Pull-through</label>

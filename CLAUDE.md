@@ -117,7 +117,11 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   pricing to match the others without checking with the user first.
 - Amp service is **confirmed park-wide (2026-08-10)**: every site is 30 *and* 50 amp. It is not a
   per-site distinction and shouldn't be presented as one — the uniform `30/50` already in the
-  `sites` table is correct, and the amenity "30/50 amp electric" covers it.
+  `sites` table is correct, and the amenity "30/50 amp electric" covers it. **The amp selector was
+  removed from the `/admin` site editor and the Amp column from its table (2026-08-12)** at the
+  user's direction, for exactly that reason — don't add either back. The `sites.amp_service`
+  column stays and is still read by the guest site cards; the admin form simply omits the field,
+  so `PATCH` falls through to `existing.amp_service` and `POST` defaults to `"30/50"`.
 - Max rig length is **still not confirmed** per site — don't invent specific values; the admin
   Sites panel is where real values get entered once the park provides them.
 - Amenities are a single unified catalog (`amenities` table) with two independent flags:

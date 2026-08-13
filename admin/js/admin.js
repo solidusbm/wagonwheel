@@ -264,7 +264,6 @@ const siteFormError = document.getElementById("site-form-error");
 const sIdField = document.getElementById("s-id");
 const sNameField = document.getElementById("s-name");
 const sAreaField = document.getElementById("s-area");
-const sAmpField = document.getElementById("s-amp");
 const sRigField = document.getElementById("s-rig");
 const sPullThroughField = document.getElementById("s-pullthrough");
 const sNightField = document.getElementById("s-night");
@@ -476,7 +475,6 @@ function renderSitesTable() {
     <tr${s.active ? "" : ' style="opacity:0.5;"'}>
       <td data-label="Site">${escapeHtml(s.name)}<br><span style="color:var(--parchment-dim);font-size:11px;">${escapeHtml(s.area)}</span></td>
       <td data-label="Rate">${rateSummary(s)}</td>
-      <td data-label="Amp">${escapeHtml(s.ampService)} amp</td>
       <td data-label="Amenities">${siteAmenities.map((n) => `<span class="tag">${escapeHtml(n)}</span>`).join(" ") || "—"}</td>
       <td data-label="Status">${s.active ? (s.permanentlyOccupied ? "Occupied (not bookable)" : "Active") : "Inactive"}</td>
       <td class="row-actions"><button type="button" class="btn btn-ghost" data-edit-site="${s.id}">Edit</button></td>
@@ -487,7 +485,7 @@ function renderSitesTable() {
   sitesContent.innerHTML = `
     <div class="table-scroll">
       <table>
-        <thead><tr><th>Site</th><th>Rate</th><th>Amp</th><th>Amenities</th><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Site</th><th>Rate</th><th>Amenities</th><th>Status</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>
@@ -509,7 +507,6 @@ function openSiteForm(site) {
     sIdField.value = site.id;
     sNameField.value = site.name;
     sAreaField.value = site.area;
-    sAmpField.value = site.ampService;
     sRigField.value = site.maxRigLength ?? "";
     sPullThroughField.value = String(site.pullThrough);
     setRate(sNightField, sNightNa, site.pricePerNightCents);
@@ -552,7 +549,6 @@ async function onSiteSubmit(event) {
   const payload = {
     name: sNameField.value.trim(),
     area: sAreaField.value.trim(),
-    ampService: sAmpField.value,
     maxRigLength: sRigField.value ? Number(sRigField.value) : null,
     pullThrough: sPullThroughField.value === "true",
     // null means N/A -- the site isn't rented by that term, and the server prices a stay with
