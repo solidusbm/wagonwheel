@@ -27,8 +27,13 @@ INSERT INTO sites (name, area, amp_service, pull_through, max_rig_length, pet_fr
   ('Site 9',  'Back Row',   '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 9),
   ('Site 10', 'Back Row',   '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 10),
   ('Site 11', 'Back Row',   '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 11),
+  -- The note is shown to guests on the booking page, so it says what they need to know and not
+  -- who used to live here. It was rewritten 2026-08-12: the old wording ("electric NOT included
+  -- in the rate -- unlike sites 1-11") dated from when this was the park's only exception, and
+  -- read as wrong once the monthly rate started excluding electric everywhere. What is still
+  -- particular to Site 12 is that its NIGHTLY and WEEKLY rates exclude it too.
   ('Site 12', 'Back Row',   '30/50', false, NULL, true, 5000, 35000, 35000,
-    'Premium site (formerly "Brady''s"). Electric is metered separately and NOT included in the rate -- unlike sites 1-11.', 12);
+    'Premium site. Electric is metered separately and settled at the office. At this site that applies to every rate, including nightly and weekly; at the other sites only the monthly rate excludes electric.', 12);
 
 -- Unified amenity catalog. show_on_homepage puts an amenity in the homepage's "What every
 -- site includes" grid; show_per_site makes it toggleable on individual sites from /admin.
