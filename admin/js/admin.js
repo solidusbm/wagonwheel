@@ -66,10 +66,21 @@ function formatDate(iso) {
   return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 }
 
+/* A site sold only by the month has no nightly rate to quote. This label used to hardcode
+   "/night", so such a site showed as "$0.00/night" in the booking dropdown -- a rate the park
+   doesn't offer, at a price it would never charge. Lead with whatever term the site actually sells.
+   Note this reads the PUBLIC /api/sites shape (snake_case), not /api/admin/sites. */
+function leadRate(s) {
+  if (s.price_per_night_cents) return `${money(s.price_per_night_cents)}/night`;
+  if (s.price_per_week_cents) return `${money(s.price_per_week_cents)}/week`;
+  if (s.price_per_month_cents) return `${money(s.price_per_month_cents)}/month`;
+  return "no rate set";
+}
+
 async function loadSites() {
   const res = await fetch("/api/sites");
   sites = res.ok ? await res.json() : [];
-  siteField.innerHTML = sites.map((s) => `<option value="${s.id}">${s.name} · ${s.area} (${money(s.price_per_night_cents)}/night)</option>`).join("");
+  siteField.innerHTML = sites.map((s) => `<option value="${s.id}">${s.name} · ${s.area} (${leadRate(s)})</option>`).join("");
   renderFeedList();
 }
 

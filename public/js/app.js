@@ -242,9 +242,16 @@ function siteRates(site) {
 
   if (rates.length === 0) return small("Rates not set");
   const [[leadCents, leadUnit], ...rest] = rates;
+  // Electric is metered separately on anything charged at the monthly rate, so the monthly figure
+  // must never appear on its own -- a guest comparing $350/month against a nightly rate that does
+  // include power is comparing two different things.
+  const elec = site.price_per_month_cents
+    ? `<div class="rate-note">Monthly rate excludes electric &mdash; metered separately</div>`
+    : "";
   return (
     `${money(leadCents)} ${small(`/${leadUnit}`)}` +
-    rest.map(([cents, unit]) => ` ${small(`· ${money(cents)}/${unit}`)}`).join("")
+    rest.map(([cents, unit]) => ` ${small(`· ${money(cents)}/${unit}`)}`).join("") +
+    elec
   );
 }
 
@@ -618,11 +625,15 @@ async function renderOrderSummary(site) {
     return;
   }
 
-  // A stay billed at the monthly rate is worth saying out loud: it is both a saving on the
-  // nightly arithmetic and the thing that decides the guest's cancellation terms ($100 flat
-  // rather than 11.11%), which the confirmation email then repeats back to them.
+  /* A stay billed at the monthly rate carries two consequences the guest has to be told BEFORE
+     they pay, not after: electric is metered separately and isn't in this total, and cancelling
+     costs a flat $100 rather than 11.11%. Both hang off the same monthlyRateApplied flag, so a
+     short stay that merely reached the cap gets the same treatment as a full month -- confirmed
+     by the park 2026-08-12. The confirmation email repeats both back. */
   const monthlyNote = q.monthlyRateApplied
-    ? `<p style="font-size:0.75rem;opacity:0.8;margin-top:8px;">Charged at the monthly rate — a stay is never billed more than the monthly rate for each month.</p>`
+    ? `<p class="summary-note"><b>Charged at the monthly rate.</b> A stay is never billed more than the monthly rate for each month.
+       <b>Electric is not included</b> — it's metered separately and settled at the office. Cancelling a booking charged at the
+       monthly rate carries a flat $100 service fee.</p>`
     : "";
 
   orderSummary.innerHTML = `

@@ -228,6 +228,15 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   `#sandbox-note` that `app.js` reveals only when `/api/config` reports a non-production Square
   environment. It used to be hardcoded, so the live site told guests "no real card will be
   charged" while charging their card.
+- **Electric is NOT included in the monthly rate.** It's read at the meter and settled separately
+  at the office; nightly and weekly rates do include it. Set by the user 2026-08-12. This keys off
+  the same `monthlyRateApplied` flag as the cancellation terms, so **a short stay that merely
+  reached the cap is on monthly terms for electric too** — explicitly confirmed, not an accident.
+  It is stated in five places and they must not drift: the site card (`siteRates()`), the order
+  summary before payment (`renderOrderSummary()`), the guest confirmation email
+  (`ELECTRIC_LEAD`/`ELECTRIC_DETAIL` in `server/lib/email.js`), `/hours`, and the `/admin` site
+  editor's hint. The `sendSampleGuestEmail()` fixture is a **monthly** booking on purpose — that
+  version of the email is a superset, carrying both the electric notice and the $100 wording.
 - **Cancellation: $100 flat if the booking was charged at the monthly rate** (including a shorter
   stay that hit the cap), **otherwise 11.11% of the amount charged.** The rest is refunded. This
   **replaced** the earlier deposit / 14-day / camping-credit terms entirely on 2026-08-11 -- those

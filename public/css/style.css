@@ -237,6 +237,10 @@ details.form-section > summary .opt{font-family:'Zilla Slab',serif; text-transfo
 .card-mock{background:var(--bg); border:1px solid rgba(232,220,196,0.2); border-radius:var(--radius); padding:10px 14px; margin-bottom:18px; min-height:44px;}
 .demo-note{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--parchment-dim); background:rgba(201,138,43,0.1); border:1px solid rgba(201,138,43,0.3); padding:10px 14px; border-radius:var(--radius); margin:8px 0 0;}
 .pay-note{font-size:12px; color:var(--parchment-dim); margin:10px 0 0;}
+/* Rate caveats -- currently "monthly excludes electric". Small, but it sits with the price it
+   qualifies rather than in a footnote nobody reads. */
+.rate-note{font-size:11px; line-height:1.45; color:var(--parchment-dim); margin-top:3px; font-style:italic;}
+.summary-note{font-size:12.5px; line-height:1.5; color:var(--parchment); margin:12px 0 0; padding:10px 12px; background:rgba(201,138,43,0.1); border-left:2px solid var(--gold); border-radius:0 var(--radius) var(--radius) 0;}
 
 .order-summary{background:var(--bg-panel-2); border:1px solid var(--line); border-radius:var(--radius); padding:22px; position:sticky; top:88px;}
 

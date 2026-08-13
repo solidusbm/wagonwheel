@@ -112,6 +112,14 @@ function cancelSentence(r) {
   return `if you cancel, ${why}, and ${money(refundCents)} is refunded.`;
 }
 
+/* Electric is metered separately on anything charged at the monthly rate and is NOT in the total
+   the guest just paid -- it's settled at the office. This email is the record they keep, so it
+   has to say so plainly rather than leaving them to find it on the website. Same monthlyRateApplied
+   flag as the cancellation terms, so a short stay that only reached the cap is covered too
+   (confirmed by the park 2026-08-12). */
+const ELECTRIC_LEAD = "Electric is not included in the monthly rate.";
+const ELECTRIC_DETAIL = "It's read at the meter and settled separately at the office.";
+
 export function guestConfirmation(reservation) {
   const r = reservation;
   const nights = r.nights === 1 ? "1 night" : `${r.nights} nights`;
@@ -129,6 +137,7 @@ export function guestConfirmation(reservation) {
     `  Length of stay      ${nights}`,
     `  Guests              ${r.guest.numGuests}`,
     `  Paid                ${money(r.totalCents)}`,
+    ...(r.monthlyRateApplied ? [``, ELECTRIC_LEAD, ELECTRIC_DETAIL] : []),
     ``,
     `When you arrive, stop at the office to register before parking. It's just`,
     `inside the entrance gate on your right.`,
@@ -163,6 +172,13 @@ export function guestConfirmation(reservation) {
     ${row("Guests", String(r.guest.numGuests))}
     ${row("Paid", money(r.totalCents))}
   </table>
+  ${
+    r.monthlyRateApplied
+      ? `<p style="margin:18px 0;padding:12px 14px;background:#fdf5e6;border-left:3px solid #a9721f;font-size:14px;">
+    <b>${escapeHtml(ELECTRIC_LEAD)}</b> ${escapeHtml(ELECTRIC_DETAIL)}
+  </p>`
+      : ""
+  }
   <p>When you arrive, stop at the office to register before parking. It's just inside the entrance gate on your right.</p>
   <p style="margin:18px 0;padding:14px 16px;background:#f6ecd8;border-left:3px solid #a9721f;">
     <b>${escapeHtml(PARK.name)}</b><br>
@@ -211,14 +227,19 @@ export async function sendSampleGuestEmail() {
   const mailer = getTransporter();
   if (!mailer) throw new Error("SMTP_HOST is not set - the app has no mail server to send through.");
 
+  /* Deliberately a booking charged at the MONTHLY rate. That version of the email is a superset:
+     it carries the electric-is-not-included notice and the flat $100 cancellation wording on top
+     of everything a nightly booking shows. Previewing the 3-night version instead would have hid
+     exactly the two claims most worth checking before a guest reads them. */
   const sample = {
     reservationCode: "SAMPLE1",
     site: { name: "Site 1", area: "Front Row" },
     guest: { name: "Sample Guest", email: adminEmail, numGuests: 2 },
     checkIn: "2026-09-14",
-    checkOut: "2026-09-17",
-    nights: 3,
-    totalCents: 13500,
+    checkOut: "2026-10-14",
+    nights: 30,
+    totalCents: 35000,
+    monthlyRateApplied: true,
   };
   const { subject, text, html } = guestConfirmation(sample);
   await mailer.verify();

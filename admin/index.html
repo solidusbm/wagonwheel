@@ -198,7 +198,13 @@
         <!-- Any rate can be N/A: a site rented by the month only has no nightly or weekly rate to
              quote. Ticking N/A greys the box out so a rate that isn't offered can't be confused
              with one nobody has typed in yet. At least one must stay set. -->
-        <div class="rates-note">Tick <b>N/A</b> for any term this site isn't rented by — a monthly-only site has no nightly or weekly rate. At least one rate must be set.</div>
+        <div class="rates-note">
+          Tick <b>N/A</b> for any term this site isn't rented by — a monthly-only site has no nightly or weekly rate.
+          At least one rate must be set, and guests only see the rates a site is actually offered at.<br>
+          <b>Electric is not included in the monthly rate</b> — any booking charged at the monthly rate (including a shorter
+          stay that reaches the cap) is told so on the booking page and in its confirmation email. Nightly and weekly rates
+          include electric.
+        </div>
         <div class="grid-3">
           <div class="field">
             <label for="s-night">Price per night ($)</label>
@@ -296,7 +302,7 @@
 
   <details class="sync-feeds">
     <summary><h2>Booking alert email</h2></summary>
-    <div class="sub">When a guest completes a booking, the park gets an email with the site, dates, guest details and total. The alert address can be a <b>comma-separated list</b> if more than one person should get them. Guests also get their own confirmation with the site, dates, arrival times, the office rule and the cancellation terms &mdash; "Preview the guest email" sends you a copy of exactly what they receive, using a fake booking.</div>
+    <div class="sub">When a guest completes a booking, the park gets an email with the site, dates, guest details and total. The alert address can be a <b>comma-separated list</b> if more than one person should get them. Guests also get their own confirmation with the site, dates, arrival times, the office rule and the cancellation terms &mdash; "Preview the guest email" sends you a copy of exactly what they receive, using a fake booking. The sample is a <b>monthly-rate</b> booking on purpose: that version also carries the electric-not-included notice and the flat $100 cancellation wording, so it shows every claim the email can make.</div>
     <div id="email-status" class="sub">Checking&hellip;</div>
     <button type="button" class="btn btn-primary" id="email-test-btn">Send a test email</button>
     <button type="button" class="btn btn-ghost" id="email-guest-btn" style="margin-left:8px;">Preview the guest email</button>
