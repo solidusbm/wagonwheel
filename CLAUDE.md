@@ -196,9 +196,10 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   `price_per_month_cents` and the remainder the normal weekly/nightly way, never charging more
   than one further month for the remainder. A single flat ceiling on the whole stay would make a
   year cost the same as a fortnight -- don't "simplify" it to that. Set by the user 2026-08-11.
-  **All twelve sites are currently $350/month, a placeholder** pending the real per-site figures
-  from the Tuesday meeting. With that value the cap bites at about 11 nights, so an 11-night stay
-  and a 29-night stay both cost $350.
+  **The real per-site monthly rates are now in (2026-08-12)** and they vary: $300 (Site 7), $325
+  (Sites 4, 5, 10), $350 (most), $650 (Site 2, which carries the storage/cover/carport/slab
+  extras). The $350 placeholder is gone -- don't reintroduce a uniform figure. At $350 the cap
+  bites at about 11 nights, so an 11-night stay and a 29-night stay cost the same there.
 - **Any rate may be N/A (NULL) -- a site need not be sold by every term.** Site 1 is rented by the
   month only, so its nightly and weekly rates are NULL. `quote()` bills a stay with whatever terms
   the site does sell, **rounding up to the smallest one available**: at a monthly-only site a
@@ -266,10 +267,18 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
 
 ## Known unresolved / don't guess at these
 
-- A monthly rate for sites 1–11 (as distinct from the automatic weekly-rate stacking) — not
-  confirmed.
-- Which specific sites have "Wired Ethernet" — confirmed real, not confirmed which sites.
-- Max rig length per site (see above). Amp service is settled — 30 and 50 at every site.
+Most of what used to sit here was answered by the park on **2026-08-12** and entered directly in
+`/admin` — real per-site monthly rates, max rig length, and the per-site amenity assignments
+(which also gained Privacy Fence, Private Storage, RV Cover, Carport and Concrete Slab). Amp
+service was settled earlier — 30 and 50 at every site. What's still open:
+
+- **Site 2 and Site 12 have no max rig length**, while the other ten are 60 ft. Blank means the
+  booking page shows no rig figure for them at all.
+- **Site 10 is the only site with no amenities assigned** — every other site carries Wired
+  Ethernet. Could be deliberate; worth confirming rather than assuming it was missed.
+- **Site 12's monthly rate ($350) equals its weekly rate ($350)**, so a month there costs what a
+  week costs, and any stay beyond about a week is $350 flat. It's also the *cheapest* monthly in
+  the park despite being the premium site — Site 2 is $650. Almost certainly wants a real figure.
 - Real footages for the site map. The map was rebuilt on 2026-08-10 against the filed plan
   (Mangold Engineering dwg 100-7799, sheet 2 of 5, "System Layout", 1" = 100'), supplied by the
   park first as a photo of the printed sheet and then as a copy marked up by hand — roads in
