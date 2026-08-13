@@ -11,14 +11,27 @@ import crypto from "node:crypto";
  * The hash is computed once at boot and the rewritten HTML is memoised, so this costs one read per
  * page for the life of the process. Files don't change at runtime; a deploy restarts the process.
  */
-const VERSIONED = /(?:href|src)="(\/(?:css|js)\/[a-zA-Z0-9._-]+\.(?:css|js))"/g;
+/* Matches /css/x.css, /js/x.js AND /admin/js/x.js. That last alternative is not decoration: the
+ * admin page's own scripts live at /admin/js/*.js, the pattern used to stop at /js/, and so
+ * admin.js was never versioned at all. Its HTML is sent no-cache and is always fresh, while the
+ * script sat in Cloudflare for up to four hours -- on 2026-08-12 that combination served a
+ * deploy-old admin.js against new HTML, it went looking for a form field that had been removed,
+ * threw, and the Edit button on the Sites table silently did nothing.
+ *
+ * If you add an asset under a new URL prefix, add it here AND teach resolveAsset in index.js
+ * where the file lives. Missing either fails silently -- the asset just quietly stops being
+ * versioned, and you find out days later when a deploy half-lands. */
+const VERSIONED = /(?:href|src)="(\/(?:admin\/)?(?:css|js)\/[a-zA-Z0-9._-]+\.(?:css|js))"/g;
 
-export function makeAssetVersioner(rootDir) {
+/* resolveAsset maps an asset URL, as the browser requests it, to the file that actually serves it.
+ * It can't be assumed to sit under this middleware's own root: the admin page is served out of
+ * admin/ but links the stylesheet at /css/style.css, which lives in public/. */
+export function makeAssetVersioner(rootDir, resolveAsset = (urlPath) => path.join(rootDir, urlPath)) {
   const cache = new Map();
 
   const hashOf = (urlPath) => {
     try {
-      const buf = fs.readFileSync(path.join(rootDir, urlPath));
+      const buf = fs.readFileSync(resolveAsset(urlPath));
       return crypto.createHash("sha1").update(buf).digest("hex").slice(0, 8);
     } catch {
       return null; // not ours to serve -- leave the URL untouched

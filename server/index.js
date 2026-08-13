@@ -52,12 +52,23 @@ app.use("/api", sitesRouter);
 app.use("/api/reservations", reservationsRouter);
 app.use("/api/admin", adminAuth, adminRouter);
 const adminDir = path.join(__dirname, "..", "admin");
-app.use("/admin", adminAuth, makeAssetVersioner(adminDir), express.static(adminDir));
+const publicDir = path.join(__dirname, "..", "public");
+
+/* Where an asset URL actually lives on disk. The admin page is the awkward one: it's mounted at
+   /admin, so its own scripts are requested as /admin/js/*.js and served out of adminDir, but it
+   borrows the site stylesheet at /css/style.css, which is in publicDir. A wrong answer here does
+   not throw -- the asset simply stops being version-stamped and starts surviving deploys in a
+   cache. See the note in lib/assetVersion.js. */
+const resolveAsset = (urlPath) =>
+  urlPath.startsWith("/admin/")
+    ? path.join(adminDir, urlPath.slice("/admin".length))
+    : path.join(publicDir, urlPath);
+
+app.use("/admin", adminAuth, makeAssetVersioner(adminDir, resolveAsset), express.static(adminDir));
 app.use("/calendar", calendarRouter);
 app.use(photosRouter);
 
-const publicDir = path.join(__dirname, "..", "public");
-app.use(makeAssetVersioner(publicDir));
+app.use(makeAssetVersioner(publicDir, resolveAsset));
 app.use(express.static(publicDir));
 
 app.use((err, req, res, next) => {

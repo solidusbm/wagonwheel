@@ -75,6 +75,27 @@ the bottom of the page, after Photos/Amenities/Content, so pressing Edit scrolle
 from the sites list into what looked like an unrelated part of the admin. `openSiteForm()` also
 opens the enclosing `<details>` — a panel revealed inside a collapsed section is invisible.
 
+## Asset caching — why a deploy can half-land
+
+Cloudflare serves JS/CSS with `max-age=14400` (four hours), and that Browser Cache TTL lives in the
+**client's** Cloudflare account, so it can't be changed from here. `server/lib/assetVersion.js`
+therefore rewrites asset URLs in the HTML with a content hash (`?v=<sha1>`), and sends the HTML
+itself `no-cache`. A changed file becomes a different URL, so no cache can serve the old one.
+
+**The failure this prevents is silent and nasty.** Until 2026-08-12 the rewrite pattern only matched
+`/css/*` and `/js/*`, while the admin's own scripts are requested as `/admin/js/*.js` — so
+`admin.js` was never versioned. A deploy then served **fresh HTML against a four-hour-old script**:
+the old `admin.js` looked for a form field the new HTML no longer had, threw
+`TypeError: Cannot set properties of null`, and every Edit button on the Sites table silently did
+nothing. Nothing in the logs, nothing on screen.
+
+If you add an asset under a new URL prefix you must update **both**: the `VERSIONED` regex in
+`lib/assetVersion.js` and `resolveAsset()` in `index.js` (which maps a URL to the file that serves
+it — note `/admin/*` resolves into `admin/` while `/css/*` resolves into `public/`, even on the
+admin page). Getting either wrong doesn't error; the asset just quietly stops being stamped.
+
+To check, load a page and confirm every `href`/`src` for a local css/js carries a `?v=`.
+
 ## Payments
 
 Square is **live**. `SQUARE_ENVIRONMENT=production` with production `SQUARE_ACCESS_TOKEN`,
