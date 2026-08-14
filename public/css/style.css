@@ -244,6 +244,39 @@ details.form-section > summary .opt{font-family:'Zilla Slab',serif; text-transfo
 /* ---------- site cards ---------- */
 .site-area{margin-bottom:20px;}
 .site-area h3{font-size:17px; margin:0 0 12px;}
+
+/* The "not available" group folds away so a busy week doesn't push the bookable sites off screen.
+   It's a <details>, so the heading has to sit inside the <summary> and keep its own margin. */
+.site-unavailable{border-top:1px dashed var(--line); padding-top:16px;}
+.site-unavailable > summary{list-style:none; cursor:pointer; display:flex; align-items:center; gap:9px;}
+.site-unavailable > summary::-webkit-details-marker{display:none;}
+.site-unavailable > summary::before{content:"\25B8"; color:var(--gold); font-size:13px; line-height:1; transition:transform 0.15s;}
+.site-unavailable[open] > summary::before{transform:rotate(90deg);}
+.site-unavailable > summary h3{margin:0; font-size:15px; color:var(--parchment-dim);}
+.no-sites{background:var(--bg-panel-2); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; margin:0 0 20px; font-style:italic; color:var(--parchment);}
+
+/* Row/area moved onto the card when the list stopped being grouped by row. */
+.site-area-label{font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:var(--parchment-dim); margin-top:-4px;}
+
+/* A fixed-ratio box, so cards don't reflow as lazy-loaded photos arrive. */
+.site-photo{display:block; width:100%; padding:0; margin:0 0 4px; border:0; border-radius:var(--radius);
+  overflow:hidden; background:var(--bg); cursor:zoom-in; aspect-ratio:4/3; line-height:0;}
+.site-photo img{width:100%; height:100%; object-fit:cover; display:block;}
+.site-card.unavailable .site-photo{filter:grayscale(0.55);}
+/* Placeholder for a site nobody has photographed yet -- the park's wheel, faint, on the panel
+   tone. Keeps the row aligned without pretending there's a picture. */
+.site-photo-none{display:flex; align-items:center; justify-content:center; cursor:inherit; background:var(--bg-panel);}
+.site-photo-none svg{width:38%; height:38%; color:var(--line); opacity:0.85;}
+
+.lightbox{position:fixed; inset:0; z-index:60; background:rgba(28,20,13,0.82); display:flex;
+  align-items:center; justify-content:center; padding:24px; cursor:zoom-out;}
+.lightbox figure{margin:0; max-width:min(900px,92vw); max-height:88vh; display:flex; flex-direction:column; gap:10px;}
+.lightbox img{max-width:100%; max-height:80vh; object-fit:contain; border-radius:var(--radius); display:block;}
+/* On the dark overlay, not the page -- so this text is pinned, not themed. */
+.lightbox figcaption{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.06em;
+  text-transform:uppercase; color:#f7ecd8; text-align:center;}
+.lightbox-close{position:absolute; top:14px; right:18px; background:none; border:0; color:#f7ecd8;
+  font-size:34px; line-height:1; cursor:pointer; padding:4px 10px;}
 .site-grid, .site-cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px;}
 .site-card{background:var(--bg-panel-2); border:1px solid var(--line); border-radius:var(--radius); padding:16px; cursor:pointer; display:flex; flex-direction:column; gap:6px;}
 .site-card:hover{border-color:var(--gold);}

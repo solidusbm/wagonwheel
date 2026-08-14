@@ -9,6 +9,20 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 // amenities catalog -- separate from the fixed columns below (amp_service, pull_through, ...).
 // show_per_site filters out homepage-only amenities even if one somehow got assigned to a
 // site (e.g. via a stale API call) before its show_per_site flag was toggled off.
+/* The photo shown on a site's card in the booking flow. A site can have several assigned; the
+   lowest sort_order leads, and ties break on the photo's own order so the choice is stable rather
+   than whatever the planner happens to return. */
+const SITE_PHOTO_JOIN = `
+  LEFT JOIN LATERAL (
+    SELECT sp.photo_id
+    FROM site_photos sp
+    JOIN photos ph ON ph.id = sp.photo_id
+    WHERE sp.site_id = s.id
+    ORDER BY sp.sort_order, ph.sort_order, ph.id
+    LIMIT 1
+  ) sph ON true
+`;
+
 const AMENITIES_JOIN = `
   LEFT JOIN LATERAL (
     SELECT COALESCE(json_agg(a.name ORDER BY a.sort_order), '[]'::json) AS names
@@ -22,9 +36,11 @@ router.get("/sites", async (req, res, next) => {
   try {
     const { rows } = await pool.query(
       `SELECT s.id, s.name, s.area, s.amp_service, s.pull_through, s.max_rig_length, s.pet_friendly,
-              s.price_per_night_cents, s.price_per_week_cents, s.price_per_month_cents, s.notes, s.permanently_occupied, am.names AS amenities
+              s.price_per_night_cents, s.price_per_week_cents, s.price_per_month_cents, s.notes, s.permanently_occupied,
+              am.names AS amenities, sph.photo_id
        FROM sites s
        ${AMENITIES_JOIN}
+       ${SITE_PHOTO_JOIN}
        WHERE s.active = true ORDER BY s.sort_order`
     );
     res.json(rows);
@@ -45,7 +61,7 @@ router.get("/availability", async (req, res, next) => {
     const { rows } = await pool.query(
       `SELECT s.id, s.name, s.area, s.amp_service, s.pull_through, s.max_rig_length,
               s.pet_friendly, s.price_per_night_cents, s.price_per_week_cents, s.price_per_month_cents, s.notes,
-              s.permanently_occupied, am.names AS amenities,
+              s.permanently_occupied, am.names AS amenities, sph.photo_id,
               -- A site with every rate set to N/A can't be priced, so it can't be offered --
               -- better greyed out in the list than failing at checkout.
               ((s.price_per_night_cents IS NOT NULL OR s.price_per_week_cents IS NOT NULL
@@ -59,6 +75,7 @@ router.get("/availability", async (req, res, next) => {
               COALESCE(br.ranges, '[]'::json) AS booked_ranges
        FROM sites s
        ${AMENITIES_JOIN}
+       ${SITE_PHOTO_JOIN}
        LEFT JOIN LATERAL (
          SELECT json_agg(json_build_object('checkIn', sub.check_in, 'checkOut', sub.check_out) ORDER BY sub.check_in) AS ranges
          FROM (

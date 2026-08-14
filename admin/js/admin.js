@@ -438,6 +438,10 @@ const sActiveField = document.getElementById("s-active");
 const sOccupiedField = document.getElementById("s-occupied");
 const sNotesField = document.getElementById("s-notes");
 const siteAmenityChecks = document.getElementById("site-amenity-checks");
+const sitePhotoPicker = document.getElementById("site-photo-picker");
+
+// Selection order matters: the first photo picked is the one that leads on the guest site card.
+let sitePhotoSelection = [];
 
 document.getElementById("new-site-btn").addEventListener("click", () => openSiteForm());
 document.getElementById("cancel-site-btn").addEventListener("click", closeSiteForm);
@@ -538,6 +542,38 @@ function renderAmenityChecks(checkedIds = []) {
     </label>`
     )
     .join("");
+}
+
+/* Thumbnails of every uploaded photo, ticked for the ones assigned to this site. Order of
+   selection is kept -- the first one picked is what a guest sees on the card, and the server
+   stores that order as sort_order. */
+function renderSitePhotoPicker(selected = []) {
+  sitePhotoSelection = [...selected];
+  if (photos.length === 0) {
+    sitePhotoPicker.innerHTML = `<p class="empty-note">No photos uploaded yet — add some under Photos below, then come back.</p>`;
+    return;
+  }
+  sitePhotoPicker.innerHTML = photos
+    .map((p) => {
+      const rank = sitePhotoSelection.indexOf(p.id);
+      return `<label class="${rank >= 0 ? "on" : ""}" data-photo-pick="${p.id}">
+        <input type="checkbox" value="${p.id}" ${rank >= 0 ? "checked" : ""} />
+        ${rank === 0 ? `<span class="lead">Shown</span>` : ""}
+        <img src="/photos/${p.id}/image?w=320" alt="" loading="lazy" />
+        <span class="cap">${escapeHtml(p.caption ?? "(no caption)")}</span>
+      </label>`;
+    })
+    .join("");
+
+  sitePhotoPicker.querySelectorAll("input[type=checkbox]").forEach((el) => {
+    el.addEventListener("change", () => {
+      const id = Number(el.value);
+      if (el.checked) sitePhotoSelection.push(id);
+      else sitePhotoSelection = sitePhotoSelection.filter((x) => x !== id);
+      // Re-render so the "Shown" badge follows the actual lead photo.
+      renderSitePhotoPicker(sitePhotoSelection);
+    });
+  });
 }
 
 async function onUpdateAmenityFlag(id, flag, value) {
@@ -678,6 +714,7 @@ function openSiteForm(site) {
     sOccupiedField.value = String(site.permanentlyOccupied);
     sNotesField.value = site.notes ?? "";
     renderAmenityChecks(site.amenityIds);
+    renderSitePhotoPicker(site.photoIds ?? []);
   } else {
     sitePanelTitle.textContent = "New site";
     sIdField.value = "";
@@ -688,6 +725,7 @@ function openSiteForm(site) {
     // state it was last put in, so the boxes have to be re-synced by hand either way.
     RATE_FIELDS.forEach(([input, na]) => applyNaState(input, na));
     renderAmenityChecks([]);
+    renderSitePhotoPicker([]);
   }
   sitePanel.classList.add("open");
   // The panel lives inside the collapsed <details> for Sites; opening the form without opening
@@ -723,6 +761,7 @@ async function onSiteSubmit(event) {
     permanentlyOccupied: sOccupiedField.value === "true",
     notes: sNotesField.value.trim() || null,
     amenityIds,
+    photoIds: sitePhotoSelection,
   };
 
   if (!payload.pricePerNightCents && !payload.pricePerWeekCents && !payload.pricePerMonthCents) {
@@ -775,6 +814,9 @@ async function loadPhotos() {
   const res = await fetch("/api/admin/photos");
   photos = res.ok ? await res.json() : [];
   renderPhotoGrid();
+  // The site editor's picker is built from this list. If a site was opened before the photos
+  // arrived -- or one was just uploaded or deleted -- rebuild it, keeping the current selection.
+  if (sitePanel.classList.contains("open")) renderSitePhotoPicker(sitePhotoSelection);
 }
 
 function renderPhotoGrid() {

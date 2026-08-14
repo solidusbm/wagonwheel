@@ -171,6 +171,20 @@ CREATE TABLE IF NOT EXISTS photos (
 -- frontend fetches this map on load and fills in any element with a matching data-content-key
 -- attribute. `label` and `section` are just for grouping/labeling in the admin UI -- the `key`
 -- is the only thing the frontend actually looks up.
+/* Which photos show on which site's card in the booking flow.
+ *
+ * A join table rather than a site_id column on photos, because one photo legitimately covers more
+ * than one site -- the row-level shots from the 2026-08-11 walk show two or three pads at once,
+ * and a photo of the view is the view from several of them. sort_order decides which one leads
+ * when a site has several. */
+CREATE TABLE IF NOT EXISTS site_photos (
+  site_id INTEGER NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+  photo_id INTEGER NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (site_id, photo_id)
+);
+CREATE INDEX IF NOT EXISTS idx_site_photos_site ON site_photos(site_id);
+
 CREATE TABLE IF NOT EXISTS content_blocks (
   key TEXT PRIMARY KEY,
   section TEXT NOT NULL,

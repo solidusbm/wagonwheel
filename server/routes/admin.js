@@ -28,12 +28,16 @@ const photoUpload = multer({
 });
 
 const SITE_SELECT = `
-  SELECT s.*, COALESCE(am.ids, '[]'::json) AS amenity_ids
+  SELECT s.*, COALESCE(am.ids, '[]'::json) AS amenity_ids, COALESCE(ph.ids, '[]'::json) AS photo_ids
   FROM sites s
   LEFT JOIN LATERAL (
     SELECT json_agg(sa.amenity_id ORDER BY sa.amenity_id) AS ids
     FROM site_amenities sa WHERE sa.site_id = s.id
   ) am ON true
+  LEFT JOIN LATERAL (
+    SELECT json_agg(sp.photo_id ORDER BY sp.sort_order, sp.photo_id) AS ids
+    FROM site_photos sp WHERE sp.site_id = s.id
+  ) ph ON true
 `;
 
 function mapSite(row) {
@@ -53,6 +57,7 @@ function mapSite(row) {
     permanentlyOccupied: row.permanently_occupied,
     sortOrder: row.sort_order,
     amenityIds: row.amenity_ids,
+    photoIds: row.photo_ids,
   };
 }
 
@@ -402,7 +407,7 @@ router.get("/sites", async (req, res, next) => {
 });
 
 router.post("/sites", async (req, res, next) => {
-  const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, pricePerMonthCents, notes, sortOrder, amenityIds, permanentlyOccupied } =
+  const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, pricePerMonthCents, notes, sortOrder, amenityIds, photoIds, permanentlyOccupied } =
     req.body ?? {};
 
   if (!name?.trim() || !area?.trim()) {
@@ -442,6 +447,15 @@ router.post("/sites", async (req, res, next) => {
     if (Array.isArray(amenityIds) && amenityIds.length) {
       await client.query(`INSERT INTO site_amenities (site_id, amenity_id) SELECT $1, UNNEST($2::int[])`, [siteId, amenityIds]);
     }
+    // WITH ORDINALITY keeps the order the office arranged them in, rather than the array's
+    // arbitrary insert order deciding which photo leads on the site card.
+    if (Array.isArray(photoIds) && photoIds.length) {
+      await client.query(
+        `INSERT INTO site_photos (site_id, photo_id, sort_order)
+         SELECT $1, p.id, p.ord FROM UNNEST($2::int[]) WITH ORDINALITY AS p(id, ord)`,
+        [siteId, photoIds]
+      );
+    }
     await client.query("COMMIT");
 
     const { rows: siteRows } = await pool.query(`${SITE_SELECT} WHERE s.id = $1`, [siteId]);
@@ -459,7 +473,7 @@ router.patch("/sites/:id", async (req, res, next) => {
   if (!Number.isInteger(id)) {
     return res.status(400).json({ error: "Invalid site id" });
   }
-  const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, pricePerMonthCents, notes, active, sortOrder, amenityIds, permanentlyOccupied } =
+  const { name, area, ampService, pullThrough, maxRigLength, petFriendly, pricePerNightCents, pricePerWeekCents, pricePerMonthCents, notes, active, sortOrder, amenityIds, photoIds, permanentlyOccupied } =
     req.body ?? {};
 
   const client = await pool.connect();
@@ -516,6 +530,19 @@ router.patch("/sites/:id", async (req, res, next) => {
       await client.query("DELETE FROM site_amenities WHERE site_id = $1", [id]);
       if (amenityIds.length) {
         await client.query(`INSERT INTO site_amenities (site_id, amenity_id) SELECT $1, UNNEST($2::int[])`, [id, amenityIds]);
+      }
+    }
+
+    // Replace-all, like amenities: an omitted photoIds leaves the assignment alone, an empty array
+    // clears it. Anything else and un-assigning the last photo would be impossible.
+    if (Array.isArray(photoIds)) {
+      await client.query("DELETE FROM site_photos WHERE site_id = $1", [id]);
+      if (photoIds.length) {
+        await client.query(
+          `INSERT INTO site_photos (site_id, photo_id, sort_order)
+           SELECT $1, p.id, p.ord FROM UNNEST($2::int[]) WITH ORDINALITY AS p(id, ord)`,
+          [id, photoIds]
+        );
       }
     }
 

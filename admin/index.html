@@ -72,6 +72,17 @@
   .app-edit-row .field label{font-size:10px;}
   .app-edit-row .drop{flex:0 0 auto; margin:0 0 10px;}
   .app-edit-row .drop button{font-size:10.5px; padding:6px 10px;}
+  /* Photo picker in the site editor. Thumbnails rather than a list of filenames -- captions like
+     "Around the park" don't tell you which pad you're looking at. */
+  .site-photo-picker{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px;}
+  .site-photo-picker label{position:relative; display:block; cursor:pointer; border:2px solid transparent; border-radius:var(--radius); overflow:hidden; background:var(--bg);}
+  .site-photo-picker label.on{border-color:var(--gold);}
+  .site-photo-picker img{display:block; width:100%; height:82px; object-fit:cover;}
+  .site-photo-picker .cap{display:block; font-size:10.5px; color:var(--parchment-dim); padding:4px 6px; line-height:1.3;}
+  .site-photo-picker input{position:absolute; top:6px; left:6px; width:auto; margin:0; z-index:1;}
+  /* The lead photo is the one guests actually see, so it says so rather than relying on the order. */
+  .site-photo-picker .lead{position:absolute; top:5px; right:5px; background:var(--gold); color:var(--btn-text);
+    font-family:'JetBrains Mono',monospace; font-size:8.5px; text-transform:uppercase; letter-spacing:0.06em; padding:2px 6px; border-radius:2px;}
   .app-add{font-size:10.5px; padding:6px 10px; margin-bottom:4px;}
   .app-empty{color:var(--parchment-dim); font-style:italic; font-size:12.5px; margin:0 0 10px;}
   #print-application-link{text-decoration:none; display:inline-flex; align-items:center;}
@@ -267,6 +278,10 @@
         <div class="field">
           <label>Amenities</label>
           <div id="site-amenity-checks" class="amenity-checks"></div>
+        </div>
+        <div class="field">
+          <label>Photos <span style="text-transform:none;letter-spacing:0;font-style:italic;">— shown on this site's card when guests are choosing. The first one selected is the one they see.</span></label>
+          <div id="site-photo-picker" class="site-photo-picker"></div>
         </div>
         <p id="site-form-error" class="error-msg" hidden></p>
         <div class="btn-row">

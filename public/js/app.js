@@ -208,23 +208,50 @@ function renderSites(sites) {
 
   renderSiteMap(sites);
 
-  const byArea = new Map();
-  for (const site of sites) {
-    if (!byArea.has(site.area)) byArea.set(site.area, []);
-    byArea.get(site.area).push(site);
-  }
+  /* Grouped by whether you can book it, not by which row it's in. Front/Center/Back Row meant
+     scanning three headings for the handful actually available on those dates -- the row matters
+     when you're standing in the park, not when you're choosing. It moved onto the card instead,
+     and the map above still shows the real geography. */
+  // /api/availability already returns sites in sort_order, so both groups stay in park order
+  // (Site 1..12) without re-sorting -- note that sorting by name here would put Site 10 before
+  // Site 2. Within the unavailable group, sites merely booked for these dates come before ones
+  // that can never be booked: the first might free up if the guest shifts a day, the second won't.
+  const available = sites.filter((s) => s.available);
+  const unavailable = sites
+    .filter((s) => !s.available)
+    .sort((a, b) => Number(a.permanently_occupied) - Number(b.permanently_occupied));
 
   siteGroups.innerHTML = "";
-  for (const [area, areaSites] of byArea) {
+
+  const grid = (list) => {
+    const el = document.createElement("div");
+    el.className = "site-grid";
+    for (const site of list) el.appendChild(renderSiteCard(site, nights));
+    return el;
+  };
+
+  if (available.length === 0) {
+    const none = document.createElement("p");
+    none.className = "no-sites";
+    none.textContent = "No sites are free for those dates. Try shifting them by a day or two, or call the office — they may be able to help.";
+    siteGroups.appendChild(none);
+  } else {
     const section = document.createElement("div");
     section.className = "site-area";
-    section.innerHTML = `<h3>${area}</h3>`;
-    const grid = document.createElement("div");
-    grid.className = "site-grid";
-    for (const site of areaSites) {
-      grid.appendChild(renderSiteCard(site, nights));
-    }
-    section.appendChild(grid);
+    section.innerHTML = `<h3>Available · ${available.length} site${available.length === 1 ? "" : "s"}</h3>`;
+    section.appendChild(grid(available));
+    siteGroups.appendChild(section);
+  }
+
+  // Shown, but folded away: a guest looking at a full park still wants to see the park, and it
+  // shouldn't push the bookable sites off the screen to do it. Open by default only when there is
+  // nothing available, since then it's the whole answer.
+  if (unavailable.length > 0) {
+    const section = document.createElement("details");
+    section.className = "site-area site-unavailable";
+    if (available.length === 0) section.open = true;
+    section.innerHTML = `<summary><h3>Not available for these dates · ${unavailable.length}</h3></summary>`;
+    section.appendChild(grid(unavailable));
     siteGroups.appendChild(section);
   }
 }
@@ -255,6 +282,35 @@ function siteRates(site) {
   );
 }
 
+/* A plain overlay rather than a gallery: one photo, tap anywhere or press Escape to close. It's
+   built on demand and removed on close, so it can't sit in the DOM intercepting clicks meant for
+   the card underneath -- which, on this page, would book a site. */
+function openLightbox(site) {
+  const box = document.createElement("div");
+  box.className = "lightbox";
+  box.innerHTML = `
+    <button type="button" class="lightbox-close" aria-label="Close">&times;</button>
+    <figure>
+      <img src="/photos/${site.photo_id}/image?w=640" alt="${escapeHtml(site.name)}" />
+      <figcaption>${escapeHtml(site.name)} · ${escapeHtml(site.area)}</figcaption>
+    </figure>`;
+
+  const close = () => {
+    box.remove();
+    document.removeEventListener("keydown", onKey);
+    document.body.style.overflow = "";
+  };
+  const onKey = (e) => {
+    if (e.key === "Escape") close();
+  };
+
+  box.addEventListener("click", close);
+  document.addEventListener("keydown", onKey);
+  document.body.style.overflow = "hidden";
+  document.body.appendChild(box);
+  box.querySelector(".lightbox-close").focus();
+}
+
 function renderSiteCard(site, nights) {
   const card = document.createElement("div");
   card.className = `site-card${site.available ? "" : " unavailable"}${state.selectedSite?.id === site.id ? " selected" : ""}`;
@@ -265,8 +321,25 @@ function renderSiteCard(site, nights) {
     ...(site.amenities ?? []),
   ].filter(Boolean);
 
+  /* Assigned in /admin -> Sites -> Edit -> Photos. Served at a capped width: twelve full-size
+     shots is several megabytes, and the list has to appear before the pictures do on cellular.
+     The fixed-ratio box means cards don't reflow as images arrive, and a site with no photo simply
+     has no box rather than a broken frame. */
+  /* A site with no photo assigned still gets a box, so the cards in a row line up and the odd one
+     out reads as "no picture yet" rather than as a broken image. Not all twelve are photographed. */
+  const photo = site.photo_id
+    ? `<button type="button" class="site-photo" data-photo="${site.photo_id}"
+         aria-label="Enlarge the photo of ${escapeHtml(site.name)}">
+         <img src="/photos/${site.photo_id}/image?w=320" alt="${escapeHtml(site.name)}" loading="lazy" />
+       </button>`
+    : `<div class="site-photo site-photo-none" aria-hidden="true">
+         <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="5"/><circle cx="50" cy="50" r="10" fill="currentColor"/><g stroke="currentColor" stroke-width="5"><line x1="50" y1="4" x2="50" y2="96"/><line x1="4" y1="50" x2="96" y2="50"/><line x1="17" y1="17" x2="83" y2="83"/><line x1="17" y1="83" x2="83" y2="17"/></g></svg>
+       </div>`;
+
   card.innerHTML = `
+    ${photo}
     <h4>${escapeHtml(site.name)}</h4>
+    <div class="site-area-label">${escapeHtml(site.area)}</div>
     <div class="site-tags">${tags.map((t) => `<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>
     <div class="site-price">${siteRates(site)}</div>
     ${site.notes ? `<div class="site-notes">${escapeHtml(site.notes)}</div>` : ""}
@@ -275,6 +348,13 @@ function renderSiteCard(site, nights) {
     </div>
     ${site.permanently_occupied ? "" : renderBookedRanges(site.bookedRanges)}
   `;
+
+  /* The whole card is a click target that selects the site and jumps to payment, so the photo
+     MUST stop the event. Without this, tapping a picture to look at it silently books that site. */
+  card.querySelector(".site-photo")?.addEventListener("click", (event) => {
+    event.stopPropagation();
+    openLightbox(site);
+  });
 
   if (site.available) {
     card.addEventListener("click", () => selectSite(site));

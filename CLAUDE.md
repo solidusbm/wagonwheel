@@ -75,6 +75,28 @@ the bottom of the page, after Photos/Amenities/Content, so pressing Edit scrolle
 from the sites list into what looked like an unrelated part of the admin. `openSiteForm()` also
 opens the enclosing `<details>` — a panel revealed inside a collapsed section is invisible.
 
+## Site photos and the booking list
+
+- **Sites are grouped by availability, not by row.** Front/Center/Back Row meant scanning three
+  headings for the handful bookable on those dates. The row moved onto the card
+  (`.site-area-label`); the map above still shows the real geography, which is where it matters.
+  The "not available" group is a collapsed `<details>` — shown, but not pushing bookable sites off
+  screen — and opens by default only when nothing is available. `/api/availability` already returns
+  sort_order, so don't sort by name: "Site 10" sorts before "Site 2".
+- **Photos are assigned per site** through a `site_photos` join table (not a column on `photos`) —
+  one photo legitimately covers several sites, as the row-level shots do. Assign them in `/admin`
+  → Sites → Edit → Photos. **Selection order is the sort order**, and the first is what a guest
+  sees; the picker labels it "Shown" so that isn't a guess.
+- **`/photos/:id/image?w=320|640` serves thumbnails.** Twelve full-size shots is several megabytes
+  and a lot of these guests are on cellular. Widths are a fixed allowlist because the width is part
+  of the cache key — leaving it open lets anyone fill the cache with `?w=1..1600`. Cached in memory,
+  which is safe because a photo's bytes never change (upload inserts, delete removes).
+- **The card's photo MUST call `stopPropagation()`.** The whole card is a click target that selects
+  the site and jumps to payment — without it, tapping a picture to look at it books that site.
+  Verified by test, not by eye. Any new control added inside a site card needs the same treatment.
+- A site with no photo gets a **placeholder tile of the same aspect**, so cards in a row line up and
+  the gap reads as deliberate. Not all twelve sites are photographed.
+
 ## The guest application
 
 The booking form doubles as the park's paper application. Three things render that data and they
