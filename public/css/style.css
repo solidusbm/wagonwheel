@@ -176,6 +176,12 @@ a{color:var(--gold);}
 
 /* ---------- panels ---------- */
 .panel{background:var(--bg-panel); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius); padding:32px; margin-bottom:24px;}
+/* 32px each side is right on a desktop and expensive on a phone: nested inside .wrap and a
+   <details>, it left the site editor's photo grid 181px wide out of a 390px screen -- one column,
+   for a form the office uses standing in the park. */
+@media(max-width:620px){
+  .panel{padding:20px 16px;}
+}
 .panel h2{font-size:27px; margin:0 0 4px;}
 .panel .sub{color:var(--parchment-dim); font-size:14px; margin-bottom:24px; font-style:italic;}
 

@@ -94,6 +94,11 @@ opens the enclosing `<details>` — a panel revealed inside a collapsed section 
   one photo legitimately covers several sites, as the row-level shots do. Assign them in `/admin`
   → Sites → Edit → Photos. **Selection order is the sort order**, and the first is what a guest
   sees; the picker labels it "Shown" so that isn't a guess.
+- The picker is a **collapsed `<details>`**, and should stay one as the catalog grows. Eighteen
+  open tiles pushed Save off the screen and made it the tallest thing in the form. Its closed
+  summary shows thumbnails of what's chosen with the lead one ringed, so the usual question is
+  answered without opening it; the grid itself is capped at 320px and scrolls. It re-collapses each
+  time a site is opened, so it never inherits the last site's state.
 - **`/photos/:id/image?w=320|640` serves thumbnails.** Twelve full-size shots is several megabytes
   and a lot of these guests are on cellular. Widths are a fixed allowlist because the width is part
   of the cache key — leaving it open lets anyone fill the cache with `?w=1..1600`. Cached in memory,

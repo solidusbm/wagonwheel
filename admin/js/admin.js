@@ -439,6 +439,8 @@ const sOccupiedField = document.getElementById("s-occupied");
 const sNotesField = document.getElementById("s-notes");
 const siteAmenityChecks = document.getElementById("site-amenity-checks");
 const sitePhotoPicker = document.getElementById("site-photo-picker");
+const sitePhotoSummary = document.getElementById("site-photo-summary");
+const sitePhotoDetails = document.getElementById("site-photo-details");
 
 // Selection order matters: the first photo picked is the one that leads on the guest site card.
 let sitePhotoSelection = [];
@@ -547,6 +549,24 @@ function renderAmenityChecks(checkedIds = []) {
 /* Thumbnails of every uploaded photo, ticked for the ones assigned to this site. Order of
    selection is kept -- the first one picked is what a guest sees on the card, and the server
    stores that order as sort_order. */
+/* What the picker says when it's shut. Thumbnails rather than "2 selected", because the question
+   the office actually has is "which ones", and the lead photo -- the one guests see on the card --
+   is ringed so that's answerable at a glance too. */
+function renderSitePhotoSummary() {
+  if (!sitePhotoSummary) return;
+  if (sitePhotoSelection.length === 0) {
+    sitePhotoSummary.innerHTML = `<span>None chosen &mdash; guests see a placeholder</span>`;
+    return;
+  }
+  const shown = sitePhotoSelection.slice(0, 4);
+  const more = sitePhotoSelection.length - shown.length;
+  sitePhotoSummary.innerHTML =
+    shown
+      .map((id, i) => `<img class="${i === 0 ? "lead-dot" : ""}" src="/photos/${id}/image?w=320" alt="" loading="lazy" />`)
+      .join("") +
+    `<span>${sitePhotoSelection.length} chosen${more > 0 ? ` (${more} more)` : ""} &middot; ringed one leads</span>`;
+}
+
 function renderSitePhotoPicker(selected = []) {
   sitePhotoSelection = [...selected];
   if (photos.length === 0) {
@@ -564,6 +584,8 @@ function renderSitePhotoPicker(selected = []) {
       </label>`;
     })
     .join("");
+
+  renderSitePhotoSummary();
 
   sitePhotoPicker.querySelectorAll("input[type=checkbox]").forEach((el) => {
     el.addEventListener("change", () => {
@@ -727,6 +749,9 @@ function openSiteForm(site) {
     renderAmenityChecks([]);
     renderSitePhotoPicker([]);
   }
+  // Shut again for each site opened, so it never inherits the previous site's expanded state --
+  // the summary is the intended resting view.
+  sitePhotoDetails?.removeAttribute("open");
   sitePanel.classList.add("open");
   // The panel lives inside the collapsed <details> for Sites; opening the form without opening
   // the section it sits in would scroll to nothing.

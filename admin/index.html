@@ -73,8 +73,30 @@
   .app-edit-row .drop{flex:0 0 auto; margin:0 0 10px;}
   .app-edit-row .drop button{font-size:10.5px; padding:6px 10px;}
   /* Photo picker in the site editor. Thumbnails rather than a list of filenames -- captions like
-     "Around the park" don't tell you which pad you're looking at. */
-  .site-photo-picker{display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:10px;}
+     "Around the park" don't tell you which pad you're looking at.
+
+     Wrapped in a <details> because the catalog keeps growing: eighteen 120px tiles pushed Save off
+     the screen and made this the tallest thing in the form by a distance. The closed state still
+     answers the common question -- what has this site got -- with small thumbnails in the summary. */
+  .photo-picker{border:1px solid rgba(60,42,26,0.18); border-radius:var(--radius); margin:0 0 18px; background:var(--bg-panel-2);}
+  .photo-picker > summary{list-style:none; cursor:pointer; display:flex; align-items:center; gap:10px; padding:11px 14px; flex-wrap:wrap;}
+  .photo-picker > summary::-webkit-details-marker{display:none;}
+  .photo-picker > summary::before{content:"▸"; color:var(--gold); font-size:12px; line-height:1; transition:transform 0.15s; flex:0 0 auto;}
+  .photo-picker[open] > summary::before{transform:rotate(90deg);}
+  .pp-title{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.07em; color:var(--gold); flex:0 0 auto;}
+  .pp-summary{display:flex; align-items:center; gap:7px; flex:1 1 auto; min-width:0; font-size:12.5px; color:var(--parchment-dim); font-style:italic;}
+  .pp-summary img{width:34px; height:26px; object-fit:cover; border-radius:2px; flex:0 0 auto;}
+  .pp-summary .lead-dot{width:34px; height:26px; border-radius:2px; flex:0 0 auto; outline:2px solid var(--gold); outline-offset:-2px;}
+  .pp-body{padding:0 14px 14px; border-top:1px solid rgba(60,42,26,0.11);}
+  @media(max-width:620px){
+    .admin-wrap{padding:24px 14px;}
+    .sync-feeds{padding:16px 14px;}
+    .pp-body{padding:0 9px 12px;}
+  }
+  .pp-hint{font-size:12.5px; color:var(--parchment-dim); font-style:italic; margin:12px 0;}
+  /* Capped so a growing catalog scrolls inside the picker rather than stretching the form. */
+  .site-photo-picker{max-height:320px; overflow-y:auto; padding-right:4px;}
+  .site-photo-picker{display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:9px;}
   .site-photo-picker label{position:relative; display:block; cursor:pointer; border:2px solid transparent; border-radius:var(--radius); overflow:hidden; background:var(--bg);}
   .site-photo-picker label.on{border-color:var(--gold);}
   .site-photo-picker img{display:block; width:100%; height:82px; object-fit:cover;}
@@ -272,10 +294,20 @@
           <label>Amenities</label>
           <div id="site-amenity-checks" class="amenity-checks"></div>
         </div>
-        <div class="field">
-          <label>Photos <span style="text-transform:none;letter-spacing:0;font-style:italic;">— shown on this site's card when guests are choosing. The first one selected is the one they see.</span></label>
-          <div id="site-photo-picker" class="site-photo-picker"></div>
-        </div>
+        <!-- Collapsed by default. There are 18 photos in the catalog and climbing; an always-open
+             grid of them buried the Save button and made the form a scroll marathon on a phone.
+             The summary carries the answer you usually want -- which photos this site has, and
+             which one leads -- so opening it is only necessary to change something. -->
+        <details class="photo-picker" id="site-photo-details">
+          <summary>
+            <span class="pp-title">Photos</span>
+            <span class="pp-summary" id="site-photo-summary"></span>
+          </summary>
+          <div class="pp-body">
+            <p class="pp-hint">Shown on this site&rsquo;s card when guests are choosing. Tick as many as you like &mdash; <b>the first one you tick is the one they see</b>; the rest are there for later.</p>
+            <div id="site-photo-picker" class="site-photo-picker"></div>
+          </div>
+        </details>
         <p id="site-form-error" class="error-msg" hidden></p>
         <div class="btn-row">
           <button type="button" class="btn btn-ghost" id="cancel-site-btn">Cancel</button>
