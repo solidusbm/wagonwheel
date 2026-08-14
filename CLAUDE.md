@@ -462,6 +462,14 @@ What's still open:
     - The roads are a **ladder, not a loop** — a spine down the east side (the entrance drive
       continuing south), a leg down the west side, and three two-way rungs: above Sites 3–7,
       between the rows, and below Sites 8–12.
+    - **The NUMBERING runs east to west and does NOT match the drawing.** The plan numbers each
+      row west to east; the park numbered the markers the other way when they went out, and the
+      markers are what a guest standing in the park reads. So the lowest number in each row sits at
+      its *eastern* end: `2 1` / `7 6 5 4 3` / `12 11 10 9 8`, west to east. Confirmed by the park
+      2026-08-14 and corrected in `park-layout.js` the same day. Compare this against the drawing
+      and they *will* disagree — the drawing is the one that's wrong here. Don't "fix" it back.
+      Only the map was affected: rates, amenities and photos are keyed to the site *name*, so they
+      were already pointing at the right pad.
     - **Sites 1–2 are their own short row hanging north off the top rung** at the west end by the
       existing fence — outside the ladder, not a pocket between the rows, and not angled.
     - Every site is a back-in, matching `pull_through = false` on all twelve rows.
