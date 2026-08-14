@@ -904,8 +904,6 @@ async function onUploadPhoto(event) {
   }
 }
 
-/* ---------- danger zone: force reseed ---------- */
-
 /* ---------- refunds ----------
    Two steps on purpose: fetch the policy figures and show them, then act only on a confirmation
    that names the amount. A refund cannot be undone, so the office should never be one stray click
@@ -1085,43 +1083,6 @@ emailTestBtn.addEventListener("click", async () => {
 
 loadEmailStatus();
 
-const reseedBtn = document.getElementById("reseed-btn");
-const reseedStatus = document.getElementById("reseed-status");
-
-reseedBtn.addEventListener("click", async () => {
-  const sure = confirm(
-    "This deletes ALL current reservations, sites, and amenities and reloads them from db/seed.sql. This cannot be undone. Continue?"
-  );
-  if (!sure) return;
-  const typed = prompt('Type RESEED to confirm.');
-  if (typed !== "RESEED") {
-    reseedStatus.textContent = "Cancelled — input didn't match.";
-    return;
-  }
-
-  reseedBtn.disabled = true;
-  reseedStatus.textContent = "Reseeding…";
-  try {
-    const res = await fetch("/api/admin/db/reseed", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ confirm: "RESEED" }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error ?? "Reseed failed");
-    }
-    reseedStatus.textContent = `Done — ${data.sitesCount} sites loaded. Refreshing…`;
-    await loadSites();
-    await loadReservations();
-    await loadAmenities();
-    await loadAdminSites();
-  } catch (err) {
-    reseedStatus.textContent = `Failed: ${err.message}`;
-  } finally {
-    reseedBtn.disabled = false;
-  }
-});
 
 /* ---------- content blocks ---------- */
 

@@ -1107,21 +1107,23 @@ router.get("/square/locations", async (req, res) => {
    pick up corrected seed data automatically. This lets an authenticated admin trigger it
    explicitly instead of needing direct database credentials. TRUNCATEs reservations, sites,
    amenities, and site_amenities -- irreversible. */
-router.post("/db/reseed", async (req, res, next) => {
-  const { confirm } = req.body ?? {};
-  if (confirm !== "RESEED") {
-    return res.status(400).json({ error: 'Send { "confirm": "RESEED" } to proceed. This truncates and reloads sites, amenities, and reservations.' });
-  }
-  try {
-    await applySchema();
-    await applySeed();
-    await applyContentSeed();
-    const count = await sitesCount();
-    res.json({ ok: true, sitesCount: count });
-  } catch (err) {
-    next(err);
-  }
-});
+/* The "reseed database" endpoint was removed on 2026-08-14, and should not come back in this form.
+ *
+ * It truncated sites/reservations/amenities and reloaded them from db/seed.sql, behind a typed
+ * RESEED confirmation. That made sense while seed.sql WAS the source of truth. It stopped being
+ * true once the park keyed in real data: per-site monthly rates ($300-$650), rig lengths, amenity
+ * assignments, photo assignments, Site 12's note, and actual bookings -- none of which exist in
+ * seed.sql. Pressing it destroyed all of that with nothing in the repository to restore from.
+ *
+ * Note what it was NOT needed for: bootstrapDatabase() in server/index.js already applies seed.sql
+ * automatically whenever the sites table is empty, so a genuinely fresh database seeds itself. The
+ * only thing this endpoint could do that the boot path can't is reseed a NON-empty database --
+ * which is precisely the destructive case with no remaining legitimate use.
+ *
+ * If a future schema change really needs data rewritten on a live database, write a migration in
+ * schema.sql (it runs every boot and is idempotent), not a truncate-and-reload button in the admin.
+ */
+
 
 router.get("/push/vapid-public-key", (req, res) => {
   res.json({ publicKey: process.env.VAPID_PUBLIC_KEY ?? null });

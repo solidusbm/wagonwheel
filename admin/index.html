@@ -129,14 +129,7 @@
   .content-row textarea{margin-bottom:0;}
   .content-row .save-hint{font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--cedar-light); opacity:0; transition:opacity 0.3s;}
   .content-row .save-hint.show{opacity:1;}
-  .danger-zone{margin:32px 0; padding:20px 24px; background:var(--bg-panel); border:1px solid rgba(140,58,43,0.45); border-radius:var(--radius);}
-  .danger-zone summary{list-style:none; cursor:pointer; display:flex; align-items:center; gap:8px;}
-  .danger-zone summary::-webkit-details-marker{display:none;}
-  .danger-zone summary h2{font-size:17px; margin:0; color:var(--rust-bright);}
-  .danger-zone summary::before{content:"▸"; color:var(--rust-bright); font-size:13px; transition:transform 0.15s;}
-  .danger-zone[open] summary::before{transform:rotate(90deg);}
-  .danger-zone .sub{color:var(--parchment-dim); font-size:12.5px; font-style:italic; margin:14px 0;}
-</style>
+      </style>
 </head>
 <body>
 <div class="admin-wrap">
@@ -355,12 +348,6 @@
     <p id="email-test-status" class="sub" style="margin-top:10px;"></p>
   </details>
 
-  <details class="danger-zone">
-    <summary><h2>Danger zone</h2></summary>
-    <div class="sub">Force-reload sites and amenities from <code>db/seed.sql</code> on the live database. Use this after a code update changes seed data (like this one) -- otherwise an already-provisioned database keeps its old rows and never picks up corrections. <strong>This deletes all current reservations, sites, and amenities and reloads them from scratch. Cannot be undone.</strong></div>
-    <button type="button" class="btn btn-primary" id="reseed-btn" style="background:var(--rust);">Reseed database from seed.sql</button>
-    <p id="reseed-status" class="sub" style="margin-top:10px;"></p>
-  </details>
 </div>
 <script type="module" src="/admin/js/admin.js"></script>
 <script type="module" src="/admin/js/push.js"></script>

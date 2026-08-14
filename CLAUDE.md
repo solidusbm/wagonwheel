@@ -41,20 +41,27 @@ that counts — you don't need to ask a second time in the same turn.
 This means: on an already-provisioned database (like the live one), new columns/tables you add to
 `schema.sql` show up automatically on the next deploy, but corrected *data* in `seed.sql` (new
 site names, rates, amenity lists, etc.) does **not** apply automatically — the `sites` table
-already has rows, so step 2 never runs. If you change `seed.sql`, the live database won't reflect
-it until someone manually reseeds.
+already has rows, so step 2 never runs.
 
-**To force a reseed:** `/admin` has a "Danger zone" panel → "Reseed database from seed.sql". It
-calls `POST /api/admin/db/reseed` (Basic Auth protected, requires typing `RESEED` to confirm).
-This **truncates and reloads** `sites`, `reservations`, `amenities`, `site_amenities`, and
-`photos` — irreversible, deletes any real bookings that exist at the time. Use with the user's
-explicit go-ahead only, same as a push.
+**There is no longer a way to reseed a live database, and that is deliberate.** A "Danger zone"
+panel in `/admin` used to do it, behind a typed `RESEED` confirmation; it was removed on
+2026-08-14 along with `POST /api/admin/db/reseed`. It made sense while `seed.sql` *was* the source
+of truth, and stopped being true the moment the park keyed in data that lives nowhere else: the
+per-site monthly rates ($300–$650), rig lengths, amenity and photo assignments, Site 12's note,
+and real bookings. Pressing it destroyed all of that with nothing in the repository to restore
+from. Note what it was *not* needed for — a genuinely fresh database seeds itself through
+`bootstrapDatabase()`, so the only thing that button could do was the destructive thing.
 
-Do not try to reseed by connecting to the database directly with credentials pulled from the
-Render dashboard — that pattern gets blocked by the permission system (rightly: an automated
-process using scraped DB credentials to write to production is exactly what it's designed to
-catch). The reseed endpoint above is the sanctioned path; it never requires exposing DB
-credentials at all.
+**So: `seed.sql` is now for provisioning a NEW database, not for correcting a live one.** To change
+live data, use `/admin` (the Sites editor, the Amenities catalog, the Content panel) or a small
+script against the admin API — see `fix-site-data.ps1` in the job scratch directory for the shape.
+If a schema change genuinely needs data rewritten on the live database, write it as an idempotent
+migration in `schema.sql`, which runs on every boot, rather than reintroducing a truncate-and-reload
+button. Keep `seed.sql` accurate anyway: it's the starting point for the next environment.
+
+Do not reach for the database directly with credentials scraped from a hosting dashboard — that
+pattern gets blocked by the permission system, rightly. The admin API is the sanctioned path and
+never requires exposing DB credentials at all.
 
 ## Admin access
 
@@ -67,7 +74,7 @@ by the user — don't ask for the password unprompted. `server/index.js` still w
 phone numbers, so that warning is worth heeding.
 
 Every section below Reservations (Sites, Photos, Amenities, Content, Push notifications,
-RoverPass/Hipcamp sync, Danger zone) is a `<details class="sync-feeds">`, closed by default. Keep
+RoverPass/Hipcamp sync) is a `<details class="sync-feeds">`, closed by default. Keep
 new admin sections consistent with that pattern rather than adding a plain always-open panel.
 
 The **site editor lives inside the Sites section**, above the table it edits. It used to sit at
@@ -264,7 +271,7 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   (currently the original "Dark Cowboy" look, seeded that way). If a style switcher is wanted
   again later, re-add the admin panel rather than rebuilding the backend — it's untouched. Seeded
   via `db/seed-content.sql`, applied unconditionally on every boot (unlike `db/seed.sql`, which
-  needs an empty `sites` table or a Danger Zone reseed) — see `applyContentSeed()` in
+  needs a completely empty `sites` table) — see `applyContentSeed()` in
   `server/lib/dbBootstrap.js`.
 - **Fixed (2026-07-28):** the homepage hero section, nav bar, and the always-dark accent panels
   (`.nearby-item`, `.site-card`, `.order-summary` — all backed by the hardcoded `--bg-panel-2`,
@@ -433,8 +440,8 @@ standing is its metered electric, not a higher weekly rate.
 
 What's still open:
 
-- **Site 10 is the only site with no amenities assigned** — every other site carries Wired
-  Ethernet. Could be deliberate; worth confirming rather than assuming it was missed.
+- Site 10 having no amenities is **deliberate** — confirmed by the park 2026-08-14. It's the one
+  site without Wired Ethernet. Don't "fix" it by copying the other eleven.
 
 - Real footages for the site map. The map was rebuilt on 2026-08-10 against the filed plan
   (Mangold Engineering dwg 100-7799, sheet 2 of 5, "System Layout", 1" = 100'), supplied by the
