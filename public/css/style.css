@@ -307,6 +307,11 @@ details.form-section > summary .opt{font-family:'Zilla Slab',serif; text-transfo
 .terms-line{font-size:12.5px; line-height:1.5; color:var(--parchment); background:var(--bg-panel-2);
   border:1px solid var(--line); border-radius:var(--radius); padding:10px 13px; margin:0 0 14px;}
 .terms-line:empty{display:none;}
+/* Sits above the collapsed application sections. The point it makes -- optional, finishable at
+   check-in -- is why a guest doesn't bail at seeing forty fields. */
+.prefill-note{font-size:13px; line-height:1.6; color:var(--parchment); background:var(--bg-panel-2);
+  border-left:2px solid var(--cedar); border-radius:0 var(--radius) var(--radius) 0;
+  padding:12px 15px; margin:6px 0 16px;}
 /* Rate caveats -- currently "monthly excludes electric". Small, but it sits with the price it
    qualifies rather than in a footnote nobody reads. */
 .rate-note{font-size:11px; line-height:1.45; color:var(--parchment-dim); margin-top:3px; font-style:italic;}

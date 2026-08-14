@@ -1,38 +1,38 @@
 -- Real site inventory for Bandera Wagon Wheel RV Park, pulled from the county-filed
--- septic/site engineering plan (Mangold Engineering, drawing 100-7799) and the park's
--- printed rate notes -- see wagonwheel-inbox 2026-07-27 uploads. Numbering (1-12) and the
--- Front/Center/Back Row grouping match that plan. Daily/weekly rates for sites 1-11 are
--- confirmed ($45/night incl. electric, $210/week). Site 12 is a separate premium site
--- (formerly long-term-occupied by "Brady") at a confirmed $350/week with electric NOT
--- included; its nightly rate ($50) is derived arithmetically (350/7) since only a weekly
--- figure was given -- not itself confirmed as a nightly offering. Per-site amp/pull-through/
--- max-rig-length figures are NOT confirmed per site (the pamphlet only says the park offers
--- 30 and 50 amp service park-wide and is "big rig friendly" with some 60' sites) -- left
--- unset here rather than guessed.
+-- septic/site engineering plan (Mangold Engineering, drawing 100-7799) and the park's own
+-- figures. Numbering (1-12) and the Front/Center/Back Row grouping match that plan.
+--
+-- Rates and per-site details were confirmed by the park on 2026-08-12 and 2026-08-14 and are no
+-- longer estimates: $45/night and $210/week at sites 1-11, $50/night and $210/week at Site 12,
+-- and every site is a 60 ft back-in with both 30 and 50 amp service.
+--
+-- NOTE this file only runs against a COMPLETELY EMPTY sites table. The live rows carry per-site
+-- monthly rates the park entered by hand ($300-$650, varying by site) that are NOT reproduced
+-- here -- $350 below is a sane starting figure for a fresh database, not what the park charges.
+-- Site 12's premium standing is its metered electric, not a higher weekly rate.
 TRUNCATE reservations, sites, amenities, site_amenities RESTART IDENTITY CASCADE;
 
 -- Any rate column may be NULL, meaning "N/A -- not sold by that term" (a monthly-only site sets
--- nightly and weekly to NULL). The $350/month figure below is the placeholder set 2026-08-11
--- pending the real per-site figures; it lives here, not in schema.sql, because schema.sql runs on
+-- nightly and weekly to NULL). Rates live here, not in schema.sql, because schema.sql runs on
 -- every boot and would overwrite a rate the office had deliberately changed or cleared.
 INSERT INTO sites (name, area, amp_service, pull_through, max_rig_length, pet_friendly, price_per_night_cents, price_per_week_cents, price_per_month_cents, notes, sort_order) VALUES
-  ('Site 1',  'Front Row',  '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 1),
-  ('Site 2',  'Front Row',  '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 2),
-  ('Site 3',  'Center Row', '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 3),
-  ('Site 4',  'Center Row', '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 4),
-  ('Site 5',  'Center Row', '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 5),
-  ('Site 6',  'Center Row', '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 6),
-  ('Site 7',  'Center Row', '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 7),
-  ('Site 8',  'Back Row',   '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 8),
-  ('Site 9',  'Back Row',   '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 9),
-  ('Site 10', 'Back Row',   '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 10),
-  ('Site 11', 'Back Row',   '30/50', false, NULL, true, 4500, 21000, 35000, NULL, 11),
+  ('Site 1',  'Front Row',  '30/50', false, 60, true, 4500, 21000, 35000, NULL, 1),
+  ('Site 2',  'Front Row',  '30/50', false, 60, true, 4500, 21000, 35000, NULL, 2),
+  ('Site 3',  'Center Row', '30/50', false, 60, true, 4500, 21000, 35000, NULL, 3),
+  ('Site 4',  'Center Row', '30/50', false, 60, true, 4500, 21000, 35000, NULL, 4),
+  ('Site 5',  'Center Row', '30/50', false, 60, true, 4500, 21000, 35000, NULL, 5),
+  ('Site 6',  'Center Row', '30/50', false, 60, true, 4500, 21000, 35000, NULL, 6),
+  ('Site 7',  'Center Row', '30/50', false, 60, true, 4500, 21000, 35000, NULL, 7),
+  ('Site 8',  'Back Row',   '30/50', false, 60, true, 4500, 21000, 35000, NULL, 8),
+  ('Site 9',  'Back Row',   '30/50', false, 60, true, 4500, 21000, 35000, NULL, 9),
+  ('Site 10', 'Back Row',   '30/50', false, 60, true, 4500, 21000, 35000, NULL, 10),
+  ('Site 11', 'Back Row',   '30/50', false, 60, true, 4500, 21000, 35000, NULL, 11),
   -- The note is shown to guests on the booking page, so it says what they need to know and not
   -- who used to live here. It was rewritten 2026-08-12: the old wording ("electric NOT included
   -- in the rate -- unlike sites 1-11") dated from when this was the park's only exception, and
   -- read as wrong once the monthly rate started excluding electric everywhere. What is still
   -- particular to Site 12 is that its NIGHTLY and WEEKLY rates exclude it too.
-  ('Site 12', 'Back Row',   '30/50', false, NULL, true, 5000, 35000, 35000,
+  ('Site 12', 'Back Row',   '30/50', false, 60, true, 5000, 21000, 35000,
     'Premium site. Electric is metered separately and settled at the office. At this site that applies to every rate, including nightly and weekly; at the other sites only the monthly rate excludes electric.', 12);
 
 -- Unified amenity catalog. show_on_homepage puts an amenity in the homepage's "What every

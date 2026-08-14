@@ -299,6 +299,23 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   `PATCH /api/admin/style-gallery-approvals/:slug` accepts `approved`, `dismissed`, and/or `note`
   independently via `COALESCE` in the upsert — a note-only save doesn't touch the other two.
 
+## Privacy
+
+`/privacy.html` went up 2026-08-14, linked from every footer and from the booking form itself. It
+is written to describe **only what the app actually does** — verified before writing, not assumed:
+no cookies, no analytics, no trackers; card details go straight to Square and never reach this
+server; the public iCal feeds carry dates only. If you change what is collected, stored, or shared,
+that page has to change with it, or it becomes a false statement on a live commercial site.
+
+Two things it deliberately does **not** promise: automatic deletion after N months (nothing in the
+app does that), or a fixed retention period. It says the park keeps records for its accounts and
+deletes on request, which is true and enforceable by a person.
+
+The guest application is framed to guests as **pre-filling, not paperwork** — every field below the
+contact details is genuinely optional (none carry `required`), and the office finishes it at
+check-in using the printable sheet. Keep those three things consistent: the form's note, the
+privacy page, and the fields actually being optional.
+
 ## Settled — don't "fix" these back
 
 - **Rates are capped at the monthly rate, PER MONTH.** `quote()` bills whole months at
@@ -379,15 +396,16 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
 Most of what used to sit here was answered by the park on **2026-08-12** and entered directly in
 `/admin` — real per-site monthly rates, max rig length, and the per-site amenity assignments
 (which also gained Privacy Fence, Private Storage, RV Cover, Carport and Concrete Slab). Amp
-service was settled earlier — 30 and 50 at every site. What's still open:
+service was settled earlier — 30 and 50 at every site. Settled on **2026-08-14**: every site is
+**60 ft** (Sites 2 and 12 had been left blank), and **Site 12's weekly rate is $210**, not $350 — it
+had matched its own monthly rate, so a month there cost exactly what a week cost. Site 12's premium
+standing is its metered electric, not a higher weekly rate.
 
-- **Site 2 and Site 12 have no max rig length**, while the other ten are 60 ft. Blank means the
-  booking page shows no rig figure for them at all.
+What's still open:
+
 - **Site 10 is the only site with no amenities assigned** — every other site carries Wired
   Ethernet. Could be deliberate; worth confirming rather than assuming it was missed.
-- **Site 12's monthly rate ($350) equals its weekly rate ($350)**, so a month there costs what a
-  week costs, and any stay beyond about a week is $350 flat. It's also the *cheapest* monthly in
-  the park despite being the premium site — Site 2 is $650. Almost certainly wants a real figure.
+
 - Real footages for the site map. The map was rebuilt on 2026-08-10 against the filed plan
   (Mangold Engineering dwg 100-7799, sheet 2 of 5, "System Layout", 1" = 100'), supplied by the
   park first as a photo of the printed sheet and then as a copy marked up by hand — roads in
