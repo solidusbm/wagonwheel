@@ -299,6 +299,36 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   `PATCH /api/admin/style-gallery-approvals/:slug` accepts `approved`, `dismissed`, and/or `note`
   independently via `COALESCE` in the upsert — a note-only save doesn't touch the other two.
 
+## Rate limiting, and why req.ip is a trap here
+
+`server/middleware/rateLimit.js` throttles the public booking and cancel endpoints. In-process and
+dependency-free on purpose: single container, twelve sites.
+
+**It keys on `CF-Connecting-IP`, not `req.ip`.** The app sits behind Cloudflare reaching the origin
+through a cloudflared tunnel on the same host, so every request arrives from the connector and
+`req.ip` is identical for every visitor on earth. A limiter keyed on that throttles all guests as
+one person -- worse than no limiter. `trust proxy` is deliberately not set; the header is read
+directly. That header is trustworthy *because* the origin is only reachable through the tunnel; if
+this app is ever exposed directly it becomes attacker-controlled and this has to change.
+
+The threat is **card testing**, not calendar-blocking. A failed charge cancels the row and releases
+the dates, so flooding can't durably hold inventory without paying for it -- but an endpoint that
+takes a card and reports whether it worked is what someone validating stolen cards wants, and the
+merchant wears the chargebacks. Hence 8 booking attempts per 15 minutes, counting attempts rather
+than successes. Don't tighten it much further: a false positive turns away a real booking, which
+costs the park more than the abuse.
+
+## Email authentication -- check the From address before publishing SPF
+
+The domain has no SPF or DMARC (verified 2026-08-14). Publishing `v=spf1 -all` and `p=reject` is
+correct **only while nothing sends as `@banderawagonwheelrv.com`** -- today mail goes out as a
+gmail.com address, so it is.
+
+**Check `/admin` -> Booking alert email -> the "from" line first.** If `SMTP_FROM` is ever set to an
+address at the park's own domain, those records will send every guest confirmation to spam or bounce
+it outright. Same applies in reverse: the day the park wants `info@banderawagonwheelrv.com`, the SPF
+record must authorise whatever sends it, and a null MX (if published) has to come off to receive.
+
 ## Privacy
 
 `/privacy.html` went up 2026-08-14, linked from every footer and from the booking form itself. It

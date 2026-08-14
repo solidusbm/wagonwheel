@@ -8,11 +8,33 @@ import { cancellationQuote } from "../lib/pricing.js";
 import { refundPayment } from "../lib/square.js";
 import { notifyAdminPush } from "../lib/push.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
+import { makeRateLimit } from "../middleware/rateLimit.js";
 
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-router.post("/", async (req, res, next) => {
+/* Booking is the endpoint worth protecting: it takes a card number and reports whether the charge
+   worked, which is what card-testing wants. Counting attempts rather than successes is the point.
+   Eight in fifteen minutes leaves room for a guest fumbling a card two or three times and booking
+   a second site afterwards -- a false positive here turns away a real booking, which costs the park
+   far more than the abuse does. */
+const bookingLimit = makeRateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 8,
+  message:
+    "Too many booking attempts from this connection. Wait a few minutes and try again, or call the office on (830) 850-0805 and we'll book it for you.",
+});
+
+/* Cancellation is HMAC-gated, so a reservation code alone can't cancel anything -- this only
+   narrows how fast someone could grind at the token, and it moves money when it succeeds. Looser,
+   because a guest reloading the cancel page a few times is normal. */
+const cancelLimit = makeRateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: "Too many attempts. Wait a few minutes, or call the office on (830) 850-0805.",
+});
+
+router.post("/", bookingLimit, async (req, res, next) => {
   const { siteId, checkIn, checkOut, guest, sourceId, idempotencyKey } = req.body ?? {};
 
   if (!Number.isInteger(siteId)) {
@@ -254,7 +276,7 @@ async function loadForCancel(code, token) {
   return { r };
 }
 
-router.get("/:code/cancel-quote", async (req, res, next) => {
+router.get("/:code/cancel-quote", cancelLimit, async (req, res, next) => {
   try {
     const { r, error, status } = await loadForCancel(req.params.code, req.query.t);
     if (error) return res.status(status).json({ error, ...(r ? { reservation: guestFacing(r) } : {}) });
@@ -265,7 +287,7 @@ router.get("/:code/cancel-quote", async (req, res, next) => {
   }
 });
 
-router.post("/:code/cancel", async (req, res, next) => {
+router.post("/:code/cancel", cancelLimit, async (req, res, next) => {
   const client = await pool.connect();
   try {
     const pre = await loadForCancel(req.params.code, req.query.t ?? req.body?.t);
