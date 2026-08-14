@@ -70,9 +70,13 @@ async function init() {
   renderTrail();
 }
 
-// All real gallery photos come from /admin -> Photos now (DB-backed). Photos flagged
-// "show on homepage" are inserted before the two illustrated placeholder figures (Medina
-// River, Downtown Bandera) that are still hardcoded until real shots exist for those.
+/* Gallery photos all come from /admin -> Photos (DB-backed); those flagged "show on homepage" fill
+   this grid. Requested at ?w=640 -- the originals came to 8.40MB across 15 photos, which is a
+   spinner rather than a homepage on Hill Country cellular.
+
+   The grid used to also contain two hardcoded illustrations of the Medina River and downtown,
+   captioned "Placeholder" to guests. They were the stand-in from before there were real photos;
+   there are 18 now, and the Nearby section covers both subjects in words. */
 async function loadHomepagePhotos() {
   try {
     const res = await fetch("/api/photos");
@@ -86,7 +90,7 @@ async function loadHomepagePhotos() {
         .map(
           (p) => `
       <figure>
-        <img src="/photos/${p.id}/image" alt="${escapeHtml(p.caption ?? "Wagon Wheel RV Park photo")}" loading="lazy" />
+        <img src="/photos/${p.id}/image?w=640" alt="${escapeHtml(p.caption ?? "Wagon Wheel RV Park photo")}" loading="lazy" />
         ${p.caption ? `<figcaption><b>${escapeHtml(p.caption)}</b></figcaption>` : ""}
       </figure>`
         )
@@ -715,6 +719,19 @@ async function renderOrderSummary(site) {
        <b>Electric is not included</b> — it's metered separately and settled at the office. Cancelling a booking charged at the
        monthly rate carries a flat $100 service fee.</p>`
     : "";
+
+  /* Cancellation terms belong next to the Pay button, not only on /hours: the fee depends on how
+     this stay was priced, and the policy has a cliff at the monthly cap. Same quote, same numbers. */
+  const cancelFee = q.monthlyRateApplied
+    ? "a flat $100 service fee"
+    : `a service fee of 11.11% of what you pay (${money(Math.round(q.totalCents * 0.1111))})`;
+  const termsLine = document.getElementById("terms-line");
+  if (termsLine) {
+    termsLine.innerHTML =
+      `By booking you accept the park's <a href="/hours.html" target="_blank" rel="noopener">terms</a>: ` +
+      `cancelling this reservation carries ${escapeHtml(cancelFee)}, and the rest is refunded. ` +
+      `You can cancel from the link in your confirmation email.`;
+  }
 
   orderSummary.innerHTML = `
     ${head}

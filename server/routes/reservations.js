@@ -106,39 +106,21 @@ router.post("/", async (req, res, next) => {
       throw err;
     }
 
+    /* ONLY the charge sits in this try. Everything after it -- the status update, the emails, the
+       push -- used to be inside it too, and the catch below cancels the reservation and answers
+       "Payment failed". So any error thrown AFTER the money moved was reported to the guest as a
+       payment that didn't go through, on a booking that was then deleted: card debited, no
+       reservation, no record for the office. It needed a database hiccup in a one-line window to
+       happen, which is exactly the kind of bug that waits for a busy weekend. */
+    let paymentId;
     try {
-      const { paymentId } = await chargeCard({
+      ({ paymentId } = await chargeCard({
         sourceId,
         amountCents: totalCents,
         idempotencyKey: idempotencyKey ?? reservationCode,
         referenceId: reservationCode,
         note: `Wagon Wheel RV Park - ${reservationCode}`,
-      });
-
-      await client.query(
-        `UPDATE reservations SET status = 'confirmed', square_payment_id = $1, updated_at = now() WHERE id = $2`,
-        [paymentId, reservationId]
-      );
-
-      const confirmedReservation = {
-        reservationCode,
-        status: "confirmed",
-        site: { id: site.id, name: site.name, area: site.area },
-        guest: { name: guest.name, email: guest.email, phone: guest.phone ?? null, numGuests: guest.numGuests ?? 1 },
-        checkIn,
-        checkOut,
-        nights,
-        subtotalCents,
-        bookingFeeCents,
-        totalCents,
-        monthlyRateApplied,
-      };
-
-      await notifyAdminOfBooking(confirmedReservation);
-      await sendGuestConfirmation(confirmedReservation);
-      await notifyAdminPush(confirmedReservation);
-
-      return res.status(201).json(confirmedReservation);
+      }));
     } catch (paymentErr) {
       // Freeing the row (status != pending/confirmed) releases the exclusion-constraint hold
       // on this date range so someone else can book it.
@@ -149,6 +131,50 @@ router.post("/", async (req, res, next) => {
       const message = paymentErr instanceof SquareError ? paymentErr.message : "Payment failed";
       return res.status(402).json({ error: message });
     }
+
+    // Past this line the guest has paid. Nothing below may cancel the booking or report a failure.
+    const confirmedReservation = {
+      reservationCode,
+      status: "confirmed",
+      site: { id: site.id, name: site.name, area: site.area },
+      guest: { name: guest.name, email: guest.email, phone: guest.phone ?? null, numGuests: guest.numGuests ?? 1 },
+      checkIn,
+      checkOut,
+      nights,
+      subtotalCents,
+      bookingFeeCents,
+      totalCents,
+      monthlyRateApplied,
+    };
+
+    try {
+      await client.query(
+        `UPDATE reservations SET status = 'confirmed', square_payment_id = $1, updated_at = now() WHERE id = $2`,
+        [paymentId, reservationId]
+      );
+    } catch (err) {
+      /* The charge succeeded but we couldn't mark the row confirmed. The reservation still exists
+         and still holds its dates (it's 'pending'), so the guest is not double-sold -- but the
+         Square payment id is now only in this log line. Loud, because reconciling it by hand needs
+         it. */
+      console.error(
+        `[booking] PAID BUT NOT CONFIRMED. Reservation ${reservationCode} was charged as Square ` +
+          `payment ${paymentId} and the confirm-update failed. Set it to confirmed in /admin and ` +
+          `record that payment id against it.`,
+        err
+      );
+    }
+
+    // Notifications are best-effort by definition: a guest who has paid is booked whether or not
+    // the office's email server is up. Each helper swallows its own errors, and this is the belt
+    // to that pair of braces -- notifyAdminPush in particular opens with an unguarded DB query.
+    await Promise.allSettled([
+      notifyAdminOfBooking(confirmedReservation),
+      sendGuestConfirmation(confirmedReservation),
+      notifyAdminPush(confirmedReservation),
+    ]);
+
+    return res.status(201).json(confirmedReservation);
   } catch (err) {
     next(err);
   } finally {

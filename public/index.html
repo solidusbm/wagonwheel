@@ -98,34 +98,7 @@
       <h2>A look around the park</h2>
       <p>Real photos of the park, straight from the property.</p>
     </div>
-    <div class="gallery" id="gallery-grid">
-      <figure>
-        <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg">
-          <rect width="400" height="260" fill="var(--hero-sky)"/>
-          <polygon points="0,260 0,190 150,160 400,200 400,260" fill="var(--hero-ground-2)"/>
-          <path d="M0,220 Q100,190 200,215 T400,205 L400,260 L0,260 Z" fill="var(--hero-water)" opacity="0.75"/>
-          <ellipse cx="230" cy="205" rx="20" ry="6" fill="var(--hero-sun)" opacity="0.7"/>
-          <circle cx="70" cy="150" r="20" fill="var(--hero-trees)"/><rect x="65" y="150" width="10" height="45" fill="var(--hero-ground-3)"/>
-          <circle cx="120" cy="170" r="16" fill="var(--cedar-light)"/><rect x="116" y="170" width="8" height="35" fill="var(--hero-ground-3)"/>
-        </svg>
-        <figcaption><b>Medina River, nearby</b><span class="placeholder-tag">Placeholder</span></figcaption>
-      </figure>
-      <figure>
-        <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg">
-          <rect width="400" height="260" fill="var(--hero-sky)"/>
-          <rect x="40" y="130" width="90" height="90" fill="var(--hero-ground-2)"/>
-          <polygon points="30,130 85,95 140,130" fill="var(--hero-ground-3)"/>
-          <rect x="150" y="110" width="110" height="110" fill="var(--hero-ground-1)"/>
-          <polygon points="140,110 205,70 270,110" fill="var(--hero-ground-3)"/>
-          <rect x="270" y="140" width="80" height="80" fill="var(--hero-ground-2)"/>
-          <polygon points="262,140 310,110 358,140" fill="var(--hero-ground-3)"/>
-          <rect x="60" y="160" width="30" height="45" fill="var(--rust)" opacity="0.7"/>
-          <text x="200" y="245" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--ink)" letter-spacing="2">DOWNTOWN BANDERA</text>
-        </svg>
-        <figcaption><b>Downtown, 7 min away</b><span class="placeholder-tag">Placeholder</span></figcaption>
-      </figure>
-    </div>
-    <div class="gallery-note">Medina River and downtown Bandera shots are still illustrated placeholders — send those over whenever you have them.</div>
+    <div class="gallery" id="gallery-grid"></div>
     <div class="gallery-more"><a href="/gallery.html" class="btn btn-ghost">See more photos →</a></div>
   </section>
 
@@ -156,7 +129,7 @@
     <div class="section-head">
       <div class="eyebrow">Reservations</div>
       <h2>Book your site</h2>
-      <p>Real availability, checked against the database as you go.</p>
+      <p>Live availability — if you can see it here, you can book it.</p>
     </div>
     <div class="trail" id="trail"></div>
 
@@ -186,7 +159,7 @@
     <section id="sites-section" class="panel" hidden>
       <h2>Pick a site</h2>
       <p class="sub" id="stay-summary"></p>
-      <p class="gallery-note" style="margin:-8px 0 20px;">Layout, numbering and orientation follow the park's filed site plan (Mangold Engineering, drawing 100-7799) — north is up, and the rows really do sit at an angle to it. Every site is a back-in with both 30 and 50 amp service. Per-site maximum rig lengths are still being confirmed with the park.</p>
+      <p class="gallery-note" style="margin:-8px 0 20px;">Layout, numbering and orientation follow the park's filed site plan (Mangold Engineering, drawing 100-7799) — north is up, and the rows really do sit at an angle to it. Every site is a back-in with both 30 and 50 amp service.</p>
       <div class="map-wrap">
         <svg id="site-map" viewBox="0 0 900 900" xmlns="http://www.w3.org/2000/svg"></svg>
         <div class="map-legend">
@@ -375,6 +348,11 @@
           </div>
 
           <p id="booking-error" class="error-msg" hidden></p>
+          <!-- The cancellation terms were only on /hours. They have a cliff -- cancelling a
+               10-night stay costs $38.33 and an 11-night stay costs $100 -- so the fee for THIS
+               booking is stated where the guest agrees to it, not on another page. app.js fills it
+               from the same quote that priced the stay. -->
+          <p class="terms-line" id="terms-line"></p>
           <div class="btn-row">
             <button type="button" class="btn btn-ghost" id="backSite">Back</button>
             <button type="submit" class="btn btn-primary" id="pay-btn">Pay &amp; reserve</button>
@@ -394,7 +372,7 @@
       <h2>You're booked</h2>
       <div class="confirm-code" id="confirmation-code"></div>
       <div id="confirmation-details" style="max-width:340px;margin:0 auto;text-align:left;"></div>
-      <p class="demo-note">Save this code — it's how the office looks up your reservation. Automated email confirmations aren't wired up yet, so this screen is your receipt for now.</p>
+      <p class="demo-note">A confirmation is on its way to the email address you gave, with your dates, the office rules and a link to cancel if your plans change. Keep this code either way — it's how the office finds your reservation.</p>
       <div class="btn-row" style="justify-content:center;"><button type="button" class="btn btn-primary" id="bookAnother">Book another site</button></div>
     </section>
   </section>
@@ -404,8 +382,7 @@
 <footer id="contact">
   <strong>Bandera Wagon Wheel RV Park</strong> · 325 Polly Peak Dr, Bandera, TX 78003<br>
   (830) 850-0805 · banderawagonwheelrv@gmail.com<br>
-  Reservations open 24/7 online · <a href="/hours.html">Office hours &amp; policies →</a><br>
-  Site count, layout, and daily/weekly rates are real; per-site amp service and rig-length limits are still placeholders.
+  Reservations open 24/7 online · <a href="/hours.html">Office hours &amp; policies →</a>
 </footer>
 
 <script src="/js/content.js"></script>

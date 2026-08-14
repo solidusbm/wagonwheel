@@ -71,6 +71,16 @@ app.use(photosRouter);
 app.use(makeAssetVersioner(publicDir, resolveAsset));
 app.use(express.static(publicDir));
 
+/* Anything that reaches here is a URL nothing served. Express's default is a bare
+   "Cannot GET /whatever" on an unstyled page, which reads as a broken site rather than a mistyped
+   address. Registered after the static mounts so it only catches genuine misses, and it answers
+   only page requests -- an unmatched /api/* call should still get JSON, not HTML. */
+app.use((req, res, next) => {
+  if (req.method !== "GET" && req.method !== "HEAD") return next();
+  if (req.path.startsWith("/api/")) return res.status(404).json({ error: "Not found" });
+  res.status(404).sendFile(path.join(publicDir, "404.html"));
+});
+
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ error: "Internal server error" });
