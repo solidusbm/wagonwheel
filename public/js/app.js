@@ -518,7 +518,6 @@ function renderSiteMap(sites) {
     <g transform="rotate(${bearing} ${pivot.x} ${pivot.y})">
       ${roads}${office}${bays}${overflow}${gateLabels}
     </g>
-    <text x="${vx + vw - 8}" y="${vy + vh - 8}" text-anchor="end" fill="var(--parchment-dim)" font-family="JetBrains Mono, monospace" font-size="9" opacity="0.7">PAD SIZES NOT YET MEASURED</text>
   `;
 
   siteMap.querySelectorAll("[data-site-id]").forEach((el) => {

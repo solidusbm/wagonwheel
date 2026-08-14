@@ -146,7 +146,6 @@ a{color:var(--gold);}
 .gallery img{display:block; width:100%; height:216px; object-fit:cover;}
 .gallery figcaption{padding:12px 14px; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--parchment-dim); display:flex; justify-content:space-between; gap:8px;}
 .gallery figcaption b{color:var(--parchment); font-family:'Zilla Slab',serif; font-size:13px; font-weight:600;}
-.gallery-note{font-size:12.5px; color:var(--parchment-dim); font-style:italic; text-align:center; margin:14px 0 20px;}
 .gallery-more{text-align:center; margin:0 0 44px;}
 
 /* ---------- amenities ---------- */
@@ -308,6 +307,9 @@ details.form-section > summary .opt{font-family:'Zilla Slab',serif; text-transfo
 @media(max-width:760px){.booking-grid{grid-template-columns:1fr;}}
 .card-mock{background:var(--bg); border:1px solid rgba(232,220,196,0.2); border-radius:var(--radius); padding:10px 14px; margin-bottom:18px; min-height:44px;}
 .demo-note{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--parchment); background:rgba(201,138,43,0.1); border:1px solid rgba(201,138,43,0.3); padding:10px 14px; border-radius:var(--radius); margin:8px 0 0;}
+.confirm-note{font-size:13.5px; line-height:1.6; color:var(--parchment); background:rgba(85,100,63,0.12);
+  border:1px solid var(--cedar-light); padding:13px 16px; border-radius:var(--radius);
+  margin:18px auto 0; max-width:460px; text-align:left;}
 .pay-note{font-size:12px; color:var(--parchment-dim); margin:10px 0 0;}
 /* The cancellation fee for this booking, stated where the guest agrees to it. */
 .terms-line{font-size:12.5px; line-height:1.5; color:var(--parchment); background:var(--bg-panel-2);
