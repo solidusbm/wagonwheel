@@ -1,48 +1,80 @@
+/* THE LIGHT PALETTE IS THE DEFAULT. It used to be the dark one, with the light values arriving
+   only as a runtime override: content.js fetched /api/live-style and injected a <style> tag after
+   the page had already painted. Measured on the live site 2026-08-12, that left every page
+   rendering dark for ~141ms before flipping to light, and it left /admin dark permanently, since
+   the admin page doesn't load content.js at all. The chosen theme belongs in the stylesheet.
+
+   Values are lifted from the style gallery's v2 ("Light Rustic") -- the page this direction was
+   picked from -- read out of static-site/v2/css/style.css rather than eyeballed. Two deliberate
+   departures from it, both of which must survive any future re-sync:
+     --parchment-dim  v2 has #7a6650, which measures 4.16:1 on the panels and fails WCAG AA for
+                      body text. #6b5844 is the corrected value (5.15:1), set 2026-08-11.
+     --taken          not in the gallery at all; it's this app's "site already booked" fill.
+   The live styles row carries the same values, so it now overrides these with themselves. */
 :root{
-  --bg:#1c140d;
-  --bg-panel:#261c12;
-  --bg-panel-2:#2e2216;
-  --line:#4a3a28;
-  --gold:#c98a2b;
-  --gold-bright:#e0a83f;
+  --bg:#f6ecd8;
+  --bg-panel:#fffaf0;
+  --bg-panel-2:#efdfc0;
+  --line:#d8c39d;
+  /* The gallery's own golds are #a9721f / #c98a2b. Measured on these surfaces, both fail WCAG AA
+     wherever they carry small text: #a9721f is 3.50:1 on --bg (needs 4.5) and #c98a2b is 2.23:1
+     on --bg-panel-2. So the scale is shifted one step darker, and the SEMANTICS invert with it --
+     on a dark theme "bright" means more contrast, on a light one it means less. --gold is now the
+     text-safe end (4.61-5.82:1 on every surface) and --gold-bright is for decoration and text at
+     24px or larger only. Check with a contrast measurement before using --gold-bright on copy. */
+  --gold:#87590f;
+  --gold-bright:#a9721f;
   --rust:#8c3a2b;
   --rust-bright:#a8462f;
-  --cedar:#6b7a54;
-  --cedar-light:#8a9c6d;
-  --parchment:#e8dcc4;
-  --parchment-dim:#b3a488;
-  --taken:#4a3f33;
-  --ink:#1c140d;
+  --cedar:#55643f;
+  --cedar-light:#74895a;
+  --parchment:#3c2a1a;
+  --parchment-dim:#6b5844;
+  --taken:#c9bca4;
+  --ink:#2b1d10;
   /* Text sitting on a solid accent fill (rust buttons, the nav CTA). Rust stays dark in every
      palette, so this must NOT follow --parchment -- under a light style --parchment inverts to
-     near-black and every primary button drops to about 1.8:1. Light styles override this to
-     their own off-white. */
-  --btn-text:#e8dcc4;
+     near-black and every primary button drops to about 1.8:1. */
+  --btn-text:#f7ecd8;
   --radius:3px;
+
+  /* Hero illustration -- a warm DAYTIME sky, straight from gallery v2. These tokens existed in
+     the gallery from the start; the app never copied them, and hardcoded v1's night-time hexes
+     into the SVG instead. That's why the artwork stayed dark when everything around it went
+     light. Any new illustration must use these, never literal hex. */
+  --hero-sky:#f3d9a8;
+  --hero-sun:#e8a23a;
+  --hero-sun-ring:#c9761d;
+  --hero-ground-1:#c9a876;
+  --hero-ground-2:#b08e5c;
+  --hero-ground-3:#8f7248;
+  --hero-trees:#6b7a4a;
+  --hero-water:#7fa8c9;
 }
 *{box-sizing:border-box;}
 html{scroll-behavior:smooth;}
 html,body{margin:0;padding:0;background:var(--bg);}
 body{font-family:'Zilla Slab', Georgia, serif; color:var(--parchment); min-height:100vh; overflow-x:hidden;}
 h1,h2,h3{font-family:'Rye', serif; font-weight:400; color:var(--parchment); letter-spacing:0.01em;}
-a{color:var(--gold-bright);}
+a{color:var(--gold);}
 
 /* ---------- nav ---------- */
-/* Like .hero-text, the nav bar's background is a fixed dark rgba() overlay, not theme-driven --
-   its text stays fixed light too, for the same reason (a light style's dark --parchment would
-   otherwise vanish against this always-dark bar). */
+/* The nav's translucent background is tinted to --bg rather than left theme-driven, because
+   backdrop-filter needs a literal. It was a dark rgba() with cream text pinned on top; both
+   flipped with the palette. If you change --bg, change this rgba to match or the bar will float
+   as a differently-coloured band over the page. */
 .nav{
-  position:sticky; top:0; z-index:20; background:rgba(28,20,13,0.92); backdrop-filter:blur(6px);
-  border-bottom:1px solid rgba(232,220,196,0.12);
+  position:sticky; top:0; z-index:20; background:rgba(246,236,216,0.9); backdrop-filter:blur(6px);
+  border-bottom:1px solid rgba(60,42,26,0.12);
   display:flex; align-items:center; justify-content:space-between;
   padding:14px 28px;
 }
-.nav .brand{display:flex; align-items:center; gap:0.6rem; font-family:'Rye',serif; font-size:20px; color:#e8dcc4; text-decoration:none;}
+.nav .brand{display:flex; align-items:center; gap:0.6rem; font-family:'Rye',serif; font-size:20px; color:var(--parchment); text-decoration:none;}
 .nav .brand-wheel{width:1.9rem; height:1.9rem; color:var(--gold);}
 .nav .brand-logo-img{object-fit:contain; border-radius:3px;}
 .nav .links{display:flex; gap:22px; font-family:'JetBrains Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.06em;}
-.nav .links a{color:#b3a488; text-decoration:none;}
-.nav .links a:hover{color:var(--gold-bright);}
+.nav .links a{color:var(--parchment-dim); text-decoration:none;}
+.nav .links a:hover{color:var(--gold);}
 .nav .cta{
   font-family:'JetBrains Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.06em;
   background:var(--rust); color:var(--btn-text); padding:9px 16px; border-radius:var(--radius); text-decoration:none;
@@ -53,7 +85,7 @@ a{color:var(--gold-bright);}
 .wrap{max-width:960px; margin:0 auto; padding:0 24px 80px; position:relative; z-index:1;}
 
 /* ---------- hero ---------- */
-.hero{position:relative; overflow:hidden; border-bottom:1px solid rgba(232,220,196,0.14);}
+.hero{position:relative; overflow:hidden; border-bottom:1px solid var(--line);}
 .hero-art{width:100%; height:auto; display:block;}
 /* .hero-art's viewBox is ~2.3:1, so at phone/tablet widths its natural (width:100%;height:auto)
    height becomes too short to fit the vertically-centered .hero-text -- it overflows upward,
@@ -71,22 +103,23 @@ a{color:var(--gold-bright);}
   position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
   text-align:center; padding:0 24px;
 }
-/* Hero text colors are intentionally fixed, not theme-variable-driven: .hero-art below is a
-   permanently dark SVG (night-sky/mountains), so hero text must stay light-on-dark regardless
-   of which style preset (/admin -> Styles) is active elsewhere on the page. A style that
-   overrides --parchment to a dark color for a light theme would otherwise make hero text
-   illegible against art that never changes. */
-.hero-text .eyebrow{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.24em; text-transform:uppercase; color:#e0a83f; margin-bottom:12px; text-shadow:0 2px 8px rgba(0,0,0,0.6);}
-.hero-text h1{font-size:clamp(36px,7vw,68px); margin:0 0 14px; text-shadow:0 3px 14px rgba(0,0,0,0.65); color:#e8dcc4;}
-.hero-text p{font-size:16px; font-style:italic; color:#e8dcc4; max-width:520px; margin:0 0 26px; text-shadow:0 2px 10px rgba(0,0,0,0.6);}
+/* Hero text sits on .hero-art, a warm daytime sky, so it is DARK text with WHITE shadows -- the
+   exact reverse of the old night-time treatment. Values match gallery v2.
+   This block used to carry the opposite instruction: hero text was pinned to cream literals
+   because the art was a hardcoded dark SVG that no palette could reach. That is no longer true --
+   the art follows --hero-* now -- so the text follows the palette like everything else. The trap
+   the old note warned about is still worth knowing in general: text over a surface whose colour
+   can't follow the theme must not use --parchment, or it inverts and disappears. */
+.hero-text .eyebrow{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.24em; text-transform:uppercase; color:var(--gold); margin-bottom:12px;}
+.hero-text h1{font-size:clamp(36px,7vw,68px); margin:0 0 14px; text-shadow:0 2px 18px rgba(255,255,255,0.55);}
+.hero-text p{font-size:16px; font-style:italic; color:var(--parchment); max-width:520px; margin:0 0 26px; text-shadow:0 1px 10px rgba(255,255,255,0.5);}
 .hero-badge{
   display:inline-flex; align-items:center; gap:8px; margin-bottom:18px;
-  background:rgba(107,122,84,0.22); border:1px solid #8a9c6d;
-  color:#e8dcc4; font-family:'JetBrains Mono',monospace; font-size:12px;
+  background:rgba(255,250,240,0.55); border:1px solid var(--cedar-light);
+  color:var(--parchment); font-family:'JetBrains Mono',monospace; font-size:12px;
   text-transform:uppercase; letter-spacing:0.08em; padding:8px 16px; border-radius:20px;
-  text-shadow:0 2px 8px rgba(0,0,0,0.6);
 }
-.hero-badge svg{width:15px; height:15px; color:#8a9c6d;}
+.hero-badge svg{width:15px; height:15px; color:var(--cedar);}
 
 /* ---------- section shells ---------- */
 .section-pad{padding:64px 0 8px;}
@@ -139,7 +172,7 @@ a{color:var(--gold-bright);}
 .trail .dot{width:11px; height:11px; border-radius:50%; background:var(--bg-panel-2); border:1px solid var(--line);}
 .trail .marker.active .dot{background:var(--gold); border-color:var(--gold); box-shadow:0 0 0 4px rgba(201,138,43,0.2);}
 .trail .marker.done .dot{background:var(--cedar); border-color:var(--cedar);}
-.trail .marker.active{color:var(--gold-bright);}
+.trail .marker.active{color:var(--gold);}
 .trail .line{height:1px; width:34px; background:var(--line); margin-top:5px;}
 
 /* ---------- panels ---------- */
@@ -226,7 +259,8 @@ details.form-section > summary .opt{font-family:'Zilla Slab',serif; text-transfo
 .site-tags{display:flex; flex-wrap:wrap; gap:6px;}
 .tag{font-size:11px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.04em; color:var(--parchment-dim); background:var(--bg); border:1px solid rgba(232,220,196,0.14); border-radius:999px; padding:3px 10px;}
 .availability-flag{font-size:12px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.06em;}
-.availability-flag.available{color:var(--cedar-light);}
+/* --cedar-light is 2.92:1 here; it's a decoration colour, not a text one. */
+.availability-flag.available{color:var(--cedar);}
 .availability-flag.unavailable{color:var(--rust-bright);}
 .booked-ranges{font-size:11.5px; color:var(--parchment-dim); line-height:1.5; padding-top:4px; border-top:1px dashed rgba(232,220,196,0.12);}
 .booked-ranges .l{font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.06em; color:var(--gold); font-size:10.5px; display:block; margin-bottom:2px;}
@@ -235,19 +269,21 @@ details.form-section > summary .opt{font-family:'Zilla Slab',serif; text-transfo
 .booking-grid{display:grid; grid-template-columns:1.3fr 1fr; gap:28px; align-items:start;}
 @media(max-width:760px){.booking-grid{grid-template-columns:1fr;}}
 .card-mock{background:var(--bg); border:1px solid rgba(232,220,196,0.2); border-radius:var(--radius); padding:10px 14px; margin-bottom:18px; min-height:44px;}
-.demo-note{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--parchment-dim); background:rgba(201,138,43,0.1); border:1px solid rgba(201,138,43,0.3); padding:10px 14px; border-radius:var(--radius); margin:8px 0 0;}
+.demo-note{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--parchment); background:rgba(201,138,43,0.1); border:1px solid rgba(201,138,43,0.3); padding:10px 14px; border-radius:var(--radius); margin:8px 0 0;}
 .pay-note{font-size:12px; color:var(--parchment-dim); margin:10px 0 0;}
 /* Rate caveats -- currently "monthly excludes electric". Small, but it sits with the price it
    qualifies rather than in a footnote nobody reads. */
 .rate-note{font-size:11px; line-height:1.45; color:var(--parchment-dim); margin-top:3px; font-style:italic;}
-.summary-note{font-size:12.5px; line-height:1.5; color:var(--parchment); margin:12px 0 0; padding:10px 12px; background:rgba(201,138,43,0.1); border-left:2px solid var(--gold); border-radius:0 var(--radius) var(--radius) 0;}
+.order-summary .summary-note{font-size:12.5px; line-height:1.5; color:var(--parchment); margin:12px 0 0; padding:10px 12px; background:rgba(201,138,43,0.1); border-left:2px solid var(--gold); border-radius:0 var(--radius) var(--radius) 0;}
 
 .order-summary{background:var(--bg-panel-2); border:1px solid var(--line); border-radius:var(--radius); padding:22px; position:sticky; top:88px;}
 
 .order-summary h3{margin:0 0 4px; font-size:19px; color:var(--parchment);}
 .order-summary p{margin:0 0 12px; color:var(--parchment-dim); font-size:13px;}
 .summary-row, .order-summary .line{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px dashed var(--line); font-size:14px; color:var(--parchment);}
-.summary-row.total, .order-summary .line.total{font-family:'JetBrains Mono',monospace; font-size:18px; color:#e0a83f; border-bottom:none; padding-top:14px; font-weight:600;}
+/* The total was pinned to the dark palette's amber (#e0a83f), which lands at about 3.1:1 on the
+   light panel -- under AA for 18px text, on the single most important number in the flow. */
+.summary-row.total, .order-summary .line.total{font-family:'JetBrains Mono',monospace; font-size:18px; color:var(--rust); border-bottom:none; padding-top:14px; font-weight:600;}
 
 /* ---------- confirmation ---------- */
 .confirm-code{font-family:'JetBrains Mono',monospace; font-size:32px; letter-spacing:0.1em; color:var(--gold-bright); border:1px dashed var(--gold); display:inline-block; padding:10px 22px; border-radius:var(--radius); margin:12px 0 24px;}

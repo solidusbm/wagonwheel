@@ -75,6 +75,40 @@ the bottom of the page, after Photos/Amenities/Content, so pressing Edit scrolle
 from the sites list into what looked like an unrelated part of the admin. `openSiteForm()` also
 opens the enclosing `<details>` — a panel revealed inside a collapsed section is invisible.
 
+## Theming — the light palette is the stylesheet's default
+
+`public/css/style.css` `:root` **is** the light theme ("Light Rustic"), taken from the style
+gallery's **v2** page on the `static-site` branch (`v2/css/style.css`) — read out of the file, not
+eyeballed. Before 2026-08-12 the stylesheet was still the *dark* palette and the light values
+arrived only at runtime, via `content.js` fetching `/api/live-style` and injecting a `<style>` tag
+after first paint. Two consequences, both fixed by moving the palette into the stylesheet:
+
+- every page painted dark for **~141ms** and then flipped (measured on the live site);
+- **`/admin` stayed dark permanently**, because it never loads `content.js`.
+
+The `styles` table row still exists and still overrides — it now sets the same values it already
+had. If you change the palette, change **both**, or the DB will quietly repaint the page.
+
+**Rules that follow from this — don't undo them:**
+
+- **Illustrations use `--hero-*` tokens, never literal hex.** The homepage hero and the two
+  placeholder figures hardcoded the dark palette's hexes, which is exactly why the artwork stayed
+  night-time when the site went light. The 8 hero tokens are a warm daytime sky, from v2.
+- **Two deliberate departures from v2's palette**, both for contrast, both measured:
+  `--parchment-dim` is `#6b5844` (v2's `#7a6650` is 4.16:1, under AA), and the golds are shifted
+  one step darker — `--gold: #87590f`, `--gold-bright: #a9721f` (v2's `#a9721f`/`#c98a2b` measure
+  3.50:1 and 2.23:1 as text). Re-syncing from the gallery must not reintroduce these.
+- **The gold semantics invert on a light theme.** On dark, "bright" meant more contrast; here it
+  means less. `--gold` is the text-safe end (4.6–5.8:1 on every surface); `--gold-bright` is for
+  decoration and text at 24px or larger **only**. Links and small labels use `--gold`.
+- **Measure, don't look.** Every contrast bug in this file was invisible to the eye and obvious to
+  a calculation. After any palette change, walk the homepage, both booking steps and `/admin` with
+  a contrast sweep (compare each text node's computed colour against its nearest opaque ancestor
+  background; 4.5:1, or 3:1 at ≥24px). The last sweep found 11 failures across guest pages and
+  `/admin`, including the order-summary **total**.
+- Watch specificity when adding a rule inside `.order-summary`: `.order-summary p` beat
+  `.summary-note` and silently repainted a callout in the dim colour at 2.30:1.
+
 ## Asset caching — why a deploy can half-land
 
 Cloudflare serves JS/CSS with `max-age=14400` (four hours), and that Browser Cache TTL lives in the

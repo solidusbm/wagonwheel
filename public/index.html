@@ -38,25 +38,27 @@
 
 <div class="hero">
   <svg class="hero-art" viewBox="0 0 1200 520" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-    <rect width="1200" height="520" fill="#1c140d"/>
-    <circle cx="980" cy="120" r="150" fill="#c98a2b" opacity="0.55"/>
-    <g stroke="#e0a83f" stroke-width="4" opacity="0.4">
+    <!-- Colours come from the --hero-* tokens, never literal hex. They were hardcoded to the dark
+         palette's values, so this artwork stayed night-time when the site went light. -->
+    <rect width="1200" height="520" fill="var(--hero-sky)"/>
+    <circle cx="980" cy="120" r="150" fill="var(--hero-sun)" opacity="0.55"/>
+    <g stroke="var(--hero-sun-ring)" stroke-width="4" opacity="0.4">
       <circle cx="980" cy="120" r="150" fill="none"/>
       <line x1="980" y1="-30" x2="980" y2="270"/>
       <line x1="830" y1="120" x2="1130" y2="120"/>
       <line x1="874" y1="14" x2="1086" y2="226"/>
       <line x1="874" y1="226" x2="1086" y2="14"/>
     </g>
-    <polygon points="0,520 0,300 200,240 400,310 620,220 820,300 1000,250 1200,320 1200,520" fill="#2e2216"/>
-    <polygon points="0,520 0,370 250,330 500,390 750,320 1000,380 1200,350 1200,520" fill="#3a2c1a"/>
-    <polygon points="0,520 0,430 300,410 600,440 900,410 1200,440 1200,520" fill="#4a3a28"/>
-    <g fill="#5c4a30">
+    <polygon points="0,520 0,300 200,240 400,310 620,220 820,300 1000,250 1200,320 1200,520" fill="var(--hero-ground-1)"/>
+    <polygon points="0,520 0,370 250,330 500,390 750,320 1000,380 1200,350 1200,520" fill="var(--hero-ground-2)"/>
+    <polygon points="0,520 0,430 300,410 600,440 900,410 1200,440 1200,520" fill="var(--hero-ground-3)"/>
+    <g fill="var(--hero-trees)">
       <ellipse cx="150" cy="405" rx="7" ry="34"/><circle cx="150" cy="368" r="26"/>
       <ellipse cx="270" cy="420" rx="6" ry="28"/><circle cx="270" cy="390" r="22"/>
       <ellipse cx="980" cy="410" rx="7" ry="32"/><circle cx="980" cy="376" r="24"/>
       <ellipse cx="1100" cy="425" rx="6" ry="26"/><circle cx="1100" cy="397" r="20"/>
     </g>
-    <path d="M0,470 Q150,450 300,472 T600,468 T900,474 T1200,466 L1200,520 L0,520 Z" fill="#31506b" opacity="0.55"/>
+    <path d="M0,470 Q150,450 300,472 T600,468 T900,474 T1200,466 L1200,520 L0,520 Z" fill="var(--hero-water)" opacity="0.55"/>
   </svg>
   <div class="hero-text">
     <div class="eyebrow">325 Polly Peak Dr · Bandera, TX 78003</div>
@@ -99,26 +101,26 @@
     <div class="gallery" id="gallery-grid">
       <figure>
         <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg">
-          <rect width="400" height="260" fill="#241b12"/>
-          <polygon points="0,260 0,190 150,160 400,200 400,260" fill="#3a2c1a"/>
-          <path d="M0,220 Q100,190 200,215 T400,205 L400,260 L0,260 Z" fill="#31506b" opacity="0.75"/>
-          <ellipse cx="230" cy="205" rx="20" ry="6" fill="#c98a2b" opacity="0.7"/>
-          <circle cx="70" cy="150" r="20" fill="#6b7a54"/><rect x="65" y="150" width="10" height="45" fill="#4a3a28"/>
-          <circle cx="120" cy="170" r="16" fill="#8a9c6d"/><rect x="116" y="170" width="8" height="35" fill="#4a3a28"/>
+          <rect width="400" height="260" fill="var(--hero-sky)"/>
+          <polygon points="0,260 0,190 150,160 400,200 400,260" fill="var(--hero-ground-2)"/>
+          <path d="M0,220 Q100,190 200,215 T400,205 L400,260 L0,260 Z" fill="var(--hero-water)" opacity="0.75"/>
+          <ellipse cx="230" cy="205" rx="20" ry="6" fill="var(--hero-sun)" opacity="0.7"/>
+          <circle cx="70" cy="150" r="20" fill="var(--hero-trees)"/><rect x="65" y="150" width="10" height="45" fill="var(--hero-ground-3)"/>
+          <circle cx="120" cy="170" r="16" fill="var(--cedar-light)"/><rect x="116" y="170" width="8" height="35" fill="var(--hero-ground-3)"/>
         </svg>
         <figcaption><b>Medina River, nearby</b><span class="placeholder-tag">Placeholder</span></figcaption>
       </figure>
       <figure>
         <svg viewBox="0 0 400 260" xmlns="http://www.w3.org/2000/svg">
-          <rect width="400" height="260" fill="#241b12"/>
-          <rect x="40" y="130" width="90" height="90" fill="#3a2c1a"/>
-          <polygon points="30,130 85,95 140,130" fill="#4a3a28"/>
-          <rect x="150" y="110" width="110" height="110" fill="#2e2216"/>
-          <polygon points="140,110 205,70 270,110" fill="#4a3a28"/>
-          <rect x="270" y="140" width="80" height="80" fill="#3a2c1a"/>
-          <polygon points="262,140 310,110 358,140" fill="#4a3a28"/>
-          <rect x="60" y="160" width="30" height="45" fill="#8c3a2b" opacity="0.7"/>
-          <text x="200" y="245" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="#c98a2b" letter-spacing="2">DOWNTOWN BANDERA</text>
+          <rect width="400" height="260" fill="var(--hero-sky)"/>
+          <rect x="40" y="130" width="90" height="90" fill="var(--hero-ground-2)"/>
+          <polygon points="30,130 85,95 140,130" fill="var(--hero-ground-3)"/>
+          <rect x="150" y="110" width="110" height="110" fill="var(--hero-ground-1)"/>
+          <polygon points="140,110 205,70 270,110" fill="var(--hero-ground-3)"/>
+          <rect x="270" y="140" width="80" height="80" fill="var(--hero-ground-2)"/>
+          <polygon points="262,140 310,110 358,140" fill="var(--hero-ground-3)"/>
+          <rect x="60" y="160" width="30" height="45" fill="var(--rust)" opacity="0.7"/>
+          <text x="200" y="245" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--ink)" letter-spacing="2">DOWNTOWN BANDERA</text>
         </svg>
         <figcaption><b>Downtown, 7 min away</b><span class="placeholder-tag">Placeholder</span></figcaption>
       </figure>

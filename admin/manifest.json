@@ -4,6 +4,6 @@
   "start_url": "/admin/",
   "scope": "/admin/",
   "display": "standalone",
-  "background_color": "#1c140d",
-  "theme_color": "#1c140d"
+  "background_color": "#f6ecd8",
+  "theme_color": "#f6ecd8"
 }
