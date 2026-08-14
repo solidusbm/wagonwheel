@@ -61,6 +61,20 @@
   #admin-form-error{margin:0 0 14px;}
   #site-panel{display:none; margin-bottom:20px;}
   #site-panel.open{display:block;}
+  #application-panel{display:none; margin-bottom:20px;}
+  #application-panel.open{display:block;}
+  .app-section{margin:0 0 18px;}
+  .app-section > h3{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--gold); margin:0 0 10px; padding-bottom:5px; border-bottom:1px solid rgba(60,42,26,0.11);}
+  /* Rows wrap rather than scroll -- the admin is used on a phone at the park. */
+  .app-edit-row{display:flex; flex-wrap:wrap; gap:0 12px; align-items:flex-end; margin-bottom:6px;}
+  .app-edit-row .field{flex:1 1 150px; min-width:0; margin-bottom:10px;}
+  .app-edit-row .field.narrow{flex:0 1 96px;}
+  .app-edit-row .field label{font-size:10px;}
+  .app-edit-row .drop{flex:0 0 auto; margin:0 0 10px;}
+  .app-edit-row .drop button{font-size:10.5px; padding:6px 10px;}
+  .app-add{font-size:10.5px; padding:6px 10px; margin-bottom:4px;}
+  .app-empty{color:var(--parchment-dim); font-style:italic; font-size:12.5px; margin:0 0 10px;}
+  #print-application-link{text-decoration:none; display:inline-flex; align-items:center;}
   .rates-note{font-size:12.5px; color:var(--parchment-dim); font-style:italic; margin:4px 0 12px;}
   /* The N/A tick sits under its own rate box, not beside it, so it stays attached to the field
      it clears when grid-3 collapses to one column on a phone. */
@@ -158,6 +172,23 @@
       <div class="btn-row">
         <button type="button" class="btn btn-ghost" id="cancel-form-btn">Cancel</button>
         <button type="submit" class="btn btn-primary" id="save-booking-btn">Save booking</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Same placement rule as the site editor: the panel sits with the table it edits, not further
+       down the page. Its fields are generated from admin/js/application-schema.js. -->
+  <div class="panel" id="application-panel">
+    <h2 id="application-panel-title">Guest application</h2>
+    <div class="sub" id="application-panel-sub"></div>
+    <form id="application-form">
+      <input type="hidden" id="app-code" value="" />
+      <div id="application-sections"></div>
+      <p id="application-error" class="error-msg" hidden></p>
+      <div class="btn-row">
+        <button type="button" class="btn btn-ghost" id="cancel-application-btn">Cancel</button>
+        <a class="btn btn-ghost" id="print-application-link" target="_blank" rel="noopener">Print this application</a>
+        <button type="submit" class="btn btn-primary" id="save-application-btn">Save application</button>
       </div>
     </form>
   </div>

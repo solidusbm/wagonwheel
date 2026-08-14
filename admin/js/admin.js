@@ -1,11 +1,16 @@
+import { APPLICATION_SECTIONS, get, set, normalise, toDraft } from "./application-schema.js";
+
 const money = (cents) => `$${(cents / 100).toFixed(2)}`;
 
 function escapeHtml(str) {
   return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-// Renders the extended monthly-guest intake (DOB, license, spouse/co-applicant, occupants,
-// vehicles, RV, pets) captured for stays of 28+ nights -- see public/js/app.js buildApplication().
+/* A read-only digest of the guest application for the Notes column -- the editable version is the
+   "Application" button, which opens the panel generated from application-schema.js.
+
+   It is NOT a monthly-only intake: the booking form is one unified application for every booking,
+   long stay or short. It used to be gated at 28+ nights and that split was deliberately removed. */
 function renderApplication(app) {
   if (!app) return "";
   const rows = [];
@@ -33,7 +38,7 @@ function renderApplication(app) {
     if (p.length) rows.push(["Pets", p.join("; ")]);
   }
   if (!rows.length) return "";
-  return `<details class="app-details"><summary>Monthly application</summary>${rows
+  return `<details class="app-details"><summary>Guest application</summary>${rows
     .map(([k, v]) => `<div class="app-row"><b>${escapeHtml(k)}:</b> ${escapeHtml(v)}</div>`)
     .join("")}</details>`;
 }
@@ -135,6 +140,7 @@ async function loadReservations() {
       <td data-label="Notes">${r.notes ?? ""}${renderApplication(r.applicationDetails)}</td>
       <td class="row-actions">
         <button type="button" class="btn btn-ghost" data-edit="${r.reservationCode}">Edit</button>
+        <button type="button" class="btn btn-ghost" data-application="${r.reservationCode}">Application</button>
         <button type="button" class="btn btn-ghost" data-cancel="${r.reservationCode}">Cancel</button>
         ${r.squarePaymentId && !r.refundedCents ? `<button type="button" class="btn btn-ghost" data-refund="${r.reservationCode}" style="color:var(--rust-bright);">Refund &amp; cancel</button>` : ""}
       </td>
@@ -154,6 +160,13 @@ async function loadReservations() {
       </table>
     </div>
   `;
+
+  content.querySelectorAll("[data-application]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const r = reservations.find((x) => x.reservationCode === btn.getAttribute("data-application"));
+      if (r) openApplicationForm(r);
+    });
+  });
 
   content.querySelectorAll("[data-edit]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -256,6 +269,144 @@ async function onCancel(code) {
     return;
   }
   await loadReservations();
+}
+
+/* ---------- guest application editor ----------
+   Every input here is generated from APPLICATION_SECTIONS, so the form, the printable sheet, and
+   the stored record can't drift apart. The office needs this because the booking form is a guest's
+   best effort: sections get skipped, plates get mistyped, and a couple of fields (a co-applicant's
+   licence state) the online form never asks for at all. */
+
+const applicationPanel = document.getElementById("application-panel");
+const applicationForm = document.getElementById("application-form");
+const applicationSections = document.getElementById("application-sections");
+const applicationError = document.getElementById("application-error");
+const applicationCode = document.getElementById("app-code");
+const printApplicationLink = document.getElementById("print-application-link");
+
+// The working copy. Edits land here on input, so adding or removing a row never loses what's
+// already typed into the other rows.
+let applicationDraft = null;
+
+document.getElementById("cancel-application-btn").addEventListener("click", closeApplicationForm);
+applicationForm.addEventListener("submit", onApplicationSubmit);
+
+function fieldInput(f, name, value) {
+  const v = value == null ? "" : String(value);
+  const cls = `field${f.width === "narrow" ? " narrow" : ""}`;
+  const attrs = [
+    `data-app-field="${escapeHtml(name)}"`,
+    f.maxlength ? `maxlength="${f.maxlength}"` : "",
+    f.type ? `type="${f.type}"` : `type="text"`,
+  ].filter(Boolean).join(" ");
+
+  const control = f.options
+    ? `<select data-app-field="${escapeHtml(name)}">
+         <option value=""${v ? "" : " selected"}>—</option>
+         ${f.options.map((o) => `<option${o === v ? " selected" : ""}>${escapeHtml(o)}</option>`).join("")}
+       </select>`
+    : `<input ${attrs} value="${escapeHtml(v)}" />`;
+
+  return `<div class="${cls}"><label>${escapeHtml(f.label)}</label>${control}</div>`;
+}
+
+function renderApplicationSections() {
+  applicationSections.innerHTML = APPLICATION_SECTIONS.map((section) => {
+    if (section.kind === "object") {
+      const rec = applicationDraft[section.key] ?? {};
+      const row = `<div class="app-edit-row">${section.fields.map((f) => fieldInput(f, `${section.key}.${f.path}`, get(rec, f.path))).join("")}</div>`;
+      return `<div class="app-section"><h3>${escapeHtml(section.title)}</h3>${row}</div>`;
+    }
+
+    const records = applicationDraft[section.key] ?? [];
+    const rows = records
+      .map(
+        (rec, i) => `<div class="app-edit-row">
+          ${section.fields.map((f) => fieldInput(f, `${section.key}.${i}.${f.path}`, get(rec, f.path))).join("")}
+          <div class="drop"><button type="button" class="btn btn-ghost" data-app-remove="${section.key}:${i}">Remove</button></div>
+        </div>`
+      )
+      .join("");
+    const empty = records.length ? "" : `<p class="app-empty">None recorded.</p>`;
+    return `<div class="app-section">
+      <h3>${escapeHtml(section.title)}</h3>
+      ${empty}${rows}
+      <button type="button" class="btn btn-ghost app-add" data-app-add="${section.key}">+ Add ${escapeHtml(section.title.replace(/s$/, "").toLowerCase())}</button>
+    </div>`;
+  }).join("");
+
+  // Written straight into the draft, so a re-render (add/remove a row) keeps everything typed.
+  applicationSections.querySelectorAll("[data-app-field]").forEach((el) => {
+    el.addEventListener("input", () => {
+      const [key, ...rest] = el.getAttribute("data-app-field").split(".");
+      const section = APPLICATION_SECTIONS.find((s) => s.key === key);
+      if (section.kind === "object") {
+        set(applicationDraft[key], rest.join("."), el.value);
+      } else {
+        const idx = Number(rest.shift());
+        set(applicationDraft[key][idx], rest.join("."), el.value);
+      }
+    });
+  });
+
+  applicationSections.querySelectorAll("[data-app-add]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      applicationDraft[btn.getAttribute("data-app-add")].push({});
+      renderApplicationSections();
+    });
+  });
+
+  applicationSections.querySelectorAll("[data-app-remove]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const [key, i] = btn.getAttribute("data-app-remove").split(":");
+      applicationDraft[key].splice(Number(i), 1);
+      renderApplicationSections();
+    });
+  });
+}
+
+function openApplicationForm(r) {
+  applicationError.hidden = true;
+  applicationCode.value = r.reservationCode;
+  applicationDraft = toDraft(r.applicationDetails);
+  document.getElementById("application-panel-title").textContent = `Guest application — ${r.reservationCode}`;
+  document.getElementById("application-panel-sub").textContent =
+    `${r.guest.name} · ${r.site.name} · ${formatDate(r.checkIn)} → ${formatDate(r.checkOut)}`;
+  printApplicationLink.href = `/admin/application.html?code=${encodeURIComponent(r.reservationCode)}`;
+  renderApplicationSections();
+  applicationPanel.classList.add("open");
+  applicationPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function closeApplicationForm() {
+  applicationPanel.classList.remove("open");
+  applicationDraft = null;
+}
+
+async function onApplicationSubmit(event) {
+  event.preventDefault();
+  applicationError.hidden = true;
+  const btn = document.getElementById("save-application-btn");
+  btn.disabled = true;
+  try {
+    // normalise() puts it back into exactly the shape a guest's own submission has -- blanks to
+    // null, empty rows dropped, an unnamed co-applicant back to null.
+    const application = normalise(applicationDraft);
+    const res = await fetch(`/api/admin/reservations/${encodeURIComponent(applicationCode.value)}/application`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ application }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Save failed");
+    closeApplicationForm();
+    await loadReservations();
+  } catch (err) {
+    applicationError.textContent = err.message;
+    applicationError.hidden = false;
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 /* ---------- sites & amenities admin ---------- */

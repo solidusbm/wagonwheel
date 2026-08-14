@@ -334,6 +334,62 @@ router.patch("/reservations/:code", async (req, res, next) => {
   }
 });
 
+/* One reservation by code, whatever its status. The list route above deliberately returns only
+   pending/confirmed bookings, but the printable application sheet has to be able to print a
+   cancelled one too -- the paper record outlives the booking. */
+router.get("/reservations/:code", async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(`${SELECT_RESERVATION} WHERE r.reservation_code = $1`, [
+      req.params.code.toUpperCase(),
+    ]);
+    if (!rows[0]) return res.status(404).json({ error: "Reservation not found" });
+    res.json(mapReservation(rows[0]));
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* Replaces a reservation's guest application wholesale.
+ *
+ * Deliberately NOT folded into PATCH /reservations/:code. That route re-prices the stay from the
+ * site and dates on every call, and correcting a typo in someone's licence plate has no business
+ * touching what they were charged -- particularly now that a re-quote can flip
+ * monthly_rate_applied and with it the cancellation fee they were quoted. This endpoint writes one
+ * column and nothing else.
+ *
+ * The body is stored as given (after a shape check). The client normalises it with normalise()
+ * from admin/js/application-schema.js so an edited record is indistinguishable from one a guest
+ * submitted; the guard here is about not letting a malformed body into a JSONB column, not about
+ * re-deriving that shape server-side. */
+router.put("/reservations/:code/application", async (req, res, next) => {
+  const code = req.params.code.toUpperCase();
+  const { application } = req.body ?? {};
+
+  if (application !== null && (typeof application !== "object" || Array.isArray(application))) {
+    return res.status(400).json({ error: "application must be an object, or null to clear it" });
+  }
+  for (const key of ["occupants", "vehicles", "pets"]) {
+    if (application && application[key] !== undefined && !Array.isArray(application[key])) {
+      return res.status(400).json({ error: `application.${key} must be an array` });
+    }
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `UPDATE reservations SET application_details = $1, updated_at = now()
+       WHERE reservation_code = $2 RETURNING reservation_code`,
+      [application ? JSON.stringify(application) : null, code]
+    );
+    if (!rows[0]) {
+      return res.status(404).json({ error: "Reservation not found" });
+    }
+    const { rows: full } = await pool.query(`${SELECT_RESERVATION} WHERE r.reservation_code = $1`, [code]);
+    res.json(mapReservation(full[0]));
+  } catch (err) {
+    next(err);
+  }
+});
+
 /* ---------- sites (park layout, rates, per-site amenity toggles) ---------- */
 
 router.get("/sites", async (req, res, next) => {

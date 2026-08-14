@@ -75,6 +75,38 @@ the bottom of the page, after Photos/Amenities/Content, so pressing Edit scrolle
 from the sites list into what looked like an unrelated part of the admin. `openSiteForm()` also
 opens the enclosing `<details>` — a panel revealed inside a collapsed section is invisible.
 
+## The guest application
+
+The booking form doubles as the park's paper application. Three things render that data and they
+must not disagree, so the fields are **defined once** in `admin/js/application-schema.js`:
+
+- the booking form (`public/index.html`) — still hand-written HTML, it predates the schema;
+- the editor in `/admin` (the **Application** button on a reservation row);
+- the printable sheet (`/admin/application.html?code=XXXX`).
+
+Adding a field means adding one entry to `APPLICATION_SECTIONS`; the editor and the print sheet
+pick it up with no other change. If the public form is ever regenerated, generate it from there too.
+
+- **Editing goes through `PUT /api/admin/reservations/:code/application`, not the reservation
+  PATCH.** That PATCH re-prices the stay from the site and dates on every call, and fixing a typo
+  in a licence plate must not touch what someone was charged — a re-quote can flip
+  `monthly_rate_applied`, and with it the cancellation fee they were quoted.
+- The client sends the record through `normalise()` first, so an application edited by the office
+  is byte-for-byte the shape `buildApplication()` produces: blanks become `null`, empty rows are
+  dropped, an unnamed co-applicant becomes `null` rather than an object of nulls.
+- **The print sheet prints every field whether or not it has a value**, blanks as rules to write
+  on, plus spare rows for occupants/vehicles/pets. That's the point of it: the online form doesn't
+  ask for everything the paper one did (it never asks for a co-applicant's licence *state*), and
+  guests skip optional sections. A booking with no application at all still prints a full blank
+  form to hand over at check-in.
+- `GET /api/admin/reservations/:code` returns a booking **whatever its status** — the list route
+  is pending/confirmed only, but a cancelled booking still needs to be printable.
+- The application is **not** monthly-only. It was once gated at 28+ nights; that split was
+  deliberately removed. Don't reintroduce "monthly application" wording.
+- `.app-row` belongs to the read-only digest in the Notes column (styled in `public/css/style.css`);
+  the editor's rows are `.app-edit-row`. They collided once — the admin's inline CSS loads later
+  and turned the digest into flex rows.
+
 ## Theming — the light palette is the stylesheet's default
 
 `public/css/style.css` `:root` **is** the light theme ("Light Rustic"), taken from the style
