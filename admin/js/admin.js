@@ -849,20 +849,33 @@ function renderPhotoGrid() {
     photoGrid.innerHTML = `<p class="empty-note">No photos uploaded yet.</p>`;
     return;
   }
+
+  /* Position is shown, and moving is done with arrows rather than drag-and-drop: this panel is
+     used on a phone at the park, where dragging a tile inside a scrolling page is a fight. The
+     badge counts only the homepage photos, because "which one do guests see first" is the actual
+     question -- the grid order alone doesn't answer it when half the photos are gallery-only. */
+  let homepageSeen = 0;
   photoGrid.innerHTML = photos
-    .map(
-      (p) => `
+    .map((p, i) => {
+      const homepageRank = p.showOnHomepage ? ++homepageSeen : null;
+      return `
     <div class="photo-tile">
-      <img src="/photos/${p.id}/image" alt="${escapeHtml(p.caption ?? "")}" loading="lazy" />
+      <img src="/photos/${p.id}/image?w=320" alt="${escapeHtml(p.caption ?? "")}" loading="lazy" />
+      ${homepageRank ? `<span class="home-rank" title="Position in the homepage gallery">Home #${homepageRank}</span>` : ""}
       <div class="body">
         <input type="text" data-caption="${p.id}" value="${escapeHtml(p.caption ?? "")}" placeholder="Caption" />
+        <div class="order-row">
+          <button type="button" class="btn btn-ghost" data-move="${p.id}:-1" ${i === 0 ? "disabled" : ""} aria-label="Move earlier">&larr;</button>
+          <span class="pos">${i + 1} / ${photos.length}</span>
+          <button type="button" class="btn btn-ghost" data-move="${p.id}:1" ${i === photos.length - 1 ? "disabled" : ""} aria-label="Move later">&rarr;</button>
+        </div>
         <div class="row">
           <label><input type="checkbox" data-homepage="${p.id}" ${p.showOnHomepage ? "checked" : ""} /> Homepage</label>
           <button type="button" class="btn btn-ghost" data-delete-photo="${p.id}">Delete</button>
         </div>
       </div>
-    </div>`
-    )
+    </div>`;
+    })
     .join("");
 
   photoGrid.querySelectorAll("[data-caption]").forEach((el) => {
@@ -871,9 +884,51 @@ function renderPhotoGrid() {
   photoGrid.querySelectorAll("[data-homepage]").forEach((el) => {
     el.addEventListener("change", () => onUpdatePhoto(Number(el.getAttribute("data-homepage")), { showOnHomepage: el.checked }));
   });
+  photoGrid.querySelectorAll("[data-move]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const [id, step] = btn.getAttribute("data-move").split(":");
+      onMovePhoto(Number(id), Number(step));
+    });
+  });
   photoGrid.querySelectorAll("[data-delete-photo]").forEach((btn) => {
     btn.addEventListener("click", () => onDeletePhoto(Number(btn.getAttribute("data-delete-photo"))));
   });
+}
+
+/* Swaps a photo with its neighbour and sends the whole order. Sending the full list rather than
+   two positions means the server can renumber from 1, so the gaps and duplicate positions left by
+   earlier edits heal themselves instead of accumulating. */
+let reordering = false;
+async function onMovePhoto(id, step) {
+  if (reordering) return;
+  const from = photos.findIndex((p) => p.id === id);
+  const to = from + step;
+  if (from < 0 || to < 0 || to >= photos.length) return;
+
+  // Move locally first so the grid responds immediately, then confirm against the server's answer.
+  const next = [...photos];
+  [next[from], next[to]] = [next[to], next[from]];
+  photos = next;
+  renderPhotoGrid();
+
+  reordering = true;
+  photoGrid.querySelectorAll("[data-move]").forEach((b) => (b.disabled = true));
+  try {
+    const res = await fetch("/api/admin/photos/order", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: next.map((p) => p.id) }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Could not save the new order");
+    photos = data;
+  } catch (err) {
+    alert(err.message);
+    await loadPhotos(); // put the grid back to whatever the server actually holds
+  } finally {
+    reordering = false;
+    renderPhotoGrid();
+  }
 }
 
 async function onUpdatePhoto(id, patch) {

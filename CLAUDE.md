@@ -82,6 +82,23 @@ the bottom of the page, after Photos/Amenities/Content, so pressing Edit scrolle
 from the sites list into what looked like an unrelated part of the admin. `openSiteForm()` also
 opens the enclosing `<details>` — a panel revealed inside a collapsed section is invisible.
 
+## Gallery order
+
+`photos.sort_order` drives both the homepage grid (the `show_on_homepage` subset, in this order)
+and `/gallery.html`. It existed from the start and `PATCH /photos/:id` accepted it, but there was no
+UI, so the order was whatever upload sequence produced — the homepage led with "Full-size bathroom"
+for a fortnight.
+
+Reordering goes through **`PUT /api/admin/photos/order`** with the full ordered id list, not a batch
+of PATCHes: moving one photo up a place renumbers everything after it, and a batch can half-apply
+and leave two photos claiming the same position. The server renumbers from 1, so gaps and duplicates
+from earlier edits heal on any reorder.
+
+The admin grid uses **arrows, not drag-and-drop** — this panel is used one-handed on a phone at the
+park, where dragging a tile inside a scrolling page is a fight. Each tile shows its overall position
+and, if flagged for the homepage, a **Home #n** badge. That badge is the point: moving a
+gallery-only photo changes the grid but not what guests see, and without it that looks like a bug.
+
 ## Site photos and the booking list
 
 - **Sites are grouped by availability, not by row.** Front/Center/Back Row meant scanning three

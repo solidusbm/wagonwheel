@@ -686,6 +686,42 @@ router.post(
   }
 );
 
+/* Reorders the whole gallery in one call.
+ *
+ * sort_order already existed and PATCH /photos/:id already accepted it, but moving one photo up a
+ * place means renumbering everything after it -- a batch of PATCHes that can half-apply and leave
+ * two photos claiming the same position. One ordered array, renumbered server-side, can't.
+ *
+ * Send every photo id in the order you want them. Positions are rewritten from 1, so gaps and
+ * duplicates left by earlier edits get cleaned up as a side effect. This drives both the homepage
+ * grid (which shows the flagged subset, in this order) and /gallery.html.
+ */
+router.put("/photos/order", async (req, res, next) => {
+  const { ids } = req.body ?? {};
+  if (!Array.isArray(ids) || ids.some((id) => !Number.isInteger(id))) {
+    return res.status(400).json({ error: "ids must be an array of photo ids, in the order you want them" });
+  }
+  if (new Set(ids).size !== ids.length) {
+    return res.status(400).json({ error: "ids contains the same photo twice" });
+  }
+  try {
+    if (ids.length) {
+      await pool.query(
+        `UPDATE photos SET sort_order = o.ord
+         FROM UNNEST($1::int[]) WITH ORDINALITY AS o(id, ord)
+         WHERE photos.id = o.id`,
+        [ids]
+      );
+    }
+    const { rows } = await pool.query(
+      "SELECT id, caption, show_on_homepage, sort_order FROM photos ORDER BY sort_order, created_at"
+    );
+    res.json(rows.map(mapPhoto));
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.patch("/photos/:id", async (req, res, next) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {
