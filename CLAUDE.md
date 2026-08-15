@@ -347,16 +347,29 @@ merchant wears the chargebacks. Hence 8 booking attempts per 15 minutes, countin
 than successes. Don't tighten it much further: a false positive turns away a real booking, which
 costs the park more than the abuse.
 
-## Email authentication -- check the From address before publishing SPF
+## Email authentication -- SPF and DMARC are live
 
-The domain has no SPF or DMARC (verified 2026-08-14). Publishing `v=spf1 -all` and `p=reject` is
-correct **only while nothing sends as `@banderawagonwheelrv.com`** -- today mail goes out as a
-gmail.com address, so it is.
+**Published 2026-08-14** and verified at Cloudflare's authoritative nameservers:
 
-**Check `/admin` -> Booking alert email -> the "from" line first.** If `SMTP_FROM` is ever set to an
-address at the park's own domain, those records will send every guest confirmation to spam or bounce
-it outright. Same applies in reverse: the day the park wants `info@banderawagonwheelrv.com`, the SPF
-record must authorise whatever sends it, and a null MX (if published) has to come off to receive.
+    TXT  @        v=spf1 -all
+    TXT  _dmarc   v=DMARC1; p=reject
+
+That says no server may send mail as this domain and anything claiming to should be rejected --
+correct **only while nothing sends as `@banderawagonwheelrv.com`**. Today the app sends guest
+confirmations as `banderawagonwheelrv@gmail.com` through `smtp.gmail.com`, so deliverability rides
+on Gmail's reputation and these records touch nothing.
+
+**They become a live outage the moment that changes.** If `SMTP_FROM` is ever pointed at an address
+on the park's own domain, `-all` fails every confirmation -- spam folder at best, bounced at worst.
+So: the day the park wants `info@banderawagonwheelrv.com`, the SPF record has to be rewritten in the
+same sitting to authorise whatever relay sends it, and an MX record added to receive. Check
+`/admin` -> Booking alert email -> the "from" line before touching any of this.
+
+No `rua=` reporting address on purpose: DMARC requires the *receiving* domain to publish an
+authorisation record when reports go elsewhere, and nobody can create records under `gmail.com`, so
+`rua=mailto:...@gmail.com` would be silently ignored. Enforcement works without it. Went straight to
+`p=reject` rather than the usual `p=none` monitoring phase because a domain that sends no mail has
+nothing to break, so monitoring would only have delayed the protection.
 
 ## Privacy
 
