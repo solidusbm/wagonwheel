@@ -26,7 +26,16 @@ const VERSIONED = /(?:href|src)="(\/(?:admin\/)?(?:css|js)\/[a-zA-Z0-9._-]+\.(?:
 /* resolveAsset maps an asset URL, as the browser requests it, to the file that actually serves it.
  * It can't be assumed to sit under this middleware's own root: the admin page is served out of
  * admin/ but links the stylesheet at /css/style.css, which lives in public/. */
-export function makeAssetVersioner(rootDir, resolveAsset = (urlPath) => path.join(rootDir, urlPath)) {
+/* `injectHead` is optional: given (target, html) it returns a string to splice in before </head>.
+ * It runs per request, OUTSIDE the memoised render below, because what it returns is derived from
+ * the database (see lib/seo.js) and the memo here lives for the life of the process -- caching the
+ * two together would freeze the park's rates into the structured data at boot. The asset-hash
+ * rewrite is still memoised, so the per-request cost is one string replace. */
+export function makeAssetVersioner(
+  rootDir,
+  resolveAsset = (urlPath) => path.join(rootDir, urlPath),
+  injectHead = null
+) {
   const cache = new Map();
 
   const hashOf = (urlPath) => {
@@ -54,7 +63,7 @@ export function makeAssetVersioner(rootDir, resolveAsset = (urlPath) => path.joi
     return out;
   };
 
-  return function assetVersioner(req, res, next) {
+  return async function assetVersioner(req, res, next) {
     if (req.method !== "GET" && req.method !== "HEAD") return next();
     const clean = req.path.split("?")[0];
     const target = clean === "/" ? "/index.html" : clean;
@@ -64,8 +73,22 @@ export function makeAssetVersioner(rootDir, resolveAsset = (urlPath) => path.joi
     const filePath = path.resolve(rootDir, "." + target);
     if (!filePath.startsWith(path.resolve(rootDir))) return next();
 
-    const body = render(filePath);
+    let body = render(filePath);
     if (body === null) return next();
+
+    if (injectHead) {
+      /* Never let a <head> tag cost someone a booking: if the database is unreachable or the
+         builder throws, the page still goes out, just without the extra tags. */
+      try {
+        const extra = await injectHead(target, body);
+        /* Function replacement, not a string one: the injected block contains dollar signs (the
+           JSON-LD price range is "$45-$650"), and a string replacement treats $& and $' as
+           substitution patterns, which would splice fragments of the page into its own <head>. */
+        if (extra) body = body.replace("</head>", () => `${extra}\n</head>`);
+      } catch (err) {
+        console.warn("[assetVersion] head injection failed for", target, "--", err.message);
+      }
+    }
 
     res.set("Content-Type", "text/html; charset=utf-8");
     // The HTML itself must never be cached, or a visitor keeps asking for the old asset URLs and

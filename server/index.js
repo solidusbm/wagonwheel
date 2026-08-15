@@ -7,6 +7,8 @@ import reservationsRouter from "./routes/reservations.js";
 import adminRouter from "./routes/admin.js";
 import calendarRouter from "./routes/calendar.js";
 import photosRouter from "./routes/photos.js";
+import seoRouter from "./routes/seo.js";
+import { headBlock, snapshot } from "./lib/seo.js";
 import { adminAuth } from "./middleware/adminAuth.js";
 import { makeAssetVersioner } from "./lib/assetVersion.js";
 import { styleGalleryCors } from "./middleware/styleGalleryCors.js";
@@ -67,8 +69,17 @@ const resolveAsset = (urlPath) =>
 app.use("/admin", adminAuth, makeAssetVersioner(adminDir, resolveAsset), express.static(adminDir));
 app.use("/calendar", calendarRouter);
 app.use(photosRouter);
+// /robots.txt, /sitemap.xml and the og:image share card. Ahead of the static mount so a stray
+// file of the same name in public/ could never shadow the generated one.
+app.use(seoRouter);
 
-app.use(makeAssetVersioner(publicDir, resolveAsset));
+/* The guest pages get their <head> completed here -- canonical, description, og:/twitter: tags and
+   the homepage's JSON-LD, built in lib/seo.js from the same rows the booking page reads. The admin
+   versioner above deliberately gets no injector: /admin is Basic-Auth'd and must never be
+   described to a crawler. */
+app.use(makeAssetVersioner(publicDir, resolveAsset, async (target, html) =>
+  headBlock(target, html, await snapshot())
+));
 app.use(express.static(publicDir));
 
 /* Anything that reaches here is a URL nothing served. Express's default is a bare
