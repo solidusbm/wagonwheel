@@ -143,7 +143,11 @@ export async function snapshot() {
       pool.query(
         `SELECT MIN(price_per_night_cents) AS night_low, MAX(price_per_night_cents) AS night_high,
                 MIN(price_per_week_cents)  AS week_low,  MAX(price_per_week_cents)  AS week_high,
-                MIN(price_per_month_cents) AS month_low, MAX(price_per_month_cents) AS month_high
+                MIN(price_per_month_cents) AS month_low, MAX(price_per_month_cents) AS month_high,
+                count(*)                                  AS bookable_total,
+                count(*) FILTER (WHERE pull_through)      AS pull_through_count,
+                MIN(max_rig_length)                       AS rig_min,
+                MAX(max_rig_length)                       AS rig_max
            FROM sites
           WHERE active AND NOT permanently_occupied`
       ),
@@ -168,6 +172,14 @@ export async function snapshot() {
       weekHigh: num(r.week_high),
       monthLow: num(r.month_low),
       monthHigh: num(r.month_high),
+      /* Pad shape and length, for the sentence on /monthly-stays.html. Counted rather than
+         written down: the repo's notes said every site was a back-in, and by the time anyone
+         checked, the park had set two BOOKABLE sites to pull-through in /admin. A page that
+         states "no pull-throughs" turns away the one customer who searches for them. */
+      bookableTotal: Number(r.bookable_total) || 0,
+      pullThroughCount: Number(r.pull_through_count) || 0,
+      rigMin: num(r.rig_min),
+      rigMax: num(r.rig_max),
       amenities: amenities.rows.map((a) => a.name),
       allPhotos: photos.rows.map((p) => ({ id: p.id, caption: p.caption })),
       photos: photos.rows

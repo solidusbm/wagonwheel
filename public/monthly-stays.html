@@ -89,9 +89,10 @@
       <a href="/hours.html">office hours and policies page</a>.</p>
 
       <h2>What's on the site</h2>
-      <p>Every pad is 60 feet and takes 30 and 50 amp service. All of them are back-in &mdash;
-      there are no pull-throughs here, which is worth knowing if you're arriving in something long
-      after dark. Full hookups are ready when you pull in.</p>
+      <!-- Counted from the sites table -- see server/lib/ssr.js. This sentence was hand-written
+           and was wrong on the day it shipped: it claimed there were no pull-throughs while two
+           bookable sites were set to pull-through in /admin. -->
+      <div data-ssr="site-shape"></div>
       <!-- The amenity list, from the same rows the homepage grid is built from. -->
       <div class="amenities-grid" data-ssr="amenities"></div>
 

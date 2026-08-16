@@ -156,6 +156,43 @@ function electricTermsHtml() {
         Nightly and weekly rates do include it.</p>`;
 }
 
+/* The shape of the pads open right now, counted from the sites table rather than written down.
+ *
+ * This exists because a hand-written sentence was wrong within hours of going live. The repo's
+ * notes recorded that every site was a back-in and that pull_through was false on all twelve rows;
+ * the live database had two BOOKABLE sites -- 4 and 7 -- set to pull-through, entered in /admin
+ * after that note was written. The page told big-rig drivers there were no pull-throughs, which is
+ * precisely the search that would have brought them.
+ *
+ * So it counts. If the park converts another pad tomorrow, the sentence follows. */
+function siteShapeHtml(snap) {
+  if (!snap?.bookableTotal) return null;
+  const { bookableTotal: total, pullThroughCount: pt, rigMin, rigMax } = snap;
+
+  /* Two sentences rather than one long clause: the length half changes number with the data
+     ("Every pad is..." / "Pads run from..."), and stitching a shared verb onto both produced
+     "Pads run from 45 to 60 feet and takes 30 and 50 amp service". */
+  const length =
+    rigMin && rigMax
+      ? rigMin === rigMax
+        ? `Every pad is ${rigMin} feet and takes 30 and 50 amp service.`
+        : `Pads run from ${rigMin} to ${rigMax} feet and take 30 and 50 amp service.`
+      : "Every pad takes 30 and 50 amp service.";
+
+  let shape;
+  if (pt === 0) {
+    shape = "All of the sites open at the moment are back-in, which is worth knowing if you're arriving in something long after dark.";
+  } else if (pt === total) {
+    shape = total === 1
+      ? "The one site open at the moment is a pull-through."
+      : "Every site open at the moment is a pull-through.";
+  } else {
+    shape = `Of the ${total} sites open at the moment, ${pt} ${pt === 1 ? "is a pull-through" : "are pull-throughs"} — the rest are back-in.`;
+  }
+
+  return `<p>${esc(length)} ${esc(shape)} Full hookups are ready when you pull in.</p>`;
+}
+
 const RENDERERS = {
   amenities: amenitiesHtml,
   gallery: galleryHtml,
@@ -163,6 +200,7 @@ const RENDERERS = {
   rates: ratesHtml,
   "monthly-rates": monthlyRatesHtml,
   "electric-terms": electricTermsHtml,
+  "site-shape": siteShapeHtml,
 };
 
 /* Fills every empty element carrying data-ssr="<name>". The containers ARE empty in the source --

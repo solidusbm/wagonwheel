@@ -502,7 +502,13 @@ What's still open:
       were already pointing at the right pad.
     - **Sites 1–2 are their own short row hanging north off the top rung** at the west end by the
       existing fence — outside the ladder, not a pocket between the rows, and not angled.
-    - Every site is a back-in, matching `pull_through = false` on all twelve rows.
+    - **Pull-through is now per site and this note used to say otherwise.** It read "every site is
+      a back-in, matching `pull_through = false` on all twelve rows"; on 2026-08-16 the live
+      database had **four** sites flagged pull-through (5, 6, and the two bookable ones, 4 and 7),
+      entered in `/admin` after that line was written. A hand-written "there are no pull-throughs
+      here" duly shipped to a live marketing page and had to be pulled. **Don't restate pad shape
+      in prose anywhere** — `data-ssr="site-shape"` in `server/lib/ssr.js` counts it from the
+      table. The map itself doesn't draw the distinction, so it's not affected either way.
   **The layout now lives in `public/js/park-layout.js` — real feet, one object.** It was arranged
   by hand in a layout editor against the marked-up plan; `renderSiteMap()` in `app.js` only draws
   it, matching bays to sites by the number in the site name. To change where anything sits, edit
