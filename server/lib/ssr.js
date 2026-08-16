@@ -64,16 +64,18 @@ function galleryHtml(snap) {
      spinner rather than a homepage on Hill Country cellular. `loading="lazy"` stays -- a crawler
      reads the src and the alt text regardless, and a phone should not fetch fifteen images to
      show three. */
+  // No whitespace between tags -- see the note in galleryAllHtml.
   return snap.photos
-    .map(
-      (p) => `
-      <figure>
-        <img src="/photos/${p.id}/image?w=640" alt="${esc(
-          p.caption ?? "Wagon Wheel RV Park photo"
-        )}" loading="lazy" />
-        ${p.caption ? `<figcaption><b>${esc(p.caption)}</b></figcaption>` : ""}
-      </figure>`
-    )
+    .map((p, i) => {
+      const alt = esc(p.caption ?? "Wagon Wheel RV Park photo");
+      const caption = p.caption ? `<figcaption><b>${esc(p.caption)}</b></figcaption>` : "";
+      return (
+        `<figure>` +
+        `<img src="/photos/${p.id}/image?w=640" alt="${alt}"` +
+        `${i === 0 ? ' fetchpriority="high"' : ' loading="lazy"'} />` +
+        `${caption}</figure>`
+      );
+    })
     .join("");
 }
 
@@ -86,16 +88,34 @@ function galleryAllHtml(snap) {
   if (!snap.allPhotos.length) {
     return `<p class="empty-note" style="color:var(--parchment-dim); font-style:italic;">No photos uploaded yet.</p>`;
   }
+  /* Thumbnails in the grid, full size behind a click.
+   *
+   * This page used to request every photo at full size: measured on the live site, 19 images and
+   * 12.21MB, against 1.42MB for the same grid at w=640. The tiles are 200px tall and at most a few
+   * hundred wide, so the other ten and a half megabytes were being downloaded and thrown away --
+   * on the Hill Country cellular connections this park's guests are usually on, and page weight is
+   * a ranking signal besides. Anyone who actually wants to look at a photograph can now open it,
+   * which is the thing full-size images were there for.
+   *
+   * The first two load eagerly and the first is fetchpriority="high": on a gallery the top image
+   * is the Largest Contentful Paint, and lazy-loading it delays the very measurement it is meant
+   * to improve. */
+  /* Built without whitespace between the tags. An indented template leaves text nodes inside the
+     <figure>, which form an anonymous line box: an uncaptioned photo rendered 41px taller than its
+     image, as an empty band under the picture. That predates the thumbnails -- the old template
+     had the same gap -- and it is why these are concatenated rather than laid out prettily. */
   const figures = snap.allPhotos
-    .map(
-      (p) => `
-        <figure>
-          <img src="/photos/${p.id}/image" alt="${esc(
-            p.caption ?? "Wagon Wheel RV Park photo"
-          )}" loading="lazy" />
-          ${p.caption ? `<figcaption><b>${esc(p.caption)}</b></figcaption>` : ""}
-        </figure>`
-    )
+    .map((p, i) => {
+      const loading = i === 0 ? ' fetchpriority="high"' : i < 2 ? "" : ' loading="lazy"';
+      const alt = esc(p.caption ?? "Wagon Wheel RV Park photo");
+      const caption = p.caption ? `<figcaption><b>${esc(p.caption)}</b></figcaption>` : "";
+      return (
+        `<figure>` +
+        `<a href="/photos/${p.id}/image" title="See this photo full size">` +
+        `<img src="/photos/${p.id}/image?w=640" alt="${alt}"${loading} />` +
+        `</a>${caption}</figure>`
+      );
+    })
     .join("");
   return `<div class="full-gallery" id="full-gallery">${figures}
       </div>`;
