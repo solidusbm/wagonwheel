@@ -88,23 +88,28 @@ export const PAGES = {
   "/404.html": { index: false },
 };
 
+/* Keys in the seo_settings table. Descriptions are one key per page, prefixed, so the set grows
+ * with PAGES rather than needing a column each. */
+export const DESC_PREFIX = "desc:";
+export const KEY_INDEXING = "indexing";
+export const KEY_SHARE_PHOTO = "share_photo_id";
+
 export const esc = (s) =>
   String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /* ---------------------------------------------------------------------------------------------
  * The database half.
  *
- * Read once and held for a few minutes rather than queried per page view: a crawler walking the
- * site would otherwise put a query on every request for numbers that change a few times a year.
- * The TTL is the staleness an /admin rate edit can show for, which is a reasonable trade at five
- * minutes. Any failure degrades to null -- the page still serves, just without structured data.
- * Never let this throw into the request path.
+ * Read once and held briefly rather than queried per page view: a crawler walking the site would
+ * otherwise put four queries on every request for figures that change a few times a year. Any
+ * failure degrades to null -- the page still serves, just without the generated parts. Never let
+ * this throw into the request path.
  * ------------------------------------------------------------------------------------------- */
-/* A minute, not the five it started at. This snapshot no longer feeds only the structured data --
- * the amenity grid, the photo grid and the rates panel are rendered from it too (lib/ssr.js), so
- * the TTL is now how long an /admin edit takes to reach the visible page. A minute keeps that
- * close to the instant reload the office had when those grids were fetched by the browser, and
- * still costs at most three queries a minute. */
+/* One minute, down from the five this started at. The snapshot no longer feeds only the structured
+ * data -- the amenity grid, the photo grid and the rates panel are rendered from it too
+ * (lib/ssr.js), so the TTL is now how long an /admin edit takes to reach the visible page. A minute
+ * keeps that close to the instant reload the office had when the browser fetched those grids, and
+ * still costs at most four queries a minute. */
 const SNAPSHOT_TTL_MS = 60 * 1000;
 /* A failure is cached too, for much less time. Caching only successes looks harmless and isn't:
  * with the database down, every single page view would re-run three queries against it and log a
@@ -118,7 +123,7 @@ export async function snapshot() {
   const ttl = snapshotCache.value ? SNAPSHOT_TTL_MS : FAILURE_TTL_MS;
   if (snapshotCache.at && Date.now() - snapshotCache.at < ttl) return snapshotCache.value;
   try {
-    const [rates, amenities, photos] = await Promise.all([
+    const [rates, amenities, photos, settings] = await Promise.all([
       /* Only sites that are actually sold: `active` and not carrying a long-term resident. The
          range shown to a guest, and to Google, has to be one somebody can actually book -- a
          permanently occupied site's rate is not on offer to anybody.
@@ -144,6 +149,7 @@ export async function snapshot() {
       pool.query(
         `SELECT id, caption, show_on_homepage FROM photos ORDER BY sort_order, created_at`
       ),
+      pool.query(`SELECT key, value FROM seo_settings`),
     ]);
     const r = rates.rows[0] ?? {};
     const num = (v) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : null);
@@ -160,7 +166,21 @@ export async function snapshot() {
         .filter((p) => p.show_on_homepage)
         .map((p) => ({ id: p.id, caption: p.caption })),
     };
-    value.photoId = value.photos[0]?.id ?? null;
+    /* Settings from the /admin "Search & sharing" panel. An absent key means "use the default",
+       so everything below falls through to what the code already decided. */
+    const set = new Map(settings.rows.map((s) => [s.key, s.value]));
+    value.descriptions = Object.fromEntries(
+      [...set].filter(([k]) => k.startsWith(DESC_PREFIX)).map(([k, v]) => [k.slice(DESC_PREFIX.length), v])
+    );
+    value.indexing = set.get(KEY_INDEXING) !== "off";
+    /* A chosen share photo only counts while that photo still exists -- deleting it from the
+       Photos panel must not leave the share card pointing at a missing row and falling all the way
+       back to the brand graphic without anyone noticing. */
+    const chosen = Number(set.get(KEY_SHARE_PHOTO));
+    value.sharePhotoId =
+      Number.isFinite(chosen) && value.allPhotos.some((p) => p.id === chosen)
+        ? chosen
+        : value.photos[0]?.id ?? null;
     // What schema.org's priceRange wants is the span of the whole offering, across every term.
     const lows = [value.nightLow, value.weekLow, value.monthLow].filter(Boolean);
     const highs = [value.nightHigh, value.weekHigh, value.monthHigh].filter(Boolean);
@@ -172,6 +192,13 @@ export async function snapshot() {
     snapshotCache = { at: Date.now(), value: null };
   }
   return snapshotCache.value;
+}
+
+/** Drop the cached snapshot so an /admin save shows on the site immediately rather than after the
+ *  TTL. Without it, saving a description and reloading the page shows the old one for up to a
+ *  minute, which reads as the save having failed. */
+export function invalidateSnapshot() {
+  snapshotCache = { at: 0, value: null };
 }
 
 const dollars = (cents) => `$${Math.round(cents / 100)}`;
@@ -255,17 +282,45 @@ export function parkJsonLd(snap) {
 /** Same-origin share card. `?v=` changes when the lead homepage photo does, so Facebook re-scrapes
  *  instead of serving the previous park's picture out of its cache for a month. */
 export function ogImagePath(snap) {
-  return snap?.photoId ? `/og-image.jpg?v=${snap.photoId}` : "/og-image.jpg";
+  return snap?.sharePhotoId ? `/og-image.jpg?v=${snap.sharePhotoId}` : "/og-image.jpg";
 }
 
 /* --------------------------------------------------------------------------------------------- */
 
 const TITLE_RE = /<title[^>]*>([\s\S]*?)<\/title>/i;
 
+/* The <title> in the file is already HTML-escaped, because it is HTML: hours.html carries
+ * "Office Hours &amp; Policies". Escaping that again for an attribute produced "&amp;amp;", and a
+ * scraper decoding it once showed guests a Facebook card headed "Office Hours &amp; Policies".
+ * So decode to plain text first and let esc() escape it exactly once. `&amp;` is decoded last, or
+ * a literal "&amp;lt;" in a title would come back as "<". */
+function decodeEntities(s) {
+  return String(s)
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0*39;|&apos;/g, "'")
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&amp;/g, "&");
+}
+
+/** A page's title as plain text, read from its own <title>. */
+export function titleOf(html) {
+  const raw = TITLE_RE.exec(html)?.[1]?.trim();
+  return raw ? decodeEntities(raw) : null;
+}
+
 /**
  * The block injected before </head>. `html` is the page as it will be sent, so the title can be
  * read back out of it rather than kept in a second list that disagrees with the first.
  */
+/** The description actually used for a page: the office's, if it has set one, else the default. */
+export function descriptionFor(target, snap) {
+  const override = snap?.descriptions?.[target];
+  return override && override.trim() ? override.trim() : PAGES[target]?.desc ?? null;
+}
+
 export function headBlock(target, html, snap) {
   const page = PAGES[target];
   const icons = [
@@ -278,18 +333,27 @@ export function headBlock(target, html, snap) {
   // Unknown page, or one that must not be indexed: an icon and nothing that invites a crawler.
   if (!page || page.index === false) return icons.join("\n");
 
-  const title = TITLE_RE.exec(html)?.[1]?.trim() ?? PARK.name;
+  const title = titleOf(html) ?? PARK.name;
   const url = `${ORIGIN}${page.canonical}`;
   const image = `${ORIGIN}${ogImagePath(snap)}`;
+  const description = descriptionFor(target, snap);
 
+  /* The indexing switch is off. Say so on the page as well as in robots.txt: robots.txt asks a
+     crawler not to FETCH a URL, which is not the same as asking it not to LIST one -- a page
+     linked from elsewhere can appear in results on the strength of the link alone, with no
+     description under it. The meta tag is what actually keeps it out. The og: tags stay, because
+     a link shared in a message should still preview properly while the site is hidden. */
   const tags = [
     ...icons,
+    ...(snap && snap.indexing === false
+      ? [`<meta name="robots" content="noindex, nofollow" />`]
+      : []),
     `<link rel="canonical" href="${esc(url)}" />`,
-    `<meta name="description" content="${esc(page.desc)}" />`,
+    `<meta name="description" content="${esc(description)}" />`,
     `<meta property="og:type" content="website" />`,
     `<meta property="og:site_name" content="${esc(PARK.name)}" />`,
     `<meta property="og:title" content="${esc(title)}" />`,
-    `<meta property="og:description" content="${esc(page.desc)}" />`,
+    `<meta property="og:description" content="${esc(description)}" />`,
     `<meta property="og:url" content="${esc(url)}" />`,
     `<meta property="og:image" content="${esc(image)}" />`,
     `<meta property="og:image:width" content="1200" />`,
@@ -300,7 +364,7 @@ export function headBlock(target, html, snap) {
        into an unreadable square thumbnail. */
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${esc(title)}" />`,
-    `<meta name="twitter:description" content="${esc(page.desc)}" />`,
+    `<meta name="twitter:description" content="${esc(description)}" />`,
     `<meta name="twitter:image" content="${esc(image)}" />`,
   ];
 
@@ -344,7 +408,12 @@ export function sitemapXml() {
  * HMAC token, and both stay that way. It keeps the calendar feeds and the tokenised cancel links
  * out of the index, which is a privacy matter: a reservation-cancelling URL should not be
  * discoverable through a search engine. */
-export function robotsTxt() {
+export function robotsTxt(snap) {
+  /* Indexing switched off in /admin. Belt and braces with the noindex meta tag in headBlock:
+     this stops the fetch, the tag stops the listing. */
+  if (snap && snap.indexing === false) {
+    return ["User-agent: *", "Disallow: /", ""].join("\n");
+  }
   return [
     "User-agent: *",
     "Allow: /",

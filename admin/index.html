@@ -102,6 +102,41 @@
   .site-photo-picker img{display:block; width:100%; height:82px; object-fit:cover;}
   .site-photo-picker .cap{display:block; font-size:10.5px; color:var(--parchment-dim); padding:4px 6px; line-height:1.3;}
   .site-photo-picker input{position:absolute; top:6px; left:6px; width:auto; margin:0; z-index:1;}
+
+  /* Search & sharing. The two preview cards imitate Google's result and Facebook's link card, so
+     their colours are deliberate LITERALS rather than palette tokens: the point of them is to look
+     like the thing they are imitating, and they would stop doing that the moment the park's theme
+     changed. They also carry their own opaque white background, which is what makes fixed text
+     colours correct here rather than a contrast bug waiting to happen. */
+  .seo-page{border:1px solid rgba(60,42,26,0.18); border-radius:var(--radius); padding:14px 16px; margin:0 0 14px; background:var(--bg-panel-2);}
+  .seo-page h4{margin:0 0 3px; font-size:14px;}
+  .seo-page .path{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--parchment-dim); margin:0 0 10px;}
+  .seo-page textarea{width:100%; min-height:62px; resize:vertical;}
+  .seo-meta{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin:5px 0 12px;}
+  .seo-count{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--parchment-dim);}
+  .seo-count.warn{color:var(--rust); font-weight:600;}
+  .seo-default{font-size:11.5px; color:var(--parchment-dim);}
+  .seo-preview-label{font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.1em;
+    text-transform:uppercase; color:var(--parchment-dim); margin:0 0 6px;}
+
+  .snippet{background:#ffffff; border:1px solid #dadce0; border-radius:8px; padding:12px 14px; max-width:600px;}
+  .snippet .s-url{color:#202124; font-size:12px; line-height:1.3;}
+  .snippet .s-url span{color:#5f6368;}
+  .snippet .s-title{color:#1a0dab; font-size:19px; line-height:1.3; margin:2px 0 3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .snippet .s-desc{color:#4d5156; font-size:13.5px; line-height:1.58;}
+
+  .fb-card{background:#ffffff; border:1px solid #dddfe2; border-radius:8px; overflow:hidden; max-width:500px;}
+  .fb-card img{display:block; width:100%; aspect-ratio:1200/630; object-fit:cover; background:#f0f2f5;}
+  .fb-card .fb-body{padding:10px 12px; border-top:1px solid #dddfe2;}
+  .fb-card .fb-domain{color:#606770; font-size:11px; text-transform:uppercase; letter-spacing:0.02em;}
+  .fb-card .fb-title{color:#1d2129; font-size:16px; font-weight:600; line-height:1.28; margin:3px 0 2px;}
+  .fb-card .fb-desc{color:#606770; font-size:13px; line-height:1.4;}
+
+  .seo-readout{font-family:'JetBrains Mono',monospace; font-size:11px; line-height:1.65;
+    background:var(--bg); border:1px solid rgba(60,42,26,0.18); border-radius:var(--radius);
+    padding:12px 14px; overflow-x:auto; white-space:pre; color:var(--parchment-dim); margin:0;}
+  .seo-danger{border-left:3px solid var(--rust); background:var(--bg-panel-2); padding:12px 15px; margin:0 0 16px;}
+  .seo-danger p{margin:0; font-size:13.5px;}
   /* The lead photo is the one guests actually see, so it says so rather than relying on the order. */
   .site-photo-picker .lead{position:absolute; top:5px; right:5px; background:var(--gold); color:var(--btn-text);
     font-family:'JetBrains Mono',monospace; font-size:8.5px; text-transform:uppercase; letter-spacing:0.06em; padding:2px 6px; border-radius:2px;}
@@ -359,6 +394,12 @@
   </details>
 
   <details class="sync-feeds">
+    <summary><h2>Search &amp; sharing</h2></summary>
+    <div class="sub">How the park looks in a Google result and when someone posts a link to Facebook or texts it to a friend. Everything that can be worked out from the park's own data already is &mdash; the headline comes from each page, and the rates and amenities in the structured data come from the Sites and Amenities panels above. What's left here is the three things that need a person's judgement.</div>
+    <div id="seo-panel"><p class="empty-note">Loading&hellip;</p></div>
+  </details>
+
+  <details class="sync-feeds">
     <summary><h2>Push notifications</h2></summary>
     <div class="sub">Get notified on this device the moment a guest books through the site — on top of, not instead of, the admin email.</div>
     <div class="push-status" id="push-status">Checking…</div>
@@ -393,5 +434,6 @@
 </div>
 <script type="module" src="/admin/js/admin.js"></script>
 <script type="module" src="/admin/js/push.js"></script>
+<script type="module" src="/admin/js/seo-panel.js"></script>
 </body>
 </html>

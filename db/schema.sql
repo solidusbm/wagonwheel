@@ -231,3 +231,20 @@ CREATE TABLE IF NOT EXISTS style_gallery_approvals (
 );
 ALTER TABLE style_gallery_approvals ADD COLUMN IF NOT EXISTS note TEXT NOT NULL DEFAULT '';
 ALTER TABLE style_gallery_approvals ADD COLUMN IF NOT EXISTS dismissed BOOLEAN NOT NULL DEFAULT false;
+
+-- Search & sharing settings (the /admin "Search & sharing" panel). Key/value rather than a column
+-- per setting because the set grows: today it holds a per-page meta description, the photo the
+-- share card is cut from, and the site-wide indexing switch.
+--
+-- An ABSENT ROW MEANS "use the built-in default" -- the descriptions in PAGES in server/lib/seo.js,
+-- the leading homepage photo, indexing on. That is what makes "reset to default" a DELETE rather
+-- than a second column recording whether the value was ever set, and it means a page added to
+-- PAGES later starts with its code-written description rather than a blank one.
+--
+-- No data defaults seeded here: schema.sql runs on EVERY boot, so an INSERT of default text would
+-- resurrect itself the next time the office cleared a field. See the note above db/seed.sql.
+CREATE TABLE IF NOT EXISTS seo_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

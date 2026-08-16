@@ -9,10 +9,16 @@ const router = Router();
  * pages has one home (PAGES in lib/seo.js). A checked-in sitemap is a file nobody remembers to
  * edit; this one cannot disagree with the tags on the pages themselves. */
 
-router.get("/robots.txt", (req, res) => {
-  res.type("text/plain; charset=utf-8");
-  res.set("Cache-Control", "public, max-age=3600");
-  res.send(robotsTxt());
+router.get("/robots.txt", async (req, res, next) => {
+  try {
+    res.type("text/plain; charset=utf-8");
+    /* Short, because this one answers to a switch in /admin: an hour is how long "hide the site
+       from search" would appear not to have worked. */
+    res.set("Cache-Control", "public, max-age=300");
+    res.send(robotsTxt(await snapshot()));
+  } catch (err) {
+    next(err);
+  }
 });
 
 router.get("/sitemap.xml", (req, res) => {
@@ -23,8 +29,8 @@ router.get("/sitemap.xml", (req, res) => {
 
 /* The share card -- what Facebook, iMessage, WhatsApp and Slack put above a link to the park.
  *
- * Cut from the photograph that leads the homepage grid, so the picture in a Facebook post is the
- * picture at the top of the site, and cut to exactly 1200x630 here rather than by handing the
+ * Cut from whichever photograph /admin -> Search & sharing nominates -- the one leading the
+ * homepage grid unless somebody chose otherwise -- and cut to exactly 1200x630 here rather than by handing the
  * scraper an arbitrary phone photo: those are portrait as often as not, and every one of those
  * previews crops to landscape anyway, badly and differently on each platform. Doing it once, with
  * `cover`, means the same considered crop everywhere.
@@ -61,13 +67,13 @@ function fallbackCard() {
 router.get("/og-image.jpg", async (req, res, next) => {
   try {
     const snap = await snapshot();
-    const key = snap?.photoId ?? "fallback";
+    const key = snap?.sharePhotoId ?? "fallback";
 
     // One entry, keyed by the photo it was cut from: change the lead photo and this regenerates.
     if (cardCache.key !== key) {
       let buf = null;
-      if (snap?.photoId) {
-        const { rows } = await pool.query("SELECT data FROM photos WHERE id = $1", [snap.photoId]);
+      if (snap?.sharePhotoId) {
+        const { rows } = await pool.query("SELECT data FROM photos WHERE id = $1", [snap.sharePhotoId]);
         if (rows[0]) {
           buf = await sharp(rows[0].data, { failOn: "none" })
             .rotate() // EXIF orientation, before the tag is stripped -- otherwise phone shots land sideways

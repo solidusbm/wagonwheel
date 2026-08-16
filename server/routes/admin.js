@@ -7,6 +7,20 @@ import { applySchema, applySeed, applyContentSeed, sitesCount } from "../lib/dbB
 import { mailConfigStatus, sendTestEmail, sendSampleGuestEmail } from "../lib/email.js";
 import { listLocations, refundPayment } from "../lib/square.js";
 import { shrinkImage } from "../lib/imageResize.js";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  PAGES,
+  DESC_PREFIX,
+  KEY_INDEXING,
+  KEY_SHARE_PHOTO,
+  ORIGIN,
+  descriptionFor,
+  titleOf,
+  snapshot,
+  invalidateSnapshot,
+} from "../lib/seo.js";
 
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -1191,6 +1205,131 @@ router.post("/push/unsubscribe", async (req, res, next) => {
   try {
     await pool.query("DELETE FROM push_subscriptions WHERE endpoint = $1", [endpoint]);
     res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* ---------------------------------------------------------------------------------------------
+ * Search & sharing (plan item 4.1).
+ *
+ * Deliberately narrow. Everything derivable stays derived -- the titles come from each page's own
+ * <title>, the rates and amenities in the structured data come from the sites and amenities
+ * tables, the sitemap builds itself from PAGES. What the office actually gets a say in is the
+ * three things a person has to judge: the sentence under the search result, which photograph
+ * fronts a shared link, and whether the site should be in an index at all.
+ *
+ * There is NO free-text box for meta tags here, on purpose. It reads as flexibility and behaves as
+ * a second source of truth: within a month it disagrees with the database and starts quietly
+ * telling Google something the site no longer does.
+ * ------------------------------------------------------------------------------------------- */
+const publicDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "public");
+/* The <title> as shipped, so the panel's previews show the real headline rather than a guess.
+   titleOf decodes the entities in it -- these are HTML files, so hours.html says "Office Hours
+   &amp; Policies" -- and the panel escapes once when it renders. Read per request: this is an
+   admin page opened a few times a day, not the guest path. */
+function pageTitle(target) {
+  try {
+    return titleOf(fs.readFileSync(path.join(publicDir, target), "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+router.get("/seo", async (req, res, next) => {
+  try {
+    const snap = await snapshot();
+    const { rows } = await pool.query("SELECT key, value FROM seo_settings");
+    const set = new Map(rows.map((r) => [r.key, r.value]));
+
+    res.json({
+      origin: ORIGIN,
+      indexing: set.get(KEY_INDEXING) !== "off",
+      sharePhotoId: snap?.sharePhotoId ?? null,
+      // Whether that id is a choice or just the default, so the panel can say which.
+      sharePhotoIsExplicit: set.has(KEY_SHARE_PHOTO),
+      photos: snap?.allPhotos ?? [],
+      pages: Object.entries(PAGES)
+        .filter(([, p]) => p.index !== false)
+        .map(([target, p]) => ({
+          target,
+          url: `${ORIGIN}${p.canonical}`,
+          title: pageTitle(target),
+          defaultDescription: p.desc,
+          // What is actually being served right now -- the override if there is one, else default.
+          description: descriptionFor(target, snap),
+          isCustom: Boolean(set.get(DESC_PREFIX + target)),
+        })),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* One PUT for the whole panel rather than a route per field: these settings are read together,
+   previewed together and saved with one button, and a half-applied batch (a description saved,
+   the indexing switch not) is a state nobody asked for. Any key omitted is left alone; a
+   description sent empty is a RESET -- the row is deleted and the built-in default takes over
+   again, which is why an absent row has to mean "default" rather than "blank". */
+router.put("/seo", async (req, res, next) => {
+  const { descriptions, sharePhotoId, indexing } = req.body ?? {};
+  const writes = [];
+
+  if (descriptions !== undefined) {
+    if (descriptions === null || typeof descriptions !== "object") {
+      return res.status(400).json({ error: "descriptions must be an object" });
+    }
+    for (const [target, text] of Object.entries(descriptions)) {
+      if (!PAGES[target] || PAGES[target].index === false) {
+        return res.status(400).json({ error: `Unknown page: ${target}` });
+      }
+      if (text !== null && typeof text !== "string") {
+        return res.status(400).json({ error: `Description for ${target} must be text` });
+      }
+      /* 320 is past the point any engine will show and well past where one is useful; it is here
+         to stop a paste of the whole page body, not to enforce a style rule. Google truncates
+         around 155-160 and the panel warns there, without refusing. */
+      if (typeof text === "string" && text.length > 320) {
+        return res.status(400).json({ error: `Description for ${target} is too long (max 320)` });
+      }
+      writes.push([DESC_PREFIX + target, text && text.trim() ? text.trim() : null]);
+    }
+  }
+
+  if (sharePhotoId !== undefined) {
+    if (sharePhotoId === null) {
+      writes.push([KEY_SHARE_PHOTO, null]);
+    } else {
+      const id = Number(sharePhotoId);
+      if (!Number.isInteger(id)) return res.status(400).json({ error: "sharePhotoId must be a photo id" });
+      const { rowCount } = await pool.query("SELECT 1 FROM photos WHERE id = $1", [id]);
+      if (!rowCount) return res.status(400).json({ error: "That photo no longer exists" });
+      writes.push([KEY_SHARE_PHOTO, String(id)]);
+    }
+  }
+
+  if (indexing !== undefined) {
+    if (typeof indexing !== "boolean") return res.status(400).json({ error: "indexing must be true or false" });
+    writes.push([KEY_INDEXING, indexing ? "on" : "off"]);
+  }
+
+  try {
+    for (const [key, value] of writes) {
+      if (value === null) {
+        // Delete rather than store a blank: an absent row is what means "use the default".
+        await pool.query("DELETE FROM seo_settings WHERE key = $1", [key]);
+      } else {
+        await pool.query(
+          `INSERT INTO seo_settings (key, value, updated_at) VALUES ($1, $2, now())
+             ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+          [key, value]
+        );
+      }
+    }
+    /* Without this the office saves a description, reloads the site and sees the old one for up to
+       a minute -- and reasonably concludes the save didn't work. */
+    invalidateSnapshot();
+    res.json({ ok: true, saved: writes.length });
   } catch (err) {
     next(err);
   }
