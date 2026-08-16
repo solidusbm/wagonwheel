@@ -86,6 +86,15 @@ app.use(makeAssetVersioner(publicDir, resolveAsset, async (target, html) => {
   const snap = await snapshot();
   return applyBody(applyHead(target, html, snap), snap);
 }));
+/* The webfonts. Their filenames carry a content hash (tools/fetch-fonts.mjs), so a given URL's
+   bytes never change and it is safe to cache for a year -- which is the point of self-hosting
+   them: the second page view costs no font request at all. Registered before the static mount so
+   the header is set on the way through. */
+app.use("/fonts", (req, res, next) => {
+  res.set("Cache-Control", "public, max-age=31536000, immutable");
+  next();
+});
+
 app.use(express.static(publicDir));
 
 /* Anything that reaches here is a URL nothing served. Express's default is a bare

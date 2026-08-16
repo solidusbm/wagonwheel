@@ -6,7 +6,7 @@
 <title>Privacy — Bandera Wagon Wheel RV Park</title>
 <!-- The description for this page now lives with every other page's, in PAGES in server/lib/seo.js,
      and is injected before </head>. Two copies would drift. -->
-<link href="https://fonts.googleapis.com/css2?family=Rye&family=Zilla+Slab:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/css/fonts.css" />
 <link rel="stylesheet" href="/css/style.css" />
 <style>
   /* Long-form reading, so the measure is tighter than the booking pages and the rhythm is looser. */
@@ -100,6 +100,11 @@
         <li><strong>No tracking.</strong> This site sets no cookies, runs no analytics, and carries
           no advertising or social media trackers. We can't tell you apart from any other visitor
           until you book.</li>
+        <li><strong>Almost nothing loads from anywhere else.</strong> The typefaces, the
+          photographs and this site's own code are all served from here &mdash; the typefaces used
+          to come from Google's servers and no longer do. The one exception is Square's payment
+          library, which loads from Square on the booking page so that your card details go
+          straight to them and never reach us. Nothing else on the site contacts another company.</li>
         <li><strong>No selling or sharing.</strong> We don't sell, rent, or trade your details, and
           we don't hand them to marketing companies.</li>
         <li><strong>No marketing email</strong> unless you ask us for it. The emails we send are
@@ -122,15 +127,14 @@
       <p>If you'd rather not get it, tell us and we won't send it.</p>
 
       <h2>Who else is involved</h2>
-      <p>Three companies see something in the course of running this site:</p>
+      <p>Two companies see something in the course of running this site:</p>
       <ul>
         <li><strong>Square</strong> processes the payment and handles your card details directly.
-          Square's own privacy terms cover what they do with them.</li>
+          Square's own privacy terms cover what they do with them. Their payment library loads on
+          the booking page, so Square's servers see your IP address when that page opens, whether or
+          not you go on to book.</li>
         <li><strong>Our email provider</strong> carries your confirmation email, and the note asking
           for a review, to you &mdash; and the booking alert to the office.</li>
-        <li><strong>Google Fonts</strong> serves the typefaces this site is set in, which means
-          Google's servers see your IP address when the page loads. That happens on most of the web;
-          we mention it because it's true.</li>
       </ul>
       <p>The park also publishes a calendar feed for each site so listing sites like RoverPass don't
       offer a site that's already booked. Those feeds contain <strong>dates only</strong> &mdash; no
