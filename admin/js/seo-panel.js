@@ -49,6 +49,7 @@ async function load() {
     descriptions: Object.fromEntries(data.pages.map((p) => [p.target, p.isCustom ? p.description : ""])),
     sharePhotoId: data.sharePhotoId,
     indexing: data.indexing,
+    googleVerification: data.googleVerification ?? "",
   };
   render();
 }
@@ -86,6 +87,18 @@ function render() {
       <input type="checkbox" id="seo-indexing" ${draft.indexing ? "checked" : ""} style="width:auto; margin:0;" />
       <span>Let search engines find this site</span>
     </label>
+
+    <h3 style="margin:0 0 4px;">Google Search Console</h3>
+    <div class="sub" style="margin-bottom:10px;">Search Console tells you what people typed into Google before they landed here &mdash; it's the only way to know whether any of this is working. It sets no cookies and adds no script to the site. In Search Console choose <b>HTML tag</b> verification and paste what it gives you below; the whole <code>&lt;meta&gt;</code> tag is fine, you don't need to pick the code out of it.</div>
+    <div class="field" style="margin-bottom:26px;">
+      <label for="seo-gsc">Verification code</label>
+      <input type="text" id="seo-gsc" placeholder="paste the meta tag or just the code" value="${escapeHtml(draft.googleVerification)}" />
+      <p class="sub" style="margin:5px 0 0;">${
+        draft.googleVerification
+          ? "In place. Leave it here &mdash; Google re-checks it, and removing it un-verifies the site."
+          : "Not set. Nothing is being reported to you yet."
+      }</p>
+    </div>
 
     <h3 style="margin:0 0 4px;">Photo for shared links</h3>
     <div class="sub" style="margin-bottom:10px;">Used whenever a link to the park is posted to Facebook or sent in a message. It gets cropped to a wide banner automatically, so a photo with its subject near the middle works best.</div>
@@ -195,6 +208,10 @@ function wire() {
     });
   });
 
+  document.getElementById("seo-gsc").addEventListener("input", (e) => {
+    draft.googleVerification = e.target.value;
+  });
+
   panel.querySelectorAll("[data-seo-reset]").forEach((el) => {
     el.addEventListener("click", () => {
       draft.descriptions[el.dataset.seoReset] = "";
@@ -228,6 +245,7 @@ async function save() {
         ),
         sharePhotoId: draft.sharePhotoId,
         indexing: draft.indexing,
+        googleVerification: draft.googleVerification.trim() || null,
       }),
     });
     if (!res.ok) {

@@ -101,6 +101,10 @@ export const PAGES = {
 export const DESC_PREFIX = "desc:";
 export const KEY_INDEXING = "indexing";
 export const KEY_SHARE_PHOTO = "share_photo_id";
+/* Google Search Console's HTML-tag verification. Held here rather than in an env var because the
+ * point is that the office can do it without a deploy -- verification is the gate on ever knowing
+ * whether any of this SEO work paid off, and it should not be waiting on an engineer. */
+export const KEY_GOOGLE_VERIFICATION = "google_site_verification";
 
 export const esc = (s) =>
   String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -193,6 +197,7 @@ export async function snapshot() {
       [...set].filter(([k]) => k.startsWith(DESC_PREFIX)).map(([k, v]) => [k.slice(DESC_PREFIX.length), v])
     );
     value.indexing = set.get(KEY_INDEXING) !== "off";
+    value.googleVerification = set.get(KEY_GOOGLE_VERIFICATION) || null;
     /* A chosen share photo only counts while that photo still exists -- deleting it from the
        Photos panel must not leave the share card pointing at a missing row and falling all the way
        back to the brand graphic without anyone noticing. */
@@ -358,6 +363,14 @@ export function headBlock(target, html, snap) {
   const image = `${ORIGIN}${ogImagePath(snap)}`;
   const description = descriptionFor(target, snap);
 
+  /* Search Console's proof of ownership. Emitted on every indexable page rather than only the
+     homepage: Google checks whichever URL the property was added as, and somebody adding
+     https://.../hours.html by mistake should still be able to verify rather than be told the tag
+     is missing. It carries no data and identifies nobody. */
+  const verification = snap?.googleVerification
+    ? [`<meta name="google-site-verification" content="${esc(snap.googleVerification)}" />`]
+    : [];
+
   /* The indexing switch is off. Say so on the page as well as in robots.txt: robots.txt asks a
      crawler not to FETCH a URL, which is not the same as asking it not to LIST one -- a page
      linked from elsewhere can appear in results on the strength of the link alone, with no
@@ -365,6 +378,7 @@ export function headBlock(target, html, snap) {
      a link shared in a message should still preview properly while the site is hidden. */
   const tags = [
     ...icons,
+    ...verification,
     ...(snap && snap.indexing === false
       ? [`<meta name="robots" content="noindex, nofollow" />`]
       : []),

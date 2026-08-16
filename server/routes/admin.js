@@ -22,6 +22,7 @@ import {
   DESC_PREFIX,
   KEY_INDEXING,
   KEY_SHARE_PHOTO,
+  KEY_GOOGLE_VERIFICATION,
   ORIGIN,
   descriptionFor,
   titleOf,
@@ -1252,6 +1253,7 @@ router.get("/seo", async (req, res, next) => {
     res.json({
       origin: ORIGIN,
       indexing: set.get(KEY_INDEXING) !== "off",
+      googleVerification: set.get(KEY_GOOGLE_VERIFICATION) || "",
       sharePhotoId: snap?.sharePhotoId ?? null,
       // Whether that id is a choice or just the default, so the panel can say which.
       sharePhotoIsExplicit: set.has(KEY_SHARE_PHOTO),
@@ -1279,7 +1281,7 @@ router.get("/seo", async (req, res, next) => {
    description sent empty is a RESET -- the row is deleted and the built-in default takes over
    again, which is why an absent row has to mean "default" rather than "blank". */
 router.put("/seo", async (req, res, next) => {
-  const { descriptions, sharePhotoId, indexing } = req.body ?? {};
+  const { descriptions, sharePhotoId, indexing, googleVerification } = req.body ?? {};
   const writes = [];
 
   if (descriptions !== undefined) {
@@ -1318,6 +1320,26 @@ router.put("/seo", async (req, res, next) => {
   if (indexing !== undefined) {
     if (typeof indexing !== "boolean") return res.status(400).json({ error: "indexing must be true or false" });
     writes.push([KEY_INDEXING, indexing ? "on" : "off"]);
+  }
+
+  if (googleVerification !== undefined) {
+    if (googleVerification !== null && typeof googleVerification !== "string") {
+      return res.status(400).json({ error: "The verification code must be text" });
+    }
+    let token = (googleVerification ?? "").trim();
+    /* Google hands you a whole <meta> tag and tells you to paste it into your HTML, so that is
+       what people copy. Pull the content out rather than rejecting it and making them edit a tag
+       by hand -- this is the step that decides whether the park ever gets Search Console at all. */
+    if (/google-site-verification/i.test(token)) {
+      const content = /content=["']([^"']+)["']/i.exec(token);
+      if (content) token = content[1].trim();
+    }
+    if (token && !/^[A-Za-z0-9_-]{10,128}$/.test(token)) {
+      return res.status(400).json({
+        error: "That doesn't look like a verification code. Paste either the code itself or the whole <meta> tag Google gives you.",
+      });
+    }
+    writes.push([KEY_GOOGLE_VERIFICATION, token || null]);
   }
 
   try {
