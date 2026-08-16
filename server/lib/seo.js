@@ -74,6 +74,14 @@ export const PAGES = {
     changefreq: "monthly",
     priority: "0.6",
   },
+  "/monthly-stays.html": {
+    canonical: "/monthly-stays.html",
+    desc:
+      "Monthly RV sites in Bandera, Texas. 60 ft back-in pads, 30/50 amp, full hookups, and a " +
+      "small settled park seven minutes from town. See what's open.",
+    changefreq: "monthly",
+    priority: "0.8",
+  },
   "/privacy.html": {
     canonical: "/privacy.html",
     // Moved here verbatim from the file's own <meta name="description"> so there is one copy.

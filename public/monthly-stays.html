@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Monthly RV Sites in Bandera — Bandera Wagon Wheel RV Park</title>
+<!-- Description, canonical and og: tags are injected before </head> from PAGES in
+     server/lib/seo.js, same as every other page. -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=Zilla+Slab:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/css/style.css" />
+<style>
+  /* Long-form, same measure as the privacy page -- this is something a person reads end to end
+     before deciding to move their home onto a pad for a month. */
+  .longform{max-width:680px; margin:0 auto; padding:0 24px 90px;}
+  .longform h2{font-size:23px; margin:38px 0 10px;}
+  .longform p{line-height:1.72; margin:0 0 14px;}
+  .longform ul{line-height:1.72; padding-left:20px; margin:0 0 14px;}
+  .longform li{margin-bottom:7px;}
+  .longform .lead{font-size:17.5px; line-height:1.65; color:var(--parchment);}
+  .longform .callout{background:var(--bg-panel-2); border:1px solid var(--line);
+    border-radius:var(--radius); padding:16px 20px; margin:0 0 20px;}
+  .longform .callout p:last-child{margin:0;}
+  .longform .btn-row{margin-top:26px;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="/">
+    <svg class="brand-wheel" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="5"/>
+      <circle cx="50" cy="50" r="10" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="5">
+        <line x1="50" y1="4" x2="50" y2="96"/>
+        <line x1="4" y1="50" x2="96" y2="50"/>
+        <line x1="16.6" y1="16.6" x2="83.4" y2="83.4"/>
+        <line x1="83.4" y1="16.6" x2="16.6" y2="83.4"/>
+      </g>
+    </svg>
+    <span>Wagon Wheel RV</span>
+  </a>
+  <div class="links">
+    <a href="/#about">About</a>
+    <a href="/#gallery">Gallery</a>
+    <a href="/hours.html">Hours</a>
+    <a href="/#contact">Contact</a>
+  </div>
+  <a href="/#booking" class="cta">Book now</a>
+</nav>
+
+<div class="wrap">
+  <section class="section-pad">
+    <div class="section-head">
+      <div class="eyebrow">Monthly stays</div>
+      <h2>Monthly RV sites in Bandera, Texas</h2>
+    </div>
+
+    <div class="longform">
+      <p class="lead">Most of the Wagon Wheel is people staying a while. Seven of the twelve pads
+      are taken by long-term residents, so if you're looking for somewhere to park a rig for a month
+      or several, you'd be joining a small, settled park rather than a holiday campground that
+      empties out on Sunday night.</p>
+
+      <h2>What a month costs</h2>
+      <!-- Rendered from the sites table -- see server/lib/ssr.js. The office edits rates in /admin
+           and this follows; a figure typed in here would be wrong within a season. -->
+      <div data-ssr="monthly-rates"></div>
+      <p>Rates vary by site because the sites do. The higher end is Site 2, which comes with a
+      cover, a carport, a concrete slab and private storage. Some sites are let by the month only.
+      Pick your dates on the <a href="/#booking">booking page</a> and you'll see exactly what each
+      available site costs for your stay, with no estimate and no fee added at the end.</p>
+
+      <div class="callout">
+        <!-- Rendered from the same constants the guest confirmation email uses, so the two can
+             never drift apart. -->
+        <div data-ssr="electric-terms"></div>
+      </div>
+
+      <h2>How the monthly rate actually works</h2>
+      <p>No stay costs more than the site's monthly rate, per month. If you book a stretch that
+      would otherwise add up to more than a month's rent, you're charged the month instead &mdash;
+      so a long fortnight and a full month can cost the same thing. Stays longer than a month are
+      billed by the month, with the remainder charged the normal way.</p>
+      <p>One consequence worth knowing before you book: because the cap can be reached by a shorter
+      stay, a booking that hits it is on monthly terms for everything else too, including how
+      electric is settled and what cancelling costs. The full terms are on the
+      <a href="/hours.html">office hours and policies page</a>.</p>
+
+      <h2>What's on the site</h2>
+      <p>Every pad is 60 feet and takes 30 and 50 amp service. All of them are back-in &mdash;
+      there are no pull-throughs here, which is worth knowing if you're arriving in something long
+      after dark. Full hookups are ready when you pull in.</p>
+      <!-- The amenity list, from the same rows the homepage grid is built from. -->
+      <div class="amenities-grid" data-ssr="amenities"></div>
+
+      <h2>On higher ground</h2>
+      <p>The whole property sits outside the FEMA 100-year floodplain. In the Hill Country that is
+      not a small thing, and it matters more the longer you stay: a hard rain means a view of the
+      Medina River running high rather than a 2am scramble to hitch up and move your rig.</p>
+
+      <h2>The paperwork</h2>
+      <p>The booking form doubles as the park's own guest application &mdash; the same questions the
+      office has always asked on paper. Filling it in online is pre-filling, not paperwork: every
+      question below your contact details is optional, and you can finish it with us at check-in
+      exactly as you always would. Doing it in advance just means less time at the desk when you
+      arrive. What we do with any of it is set out on the <a href="/privacy.html">privacy page</a>.</p>
+
+      <h2>Where you'd be</h2>
+      <p>325 Polly Peak Dr, seven minutes from downtown Bandera &mdash; close enough that the shops,
+      the honky-tonks and the Frontier Times Museum are a short drive, far enough out that the
+      evenings stay quiet. The managers live on site, so there's almost always someone about.</p>
+
+      <h2>Availability</h2>
+      <p>With most pads on long-term residents, there are usually only a handful of sites open at
+      any one time, and monthly availability moves slowly. The booking page shows exactly what's
+      free for your dates &mdash; if nothing is, it's worth a phone call to
+      <a href="tel:+18308500805">(830) 850-0805</a>, because the office knows what's coming up
+      before the calendar does.</p>
+
+      <div class="btn-row">
+        <a href="/#booking" class="btn btn-primary">Check availability</a>
+        <a href="/hours.html" class="btn btn-ghost">Rates &amp; policies</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer id="contact">
+  <strong>Bandera Wagon Wheel RV Park</strong> &middot; 325 Polly Peak Dr, Bandera, TX 78003<br>
+  (830) 850-0805 &middot; banderawagonwheelrv@gmail.com<br>
+  <a href="/monthly-stays.html">Monthly stays</a> &middot; <a href="/hours.html">Office hours &amp; policies</a> &middot; <a href="/privacy.html">Privacy</a>
+</footer>
+
+<script src="/js/content.js"></script>
+</body>
+</html>

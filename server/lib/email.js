@@ -117,8 +117,10 @@ function cancelSentence(r) {
    has to say so plainly rather than leaving them to find it on the website. Same monthlyRateApplied
    flag as the cancellation terms, so a short stay that only reached the cap is covered too
    (confirmed by the park 2026-08-12). */
-const ELECTRIC_LEAD = "Electric is not included in the monthly rate.";
-const ELECTRIC_DETAIL = "It's read at the meter and settled separately at the office.";
+/* Exported because /monthly-stays.html states this too, and it is stated in enough places already
+   that a sixth hand-typed copy would be the one that drifts. See the note in CLAUDE.md. */
+export const ELECTRIC_LEAD = "Electric is not included in the monthly rate.";
+export const ELECTRIC_DETAIL = "It's read at the meter and settled separately at the office.";
 
 export function guestConfirmation(reservation) {
   const r = reservation;

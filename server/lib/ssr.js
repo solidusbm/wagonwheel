@@ -1,4 +1,5 @@
 import { esc } from "./seo.js";
+import { ELECTRIC_LEAD, ELECTRIC_DETAIL } from "./email.js";
 
 /* Server-rendered page content -- plan item 1.3, "put the facts in the HTML, not just the
  * JavaScript".
@@ -133,11 +134,35 @@ function ratesHtml(snap) {
         <a href="/#booking">booking page</a> to see what each available site costs for your stay.</p>`;
 }
 
+/* The monthly figure on its own, for /monthly-stays.html. Same source as the three-term panel on
+ * /hours.html -- a page about monthly stays that quoted a nightly rate would just be noise. */
+function monthlyRatesHtml(snap) {
+  if (!snap?.monthLow) return null;
+  const range = snap.monthLow === snap.monthHigh ? money(snap.monthLow) : `${money(snap.monthLow)}–${money(snap.monthHigh)}`;
+  return `
+      <div class="stat-list" style="grid-template-columns:1fr; margin-bottom:18px;">
+        <div class="stat">
+          <div class="n">${range}</div>
+          <div class="l">Per month, depending on the site</div>
+        </div>
+      </div>`;
+}
+
+/* Straight from the constants the guest confirmation email uses. This claim is made in six places
+ * now and they must not drift -- see the note in CLAUDE.md -- so the sixth reads the same string
+ * the others do rather than restating it. */
+function electricTermsHtml() {
+  return `<p><strong>${esc(ELECTRIC_LEAD)}</strong> ${esc(ELECTRIC_DETAIL)}
+        Nightly and weekly rates do include it.</p>`;
+}
+
 const RENDERERS = {
   amenities: amenitiesHtml,
   gallery: galleryHtml,
   "gallery-all": galleryAllHtml,
   rates: ratesHtml,
+  "monthly-rates": monthlyRatesHtml,
+  "electric-terms": electricTermsHtml,
 };
 
 /* Fills every empty element carrying data-ssr="<name>". The containers ARE empty in the source --
