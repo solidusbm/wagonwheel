@@ -8,7 +8,8 @@ import adminRouter from "./routes/admin.js";
 import calendarRouter from "./routes/calendar.js";
 import photosRouter from "./routes/photos.js";
 import seoRouter from "./routes/seo.js";
-import { headBlock, snapshot } from "./lib/seo.js";
+import { applyHead, snapshot } from "./lib/seo.js";
+import { applyBody } from "./lib/ssr.js";
 import { adminAuth } from "./middleware/adminAuth.js";
 import { makeAssetVersioner } from "./lib/assetVersion.js";
 import { styleGalleryCors } from "./middleware/styleGalleryCors.js";
@@ -73,13 +74,17 @@ app.use(photosRouter);
 // file of the same name in public/ could never shadow the generated one.
 app.use(seoRouter);
 
-/* The guest pages get their <head> completed here -- canonical, description, og:/twitter: tags and
-   the homepage's JSON-LD, built in lib/seo.js from the same rows the booking page reads. The admin
-   versioner above deliberately gets no injector: /admin is Basic-Auth'd and must never be
-   described to a crawler. */
-app.use(makeAssetVersioner(publicDir, resolveAsset, async (target, html) =>
-  headBlock(target, html, await snapshot())
-));
+/* The guest pages are completed here, from one read of the database: the <head> gets its canonical,
+   description, og:/twitter: tags and the homepage's JSON-LD (lib/seo.js), and the body gets its
+   amenity grid, photo grid and rates panel rendered into the data-ssr containers (lib/ssr.js).
+   One snapshot feeds both, so the structured data and the visible page always agree.
+
+   The admin versioner above deliberately gets no transform: /admin is Basic-Auth'd and must never
+   be described to a crawler. */
+app.use(makeAssetVersioner(publicDir, resolveAsset, async (target, html) => {
+  const snap = await snapshot();
+  return applyBody(applyHead(target, html, snap), snap);
+}));
 app.use(express.static(publicDir));
 
 /* Anything that reaches here is a URL nothing served. Express's default is a bare

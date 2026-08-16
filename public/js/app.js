@@ -65,79 +65,15 @@ async function init() {
     return null;
   });
 
-  loadParkAmenities();
-  loadHomepagePhotos();
   renderTrail();
 }
 
-/* Gallery photos all come from /admin -> Photos (DB-backed); those flagged "show on homepage" fill
-   this grid. Requested at ?w=640 -- the originals came to 8.40MB across 15 photos, which is a
-   spinner rather than a homepage on Hill Country cellular.
-
-   The grid used to also contain two hardcoded illustrations of the Medina River and downtown,
-   captioned "Placeholder" to guests. They were the stand-in from before there were real photos;
-   there are 18 now, and the Nearby section covers both subjects in words. */
-async function loadHomepagePhotos() {
-  try {
-    const res = await fetch("/api/photos");
-    const photos = res.ok ? await res.json() : [];
-    const homepagePhotos = photos.filter((p) => p.showOnHomepage);
-    if (homepagePhotos.length === 0) return;
-    const grid = document.getElementById("gallery-grid");
-    grid.insertAdjacentHTML(
-      "afterbegin",
-      homepagePhotos
-        .map(
-          (p) => `
-      <figure>
-        <img src="/photos/${p.id}/image?w=640" alt="${escapeHtml(p.caption ?? "Wagon Wheel RV Park photo")}" loading="lazy" />
-        ${p.caption ? `<figcaption><b>${escapeHtml(p.caption)}</b></figcaption>` : ""}
-      </figure>`
-        )
-        .join("")
-    );
-  } catch (err) {
-    console.error("Failed to load homepage photos", err);
-  }
-}
-
-/* ---------- park-wide amenities ("what every site includes") ----------
-   Curated icons for the amenities known at build time; anything added later from
-   /admin's "Park amenities" panel falls back to DEFAULT_AMENITY_ICON. */
-const PARK_AMENITY_ICONS = {
-  "Water hookup": '<path d="M12 3c3 4 6 7 6 11a6 6 0 1 1-12 0c0-4 3-7 6-11z"/>',
-  "30/50 amp electric": '<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>',
-  "Wastewater hookup": '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
-  "Pet friendly": '<circle cx="12" cy="14" r="4"/><circle cx="6" cy="7" r="2"/><circle cx="18" cy="7" r="2"/><circle cx="9" cy="5" r="1.6"/><circle cx="15" cy="5" r="1.6"/>',
-  "Management on-site": '<path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/>',
-  "Trash service": '<path d="M4 7h16l-1.5 13a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2L4 7zM9 7V4h6v3"/>',
-  "New high-speed WiFi": '<path d="M5 12.5a11 11 0 0 1 14 0M8 16a6.5 6.5 0 0 1 8 0M12 19.5h.01"/>',
-  "Laundry on site": '<path d="M4 4h16v16H4zM4 12h16M9 4v16"/>',
-  "Keyless entry": '<rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
-  Showers: '<path d="M4 4v6a8 8 0 0 0 16 0V4M4 4h16M9 20h6"/>',
-  "Dog park — large & small": '<circle cx="12" cy="14" r="4"/><circle cx="6" cy="7" r="2"/><circle cx="18" cy="7" r="2"/><circle cx="9" cy="5" r="1.6"/><circle cx="15" cy="5" r="1.6"/>',
-  "10% military discount — active or retired": '<path d="M12 2 4 7v6c0 5 3.4 7.4 8 9 4.6-1.6 8-4 8-9V7l-8-5z"/>',
-};
-const DEFAULT_AMENITY_ICON = '<path d="M20 6 9 17l-5-5"/>';
-
-async function loadParkAmenities() {
-  const grid = document.getElementById("amenities-grid");
-  try {
-    const res = await fetch("/api/homepage-amenities");
-    const list = res.ok ? await res.json() : [];
-    grid.innerHTML = list
-      .map(
-        (a) => `
-      <div class="amenity">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${PARK_AMENITY_ICONS[a.name] ?? DEFAULT_AMENITY_ICON}</svg>
-        <div class="t">${escapeHtml(a.name)}</div>
-      </div>`
-      )
-      .join("");
-  } catch (err) {
-    console.error("Failed to load amenities", err);
-  }
-}
+/* The homepage's photo grid and amenity grid are rendered by the SERVER now, into their
+   data-ssr containers -- see server/lib/ssr.js. They used to be fetched and drawn here, from
+   /api/photos and /api/homepage-amenities, which meant anything that doesn't run scripts saw two
+   empty <div>s where the park describes itself, and every visitor paid two round-trips for markup
+   the server could have sent in the first place. The curated amenity icon map moved with them.
+   Don't reintroduce a client-side render of either: two copies of one template is what rots. */
 
 function loadSquareSdk(environment) {
   return new Promise((resolve, reject) => {

@@ -88,7 +88,7 @@ export const PAGES = {
   "/404.html": { index: false },
 };
 
-const esc = (s) =>
+export const esc = (s) =>
   String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /* ---------------------------------------------------------------------------------------------
@@ -100,7 +100,12 @@ const esc = (s) =>
  * minutes. Any failure degrades to null -- the page still serves, just without structured data.
  * Never let this throw into the request path.
  * ------------------------------------------------------------------------------------------- */
-const SNAPSHOT_TTL_MS = 5 * 60 * 1000;
+/* A minute, not the five it started at. This snapshot no longer feeds only the structured data --
+ * the amenity grid, the photo grid and the rates panel are rendered from it too (lib/ssr.js), so
+ * the TTL is now how long an /admin edit takes to reach the visible page. A minute keeps that
+ * close to the instant reload the office had when those grids were fetched by the browser, and
+ * still costs at most three queries a minute. */
+const SNAPSHOT_TTL_MS = 60 * 1000;
 /* A failure is cached too, for much less time. Caching only successes looks harmless and isn't:
  * with the database down, every single page view would re-run three queries against it and log a
  * warning -- turning a degraded site into a busy one, and burying the real error in a log nobody
@@ -113,46 +118,55 @@ export async function snapshot() {
   const ttl = snapshotCache.value ? SNAPSHOT_TTL_MS : FAILURE_TTL_MS;
   if (snapshotCache.at && Date.now() - snapshotCache.at < ttl) return snapshotCache.value;
   try {
-    const [rates, amenities, photo] = await Promise.all([
-      /* Only sites that are actually sold: `active`, not carrying a long-term resident, and with
-         at least one rate. The price range advertised to Google has to be a range a guest can
-         actually book -- a permanently occupied site's rate is not on offer to anybody. */
+    const [rates, amenities, photos] = await Promise.all([
+      /* Only sites that are actually sold: `active` and not carrying a long-term resident. The
+         range shown to a guest, and to Google, has to be one somebody can actually book -- a
+         permanently occupied site's rate is not on offer to anybody.
+
+         Per term rather than one overall range, because the rates panel on /hours.html quotes
+         each term separately. Postgres MIN/MAX ignore NULLs, which is exactly the behaviour
+         wanted here: NULL means "this site isn't sold by that term" (Site 1 is monthly-only), so
+         a term nobody sells comes back NULL and is dropped rather than shown as zero. */
       pool.query(
-        `SELECT MIN(LEAST(
-                  COALESCE(price_per_night_cents, 2147483647),
-                  COALESCE(price_per_week_cents,  2147483647),
-                  COALESCE(price_per_month_cents, 2147483647))) AS low,
-                MAX(GREATEST(
-                  COALESCE(price_per_night_cents, 0),
-                  COALESCE(price_per_week_cents,  0),
-                  COALESCE(price_per_month_cents, 0)))          AS high
+        `SELECT MIN(price_per_night_cents) AS night_low, MAX(price_per_night_cents) AS night_high,
+                MIN(price_per_week_cents)  AS week_low,  MAX(price_per_week_cents)  AS week_high,
+                MIN(price_per_month_cents) AS month_low, MAX(price_per_month_cents) AS month_high
            FROM sites
-          WHERE active AND NOT permanently_occupied
-            AND (price_per_night_cents IS NOT NULL
-              OR price_per_week_cents  IS NOT NULL
-              OR price_per_month_cents IS NOT NULL)`
+          WHERE active AND NOT permanently_occupied`
       ),
       pool.query(
         `SELECT name FROM amenities WHERE active AND show_on_homepage ORDER BY sort_order, name`
       ),
-      /* The share card is cut from the photo that leads the homepage grid, so the picture on a
+      /* Every photo, in the order /admin put them in: /gallery.html shows the lot and the homepage
+         shows the show_on_homepage subset, which is cheaper to filter here than to ask for twice.
+         The first of the homepage set is also what the share card is cut from, so the picture on a
          Facebook post is the picture at the top of the site. */
       pool.query(
-        `SELECT id FROM photos WHERE show_on_homepage ORDER BY sort_order, created_at LIMIT 1`
+        `SELECT id, caption, show_on_homepage FROM photos ORDER BY sort_order, created_at`
       ),
     ]);
     const r = rates.rows[0] ?? {};
-    const low = Number(r.low);
-    const high = Number(r.high);
-    snapshotCache = {
-      at: Date.now(),
-      value: {
-        priceLow: Number.isFinite(low) && low > 0 && low < 2147483647 ? low : null,
-        priceHigh: Number.isFinite(high) && high > 0 ? high : null,
-        amenities: amenities.rows.map((a) => a.name),
-        photoId: photo.rows[0]?.id ?? null,
-      },
+    const num = (v) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : null);
+    const value = {
+      nightLow: num(r.night_low),
+      nightHigh: num(r.night_high),
+      weekLow: num(r.week_low),
+      weekHigh: num(r.week_high),
+      monthLow: num(r.month_low),
+      monthHigh: num(r.month_high),
+      amenities: amenities.rows.map((a) => a.name),
+      allPhotos: photos.rows.map((p) => ({ id: p.id, caption: p.caption })),
+      photos: photos.rows
+        .filter((p) => p.show_on_homepage)
+        .map((p) => ({ id: p.id, caption: p.caption })),
     };
+    value.photoId = value.photos[0]?.id ?? null;
+    // What schema.org's priceRange wants is the span of the whole offering, across every term.
+    const lows = [value.nightLow, value.weekLow, value.monthLow].filter(Boolean);
+    const highs = [value.nightHigh, value.weekHigh, value.monthHigh].filter(Boolean);
+    value.priceLow = lows.length ? Math.min(...lows) : null;
+    value.priceHigh = highs.length ? Math.max(...highs) : null;
+    snapshotCache = { at: Date.now(), value };
   } catch (err) {
     console.warn("[seo] could not read the database for structured data:", err.message);
     snapshotCache = { at: Date.now(), value: null };
@@ -291,12 +305,24 @@ export function headBlock(target, html, snap) {
   ];
 
   if (page.jsonLd) {
+    /* Built from the same snapshot the visible page is rendered from (lib/ssr.js), so the rates
+       in the markup and the rates in the structured data cannot disagree. */
     /* JSON.stringify cannot produce "</script>", but it can produce a literal "<" -- escaping it
        is what stops a stray character in an amenity name from closing the tag early. */
     const json = JSON.stringify(parkJsonLd(snap)).replace(/</g, "\\u003c");
     tags.push(`<script type="application/ld+json">${json}</script>`);
   }
   return tags.join("\n");
+}
+
+/** Splices the head block into a page. Kept beside headBlock so callers deal in whole pages. */
+export function applyHead(target, html, snap) {
+  const extra = headBlock(target, html, snap);
+  if (!extra) return html;
+  /* A function replacement, not a string one: the block contains dollar signs (the JSON-LD price
+     range is "$45-$650") and a string replacement reads $& and $' as substitution patterns, which
+     would splice fragments of the page into its own <head>. */
+  return html.replace("</head>", () => `${extra}\n</head>`);
 }
 
 export function sitemapXml() {

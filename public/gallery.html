@@ -48,8 +48,10 @@
       <p>Every photo we've got of the park, in one place.</p>
     </div>
 
-    <div class="full-gallery" id="full-gallery"></div>
-    <p class="empty-note" id="full-gallery-empty" hidden style="color:var(--parchment-dim); font-style:italic;">No photos uploaded yet.</p>
+    <!-- Rendered server-side from the photos table -- see server/lib/ssr.js. It used to be fetched
+         and drawn by the inline script below, which meant this page, which is nothing but
+         photographs, was completely empty to anything that doesn't run scripts. -->
+    <div data-ssr="gallery-all"></div>
 
     <div class="btn-row" style="justify-content:center; margin-top:32px;">
       <a href="/" class="btn btn-ghost">← Back home</a>
@@ -64,34 +66,6 @@
   <a href="/hours.html">Office hours &amp; policies</a> &middot; <a href="/privacy.html">Privacy</a>
 </footer>
 
-<script>
-  function escapeHtml(str) {
-    return String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  }
-
-  fetch("/api/photos")
-    .then((r) => (r.ok ? r.json() : []))
-    .then((photos) => {
-      if (photos.length === 0) {
-        document.getElementById("full-gallery-empty").hidden = false;
-        return;
-      }
-      const grid = document.getElementById("full-gallery");
-      grid.insertAdjacentHTML(
-        "beforeend",
-        photos
-          .map(
-            (p) => `
-        <figure>
-          <img src="/photos/${p.id}/image" alt="${escapeHtml(p.caption ?? "Wagon Wheel RV Park photo")}" loading="lazy" />
-          ${p.caption ? `<figcaption><b>${escapeHtml(p.caption)}</b></figcaption>` : ""}
-        </figure>`
-          )
-          .join("")
-      );
-    })
-    .catch((err) => console.error("Failed to load gallery photos", err));
-</script>
 <script src="/js/content.js"></script>
 </body>
 </html>

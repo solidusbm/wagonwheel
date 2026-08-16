@@ -26,15 +26,16 @@ const VERSIONED = /(?:href|src)="(\/(?:admin\/)?(?:css|js)\/[a-zA-Z0-9._-]+\.(?:
 /* resolveAsset maps an asset URL, as the browser requests it, to the file that actually serves it.
  * It can't be assumed to sit under this middleware's own root: the admin page is served out of
  * admin/ but links the stylesheet at /css/style.css, which lives in public/. */
-/* `injectHead` is optional: given (target, html) it returns a string to splice in before </head>.
- * It runs per request, OUTSIDE the memoised render below, because what it returns is derived from
- * the database (see lib/seo.js) and the memo here lives for the life of the process -- caching the
- * two together would freeze the park's rates into the structured data at boot. The asset-hash
- * rewrite is still memoised, so the per-request cost is one string replace. */
+/* `transformHtml` is optional: given (target, html) it returns the page to actually send. It runs
+ * per request, OUTSIDE the memoised render below, because what it produces is derived from the
+ * database -- the head tags and structured data in lib/seo.js, the amenity, photo and rate blocks
+ * in lib/ssr.js -- while the memo here lives for the life of the process. Caching the two together
+ * would freeze the park's rates into the markup at boot. The asset-hash rewrite is still memoised,
+ * so the per-request cost is a couple of string replaces. */
 export function makeAssetVersioner(
   rootDir,
   resolveAsset = (urlPath) => path.join(rootDir, urlPath),
-  injectHead = null
+  transformHtml = null
 ) {
   const cache = new Map();
 
@@ -76,17 +77,14 @@ export function makeAssetVersioner(
     let body = render(filePath);
     if (body === null) return next();
 
-    if (injectHead) {
-      /* Never let a <head> tag cost someone a booking: if the database is unreachable or the
-         builder throws, the page still goes out, just without the extra tags. */
+    if (transformHtml) {
+      /* Never let a meta tag or an amenity grid cost someone a booking: if the database is
+         unreachable or a renderer throws, the page still goes out -- as the plain file, which is
+         what it was before any of this existed. */
       try {
-        const extra = await injectHead(target, body);
-        /* Function replacement, not a string one: the injected block contains dollar signs (the
-           JSON-LD price range is "$45-$650"), and a string replacement treats $& and $' as
-           substitution patterns, which would splice fragments of the page into its own <head>. */
-        if (extra) body = body.replace("</head>", () => `${extra}\n</head>`);
+        body = (await transformHtml(target, body)) ?? body;
       } catch (err) {
-        console.warn("[assetVersion] head injection failed for", target, "--", err.message);
+        console.warn("[assetVersion] html transform failed for", target, "--", err.message);
       }
     }
 
