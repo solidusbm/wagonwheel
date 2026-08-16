@@ -136,6 +136,13 @@
     background:var(--bg); border:1px solid rgba(60,42,26,0.18); border-radius:var(--radius);
     padding:12px 14px; overflow-x:auto; white-space:pre; color:var(--parchment-dim); margin:0;}
   .seo-danger{border-left:3px solid var(--rust); background:var(--bg-panel-2); padding:12px 15px; margin:0 0 16px;}
+  .review-status{border-left:3px solid var(--line); background:var(--bg-panel-2); padding:12px 15px; margin:0 0 16px;}
+  .review-status.on{border-left-color:var(--cedar);}
+  .review-status.off{border-left-color:var(--gold);}
+  .review-status p{margin:0; font-size:13.5px;}
+  /* Each field here carries a line of help text under it, which otherwise butts straight into the
+     next field's label and reads as though it belongs to that one instead. */
+  #review-panel .field{margin-bottom:20px;}
   .seo-danger p{margin:0; font-size:13.5px;}
   /* The lead photo is the one guests actually see, so it says so rather than relying on the order. */
   .site-photo-picker .lead{position:absolute; top:5px; right:5px; background:var(--gold); color:var(--btn-text);
@@ -410,6 +417,12 @@
   </details>
 
   <details class="sync-feeds">
+    <summary><h2>Review requests</h2></summary>
+    <div class="sub">A short email to a guest a day or two after they leave, asking for a Google review. Reviews are one of the strongest things there is for getting the park found locally. It goes to <b>everyone</b> who stayed and offers nothing in exchange &mdash; screening for happy guests or paying for reviews is against Google's rules and gets listings penalised. Nothing sends until this is switched on <em>and</em> a review link is saved.</div>
+    <div id="review-panel"><p class="empty-note">Loading&hellip;</p></div>
+  </details>
+
+  <details class="sync-feeds">
     <summary><h2>RoverPass / Hipcamp sync feeds</h2></summary>
     <div class="sub">One iCal feed per site, listing this app's booked dates only (no guest details). Paste a site's URL into RoverPass's or Hipcamp's "import calendar" field once those accounts exist, so a direct booking here blocks the site there too.</div>
     <div id="feed-list"></div>
@@ -435,5 +448,6 @@
 <script type="module" src="/admin/js/admin.js"></script>
 <script type="module" src="/admin/js/push.js"></script>
 <script type="module" src="/admin/js/seo-panel.js"></script>
+<script type="module" src="/admin/js/review-panel.js"></script>
 </body>
 </html>

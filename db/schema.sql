@@ -232,19 +232,36 @@ CREATE TABLE IF NOT EXISTS style_gallery_approvals (
 ALTER TABLE style_gallery_approvals ADD COLUMN IF NOT EXISTS note TEXT NOT NULL DEFAULT '';
 ALTER TABLE style_gallery_approvals ADD COLUMN IF NOT EXISTS dismissed BOOLEAN NOT NULL DEFAULT false;
 
--- Search & sharing settings (the /admin "Search & sharing" panel). Key/value rather than a column
--- per setting because the set grows: today it holds a per-page meta description, the photo the
--- share card is cut from, and the site-wide indexing switch.
+-- General key/value settings for the /admin panels -- the Search & sharing section (per-page meta
+-- description, the photo the share card is cut from, the indexing switch) and the review-request
+-- follow-up. Key/value rather than a column per setting because the set grows.
+--
+-- Introduced as `seo_settings` and renamed once it stopped being only about search. The rename is
+-- guarded so it runs at most once: schema.sql executes on EVERY boot, and a bare ALTER ... RENAME
+-- would fail the whole bootstrap on the second one.
 --
 -- An ABSENT ROW MEANS "use the built-in default" -- the descriptions in PAGES in server/lib/seo.js,
--- the leading homepage photo, indexing on. That is what makes "reset to default" a DELETE rather
--- than a second column recording whether the value was ever set, and it means a page added to
--- PAGES later starts with its code-written description rather than a blank one.
+-- the leading homepage photo, indexing on, review requests off. That is what makes "reset to
+-- default" a DELETE rather than a second column recording whether the value was ever set, and it
+-- means a page added to PAGES later starts with its code-written description rather than a blank.
 --
--- No data defaults seeded here: schema.sql runs on EVERY boot, so an INSERT of default text would
+-- No data defaults seeded here: schema.sql runs on every boot, so an INSERT of default text would
 -- resurrect itself the next time the office cleared a field. See the note above db/seed.sql.
-CREATE TABLE IF NOT EXISTS seo_settings (
+DO $$
+BEGIN
+  IF to_regclass('public.seo_settings') IS NOT NULL AND to_regclass('public.app_settings') IS NULL THEN
+    ALTER TABLE seo_settings RENAME TO app_settings;
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS app_settings (
   key TEXT PRIMARY KEY,
   value TEXT,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- When the park's review-request follow-up was sent for a booking. NULL means never, which is what
+-- makes the job idempotent: it can run every hour, and crash and restart, without a guest ever
+-- getting the same message twice. On the reservation rather than in a side table because there is
+-- exactly one of these per booking and it is a fact about the booking.
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS review_request_sent_at TIMESTAMPTZ;

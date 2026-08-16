@@ -10,6 +10,7 @@ import photosRouter from "./routes/photos.js";
 import seoRouter from "./routes/seo.js";
 import { applyHead, snapshot } from "./lib/seo.js";
 import { applyBody } from "./lib/ssr.js";
+import { startReviewRequestJob } from "./lib/reviewRequest.js";
 import { adminAuth } from "./middleware/adminAuth.js";
 import { makeAssetVersioner } from "./lib/assetVersion.js";
 import { styleGalleryCors } from "./middleware/styleGalleryCors.js";
@@ -164,3 +165,8 @@ try {
 app.listen(port, () => {
   console.log(`Wagon Wheel RV Park server listening on port ${port}`);
 });
+
+/* The review-request follow-up. Started unconditionally because it is inert until the office
+   switches it on in /admin AND supplies a link -- see lib/reviewRequest.js. Started after listen()
+   so a mail problem can never stop the site coming up. */
+startReviewRequestJob();

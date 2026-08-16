@@ -6,7 +6,7 @@ let transporter;
 
 /* Gmail and most relays reject a From that isn't the authenticated mailbox, so fall back to
    SMTP_USER rather than to a made-up address on a domain that doesn't exist. */
-function fromAddress() {
+export function fromAddress() {
   return process.env.SMTP_FROM || process.env.SMTP_USER || "bookings@wagonwheel.local";
 }
 
@@ -53,7 +53,7 @@ export async function sendTestEmail() {
   return { accepted: info.accepted ?? [], messageId: info.messageId ?? null };
 }
 
-function getTransporter() {
+export function getTransporter() {
   if (transporter !== undefined) return transporter;
   if (!process.env.SMTP_HOST) {
     transporter = null;
@@ -75,7 +75,7 @@ function getTransporter() {
 
    The guest WiFi password is deliberately absent. It is not published anywhere guest-facing and
    must not be added without the park explicitly asking. */
-const PARK = {
+export const PARK = {
   name: "Bandera Wagon Wheel RV Park",
   address: "325 Polly Peak Dr, Bandera, TX 78003",
   phone: "(830) 850-0805",

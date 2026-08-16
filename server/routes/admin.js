@@ -7,6 +7,13 @@ import { applySchema, applySeed, applyContentSeed, sitesCount } from "../lib/dbB
 import { mailConfigStatus, sendTestEmail, sendSampleGuestEmail } from "../lib/email.js";
 import { listLocations, refundPayment } from "../lib/square.js";
 import { shrinkImage } from "../lib/imageResize.js";
+import {
+  reviewSettings,
+  blockedReason,
+  reviewEmail,
+  sendDueReviewRequests,
+} from "../lib/reviewRequest.js";
+import { getTransporter, fromAddress } from "../lib/email.js";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -1239,7 +1246,7 @@ function pageTitle(target) {
 router.get("/seo", async (req, res, next) => {
   try {
     const snap = await snapshot();
-    const { rows } = await pool.query("SELECT key, value FROM seo_settings");
+    const { rows } = await pool.query("SELECT key, value FROM app_settings");
     const set = new Map(rows.map((r) => [r.key, r.value]));
 
     res.json({
@@ -1317,10 +1324,10 @@ router.put("/seo", async (req, res, next) => {
     for (const [key, value] of writes) {
       if (value === null) {
         // Delete rather than store a blank: an absent row is what means "use the default".
-        await pool.query("DELETE FROM seo_settings WHERE key = $1", [key]);
+        await pool.query("DELETE FROM app_settings WHERE key = $1", [key]);
       } else {
         await pool.query(
-          `INSERT INTO seo_settings (key, value, updated_at) VALUES ($1, $2, now())
+          `INSERT INTO app_settings (key, value, updated_at) VALUES ($1, $2, now())
              ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
           [key, value]
         );
@@ -1330,6 +1337,136 @@ router.put("/seo", async (req, res, next) => {
        a minute -- and reasonably concludes the save didn't work. */
     invalidateSnapshot();
     res.json({ ok: true, saved: writes.length });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* ---------------------------------------------------------------------------------------------
+ * Review requests (plan item 2.4).
+ *
+ * Off until somebody turns it on AND supplies a link, because the failure mode is mailing real
+ * guests. Both conditions are reported back to the panel so "why has nothing sent?" has a visible
+ * answer rather than needing the log.
+ * ------------------------------------------------------------------------------------------- */
+router.get("/review-requests", async (req, res, next) => {
+  try {
+    const settings = await reviewSettings();
+    const { rows } = await pool.query(
+      `SELECT count(*) FILTER (WHERE review_request_sent_at IS NOT NULL)               AS sent,
+              count(*) FILTER (WHERE review_request_sent_at IS NOT NULL
+                                 AND review_request_sent_at > now() - interval '30 days') AS sent_30d
+         FROM reservations`
+    );
+    const recent = await pool.query(
+      `SELECT reservation_code, guest_name, check_out, review_request_sent_at
+         FROM reservations
+        WHERE review_request_sent_at IS NOT NULL
+        ORDER BY review_request_sent_at DESC
+        LIMIT 10`
+    );
+    res.json({
+      ...settings,
+      blocked: blockedReason(settings),
+      smtpReady: Boolean(getTransporter()),
+      sendingAs: fromAddress(),
+      sentTotal: Number(rows[0].sent),
+      sent30d: Number(rows[0].sent_30d),
+      recent: recent.rows.map((r) => ({
+        code: r.reservation_code,
+        guest: r.guest_name,
+        checkOut: r.check_out,
+        sentAt: r.review_request_sent_at,
+      })),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put("/review-requests", async (req, res, next) => {
+  const { enabled, url, delayDays } = req.body ?? {};
+  try {
+    const before = await reviewSettings();
+    const writes = [];
+
+    if (url !== undefined) {
+      if (url !== null && typeof url !== "string") {
+        return res.status(400).json({ error: "The review link must be text" });
+      }
+      const trimmed = typeof url === "string" ? url.trim() : "";
+      if (trimmed) {
+        /* An http(s) URL and nothing else. This value goes into an email to a real guest -- a
+           typo that turns into a mailto: or a javascript: link is worth refusing outright. */
+        let parsed;
+        try {
+          parsed = new URL(trimmed);
+        } catch {
+          return res.status(400).json({ error: "That doesn't look like a link" });
+        }
+        if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+          return res.status(400).json({ error: "The review link must start with https://" });
+        }
+      }
+      writes.push(["review_url", trimmed || null]);
+    }
+
+    if (delayDays !== undefined) {
+      const n = Number(delayDays);
+      if (!Number.isInteger(n) || n < 0 || n > 30) {
+        return res.status(400).json({ error: "The delay must be a whole number of days, 0 to 30" });
+      }
+      writes.push(["review_delay_days", String(n)]);
+    }
+
+    if (enabled !== undefined) {
+      if (typeof enabled !== "boolean") return res.status(400).json({ error: "enabled must be true or false" });
+      writes.push(["review_enabled", enabled ? "on" : "off"]);
+      /* Stamped on the off -> on transition only. It is the floor on which stays qualify, so
+         re-saving while already on must not move it forward and skip a guest who was due. */
+      if (enabled && !before.enabled) writes.push(["review_enabled_at", new Date().toISOString()]);
+    }
+
+    for (const [key, value] of writes) {
+      if (value === null) {
+        await pool.query("DELETE FROM app_settings WHERE key = $1", [key]);
+      } else {
+        await pool.query(
+          `INSERT INTO app_settings (key, value, updated_at) VALUES ($1, $2, now())
+             ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+          [key, value]
+        );
+      }
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* Sends the real template to ADMIN_EMAIL, same idea as the guest-confirmation preview: the park
+   can read exactly what a guest gets without waiting for someone to check out. */
+router.post("/review-requests/preview", async (req, res, next) => {
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!adminEmail) return res.status(400).json({ error: "ADMIN_EMAIL is not set - there is nowhere to send it." });
+    const mailer = getTransporter();
+    if (!mailer) return res.status(400).json({ error: "SMTP_HOST is not set - no mail server to send through." });
+    const settings = await reviewSettings();
+    const url = settings.url ?? "https://example.com/your-review-link";
+    const { subject, text, html } = reviewEmail("Sample Guest", "Site 4", url);
+    await mailer.sendMail({ from: fromAddress(), to: adminEmail, subject: `[preview] ${subject}`, text, html });
+    res.json({ ok: true, sentTo: adminEmail, usedPlaceholderLink: !settings.url });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* Runs the job now instead of waiting for the hourly tick. Same code path, same idempotency --
+   this cannot send a guest a second copy. */
+router.post("/review-requests/run", async (req, res, next) => {
+  try {
+    res.json(await sendDueReviewRequests());
   } catch (err) {
     next(err);
   }

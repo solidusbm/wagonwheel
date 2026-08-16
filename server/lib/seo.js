@@ -88,7 +88,7 @@ export const PAGES = {
   "/404.html": { index: false },
 };
 
-/* Keys in the seo_settings table. Descriptions are one key per page, prefixed, so the set grows
+/* Keys in the app_settings table. Descriptions are one key per page, prefixed, so the set grows
  * with PAGES rather than needing a column each. */
 export const DESC_PREFIX = "desc:";
 export const KEY_INDEXING = "indexing";
@@ -149,7 +149,7 @@ export async function snapshot() {
       pool.query(
         `SELECT id, caption, show_on_homepage FROM photos ORDER BY sort_order, created_at`
       ),
-      pool.query(`SELECT key, value FROM seo_settings`),
+      pool.query(`SELECT key, value FROM app_settings`),
     ]);
     const r = rates.rows[0] ?? {};
     const num = (v) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : null);
