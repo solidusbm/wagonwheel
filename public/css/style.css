@@ -125,7 +125,10 @@ a{color:var(--gold);}
 .section-pad{padding:64px 0 8px;}
 .section-head{max-width:640px; margin:0 auto 32px; text-align:center;}
 .section-head .eyebrow{font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;}
-.section-head h2{font-size:32px; margin:0 0 10px;}
+/* h1 and h2 styled identically here on purpose. The heading that names a page is an <h1> -- it was
+   an <h2> on every page but the homepage, which left four pages with no <h1> at all -- and the same
+   slot is still an <h2> on the homepage, where the <h1> is the hero. One rule, no visual change. */
+.section-head h1,.section-head h2{font-size:32px; margin:0 0 10px;}
 .section-head p{color:var(--parchment-dim); font-size:15px; font-style:italic; margin:0;}
 #about .eyebrow{font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;}
 #about h2{font-size:30px; margin:0 0 16px;}
