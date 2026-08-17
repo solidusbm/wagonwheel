@@ -8,6 +8,7 @@ import { mailConfigStatus, sendTestEmail, sendSampleGuestEmail } from "../lib/em
 import { listLocations, refundPayment } from "../lib/square.js";
 import { shrinkImage } from "../lib/imageResize.js";
 import { readLayout, writeLayout, FEATURE_KINDS } from "../lib/parkLayout.js";
+import { readSectionOrder, writeSectionOrder } from "../lib/sectionOrder.js";
 import { draftPosts, KEY_FB_COMPOSE, KEY_GBP_COMPOSE } from "../lib/socialPosts.js";
 import {
   reviewSettings,
@@ -1521,6 +1522,25 @@ router.put("/park-layout", async (req, res, next) => {
     }
     const layout = await writeLayout(raw);
     res.json({ layout });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* ---------- admin section order ----------
+   Which order the office prefers for the collapsible sections below Reservations (Sites, Photos,
+   Amenities, ...) in /admin. Purely a display preference -- reordering here never touches any
+   other data -- so it's a bare array of keys in app_settings, same storage pattern as the park
+   layout above but with no geometry to validate: readSectionOrder/writeSectionOrder already
+   restrict every entry to the known SECTION_KEYS list. */
+router.get("/section-order", async (req, res) => {
+  res.json({ order: await readSectionOrder() });
+});
+
+router.put("/section-order", async (req, res, next) => {
+  try {
+    const order = await writeSectionOrder(req.body?.order);
+    res.json({ order });
   } catch (err) {
     next(err);
   }
