@@ -4,6 +4,17 @@ const money = (cents) => `$${(cents / 100).toFixed(2)}`;
 const escapeHtml = (str) =>
   String(str ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+/* A photo the browser can pick the format for. WebP is a separate URL rather than a negotiated
+   response -- Cloudflare fronts this origin and doesn't honour `Vary`, so a negotiated image can be
+   cached in one format and served to a client that wanted the other. The <img> keeps the JPEG src,
+   so anything ignoring <source> still gets a picture. Mirrors thumb() in server/lib/ssr.js. */
+const photoTag = (id, width, alt, attrs = "") =>
+  `<picture>` +
+  `<source srcset="/photos/${id}/image?w=${width}&amp;f=avif" type="image/avif" />` +
+  `<source srcset="/photos/${id}/image?w=${width}&amp;f=webp" type="image/webp" />` +
+  `<img src="/photos/${id}/image?w=${width}" alt="${alt}"${attrs} />` +
+  `</picture>`;
+
 const STEPS = ["Dates", "Site", "Details & Payment", "Confirmed"];
 
 const state = {
@@ -235,7 +246,7 @@ function openLightbox(site) {
   box.innerHTML = `
     <button type="button" class="lightbox-close" aria-label="Close">&times;</button>
     <figure>
-      <img src="/photos/${site.photo_id}/image?w=640" alt="${escapeHtml(site.name)}" />
+      ${photoTag(site.photo_id, 640, escapeHtml(site.name))}
       <figcaption>${escapeHtml(site.name)} · ${escapeHtml(site.area)}</figcaption>
     </figure>`;
 
@@ -274,7 +285,7 @@ function renderSiteCard(site, nights) {
   const photo = site.photo_id
     ? `<button type="button" class="site-photo" data-photo="${site.photo_id}"
          aria-label="Enlarge the photo of ${escapeHtml(site.name)}">
-         <img src="/photos/${site.photo_id}/image?w=320" alt="${escapeHtml(site.name)}" loading="lazy" />
+         ${photoTag(site.photo_id, 320, escapeHtml(site.name), ' loading="lazy"')}
        </button>`
     : `<div class="site-photo site-photo-none" aria-hidden="true">
          <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="5"/><circle cx="50" cy="50" r="10" fill="currentColor"/><g stroke="currentColor" stroke-width="5"><line x1="50" y1="4" x2="50" y2="96"/><line x1="4" y1="50" x2="96" y2="50"/><line x1="17" y1="17" x2="83" y2="83"/><line x1="17" y1="83" x2="83" y2="17"/></g></svg>

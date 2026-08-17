@@ -58,6 +58,28 @@ function amenitiesHtml(snap) {
     .join("");
 }
 
+/* A thumbnail the browser can pick the format for: AVIF, then WebP, then the JPEG everything
+ * understands. Measured on this park's own homepage photographs, AVIF takes 44% off and WebP 19%.
+ *
+ * Each format is a separate URL (?f=...) rather than a negotiated response -- see the note in
+ * routes/photos.js: Cloudflare sits in front of this origin and does not honour `Vary`, so a
+ * negotiated image could be cached in one format and served to a client that wanted the other.
+ * <picture> puts the choice in the browser, which is the only place that can make it, since this
+ * HTML is rendered before anyone knows who is asking.
+ *
+ * The <img> keeps the JPEG src, so anything that ignores <source> -- an ancient browser, a scraper,
+ * an email client -- still gets a picture. Attributes stay on the <img> because that is the element
+ * that actually loads: alt, loading and fetchpriority on the <source> would do nothing. */
+function thumb(id, alt, attrs = "") {
+  return (
+    `<picture>` +
+    `<source srcset="/photos/${id}/image?w=640&amp;f=avif" type="image/avif" />` +
+    `<source srcset="/photos/${id}/image?w=640&amp;f=webp" type="image/webp" />` +
+    `<img src="/photos/${id}/image?w=640" alt="${alt}"${attrs} />` +
+    `</picture>`
+  );
+}
+
 function galleryHtml(snap) {
   if (!snap?.photos?.length) return null;
   /* ?w=640, as app.js asked for: the originals run to 8.4MB across fifteen photos, which is a
@@ -71,8 +93,7 @@ function galleryHtml(snap) {
       const caption = p.caption ? `<figcaption><b>${esc(p.caption)}</b></figcaption>` : "";
       return (
         `<figure>` +
-        `<img src="/photos/${p.id}/image?w=640" alt="${alt}"` +
-        `${i === 0 ? ' fetchpriority="high"' : ' loading="lazy"'} />` +
+        thumb(p.id, alt, i === 0 ? ' fetchpriority="high"' : ' loading="lazy"') +
         `${caption}</figure>`
       );
     })
@@ -112,7 +133,7 @@ function galleryAllHtml(snap) {
       return (
         `<figure>` +
         `<a href="/photos/${p.id}/image" title="See this photo full size">` +
-        `<img src="/photos/${p.id}/image?w=640" alt="${alt}"${loading} />` +
+        thumb(p.id, alt, loading) +
         `</a>${caption}</figure>`
       );
     })
