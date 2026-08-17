@@ -413,14 +413,40 @@ export function headBlock(target, html, snap) {
   return tags.join("\n");
 }
 
+/* The first `</head>` that is NOT inside an HTML comment.
+ *
+ * This is not hypothetical tidiness. /monthly-stays.html and /privacy.html each carried a comment
+ * explaining that the tags are "injected before </head>" -- and a plain indexOf found THAT one
+ * first, so the entire head block was spliced inside the comment. Every tag on both pages -- the
+ * canonical, the description, all the og: and twitter: tags, and the Google site-verification tag
+ * -- was commented out and invisible to every crawler, on the two pages that most needed them.
+ * Live for a fortnight; found when Facebook's Sharing Debugger inferred an og:image that was
+ * plainly in the source.
+ *
+ * Returns -1 if the page has no usable closing tag, in which case the caller leaves it alone. */
+function headCloseIndex(html) {
+  let from = 0;
+  for (;;) {
+    const at = html.indexOf("</head>", from);
+    if (at === -1) return -1;
+    const open = html.lastIndexOf("<!--", at);
+    const close = html.lastIndexOf("-->", at);
+    // Inside a comment only if a `<!--` precedes it with no `-->` between the two.
+    if (open === -1 || close > open) return at;
+    from = at + 7;
+  }
+}
+
 /** Splices the head block into a page. Kept beside headBlock so callers deal in whole pages. */
 export function applyHead(target, html, snap) {
   const extra = headBlock(target, html, snap);
   if (!extra) return html;
-  /* A function replacement, not a string one: the block contains dollar signs (the JSON-LD price
-     range is "$45-$650") and a string replacement reads $& and $' as substitution patterns, which
-     would splice fragments of the page into its own <head>. */
-  return html.replace("</head>", () => `${extra}\n</head>`);
+  const at = headCloseIndex(html);
+  if (at === -1) return html;
+  /* Spliced by index rather than String.replace: the block contains dollar signs (the JSON-LD
+     price range is "$45-$650") and a string replacement reads $& and $' as substitution patterns,
+     which would put fragments of the page inside its own <head>. */
+  return `${html.slice(0, at)}${extra}\n${html.slice(at)}`;
 }
 
 export function sitemapXml() {
