@@ -439,11 +439,16 @@ function renderSiteMap(sites) {
   // pinned to particular entries in it.
   const gates = openEnds(plan.roads).sort((a, b) => a.y - b.y);
   let gateLabels = "";
+  /* Where the captions sit. They are placed off the road ends automatically, which is right until
+     two of them land on each other -- so each carries an offset in feet, dragged in /admin -> Park
+     map and zero by default. Index-matched to the gates in the order found, north to south. */
+  const nudge = (i) => plan.labelOffsets?.gates?.[i] ?? { dx: 0, dy: 0 };
   gates.forEach((g, i) => {
     const first = i === 0;
+    const o = nudge(i);
     const spec = first
-      ? { text: "ENTRANCE", x: g.x + 4, y: g.y - 24, size: 13, anchor: "end", fill: "var(--gold)" }
-      : { text: "SECOND ACCESS", x: g.x + 6, y: g.y + 8, size: 11, anchor: "start", fill: "var(--parchment-dim)" };
+      ? { text: "ENTRANCE", x: g.x + 4 + o.dx, y: g.y - 24 + o.dy, size: 13, anchor: "end", fill: "var(--gold)" }
+      : { text: "SECOND ACCESS", x: g.x + 6 + o.dx, y: g.y + 8 + o.dy, size: 11, anchor: "start", fill: "var(--parchment-dim)" };
     gateLabels += mapText(spec.x, spec.y, spec.text, {
       size: spec.size,
       fill: spec.fill,
@@ -453,10 +458,11 @@ function renderSiteMap(sites) {
     extent.push(...labelExtent(spec, -bearing));
   });
   if (gates.length) {
+    const so = plan.labelOffsets?.street ?? { dx: 0, dy: 0 };
     const spec = {
       text: "POLLY PEAK DR.",
-      x: Math.max(...gates.map((g) => g.x)) + 96,
-      y: gates.reduce((sum, g) => sum + g.y, 0) / gates.length,
+      x: Math.max(...gates.map((g) => g.x)) + 96 + so.dx,
+      y: gates.reduce((sum, g) => sum + g.y, 0) / gates.length + so.dy,
       size: 11,
       anchor: "middle",
     };
@@ -568,9 +574,11 @@ function mapText(x, y, text, opts = {}) {
    office can invent a feature the app has never heard of, and a missing shed is a better failure
    than a blank map. Fenced areas are dashed and unfilled because that is what a fence looks like
    from above, which saves the label having to say so. */
+/* Two looks, because there are two things to draw: something with walls, and something with a
+   fence round it. The layout's `kind` names the drawing rather than the place -- what a feature
+   IS lives in its label, which is free text. Anything unrecognised draws as a building. */
 const FEATURE_STYLE = {
-  "dog-park-large": { stroke: "var(--cedar-light)", fill: "none", dash: "6 4" },
-  "dog-park-small": { stroke: "var(--cedar-light)", fill: "none", dash: "6 4" },
+  fenced: { stroke: "var(--cedar-light)", fill: "none", dash: "6 4" },
 };
 const FEATURE_STYLE_DEFAULT = { stroke: "var(--gold)", fill: "var(--bg-panel-2)", dash: "" };
 const FEATURE_FIT = 0.62; // monospace glyph width, as a fraction of font size

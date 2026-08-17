@@ -18,16 +18,31 @@ import { PARK_LAYOUT } from "../../public/js/park-layout.js";
 
 export const KEY_PARK_LAYOUT = "park_layout";
 
-/* The building kinds the editor offers. `label` is the default caption -- the office can rename a
- * feature freely, so this is a starting point, not an enum the renderer depends on. `w`/`h` are
- * plausible starting footprints in feet so a newly added building lands at a sensible size and
- * gets dragged, not typed. An unknown kind is still drawn, as a plain labelled box. */
+/* What a feature LOOKS like -- and nothing else. There are two, because there are two drawings:
+ * a solid filled box, and a dashed outline. The name is free text and does the actual work of
+ * saying what a thing is.
+ *
+ * This used to be a list of specific places -- office, bathhouse, dog-park-large, dog-park-small.
+ * That was wrong in two ways. The list could only grow, since every new thing at the park wanted
+ * its own entry despite drawing identically to something already there; and it made the dropdown
+ * a trap, because "Office" sat at the top and picking it for a dog park was a silent mistake that
+ * couldn't be undone without deleting the feature. Naming the choice after the drawing removes
+ * both problems: there are two options, they look like what they say, and either is a fine
+ * starting point because the label carries the meaning. */
 export const FEATURE_KINDS = {
-  office: { label: "Office", w: 45, h: 40 },
-  bathhouse: { label: "Laundry & bathhouse", w: 40, h: 28 },
-  "dog-park-large": { label: "Dog park — large", w: 70, h: 55 },
-  "dog-park-small": { label: "Dog park — small", w: 45, h: 40 },
-  other: { label: "Building", w: 30, h: 24 },
+  building: { label: "Building", w: 40, h: 30 },
+  fenced: { label: "Fenced area", w: 65, h: 50 },
+};
+
+/* The specific kinds that shipped first, mapped onto the two that replaced them. Applied on read,
+ * so a layout saved before this -- including the live one, whose four features were all stored as
+ * "office" -- keeps drawing without anyone re-entering it. */
+const LEGACY_KINDS = {
+  office: "building",
+  bathhouse: "building",
+  other: "building",
+  "dog-park-large": "fenced",
+  "dog-park-small": "fenced",
 };
 
 const num = (v, fallback, lo, hi) => {
@@ -49,6 +64,7 @@ const MAX_FEATURES = 40;
 const MAX_BAYS = 120;
 const MAX_ROADS = 60;
 const MAX_PTS = 40;
+const MAX_GATES = 12;
 
 /** Accepts anything -- a v1 layout with a single `office`, a v2 one with `features`, a half-typed
  *  object from the editor, or junk -- and returns a layout that is safe to draw. */
@@ -65,6 +81,23 @@ export function normalise(raw) {
     features: [],
     bays: [],
     roads: [],
+    /* How far the map's own captions have been nudged from where the renderer puts them, in feet.
+       ENTRANCE, the second way in, and the street name are placed automatically off the road ends,
+       which is right until two of them land on top of each other. Dragging one in the editor
+       stores an offset here; zero means "leave it where it falls".
+
+       Index-matched to the gates in the order the renderer finds them (north to south). Nothing
+       clever -- redraw the roads and the offsets may need re-dragging, which is a second of work
+       and a great deal less machinery than tracking which opening is which. */
+    labelOffsets: {
+      gates: (Array.isArray(src.labelOffsets?.gates) ? src.labelOffsets.gates : [])
+        .slice(0, MAX_GATES)
+        .map((o) => ({ dx: num(o?.dx, 0, -MAX_FT, MAX_FT), dy: num(o?.dy, 0, -MAX_FT, MAX_FT) })),
+      street: {
+        dx: num(src.labelOffsets?.street?.dx, 0, -MAX_FT, MAX_FT),
+        dy: num(src.labelOffsets?.street?.dy, 0, -MAX_FT, MAX_FT),
+      },
+    },
   };
 
   /* v1 -> v2. The old shape carried exactly one building, as `office`, with no label or kind.
@@ -79,8 +112,10 @@ export function normalise(raw) {
   const seenIds = new Set();
   for (const f of rawFeatures.slice(0, MAX_FEATURES)) {
     if (!f || typeof f !== "object") continue;
-    const kind = str(f.kind, "other", 40);
-    const spec = FEATURE_KINDS[kind] ?? FEATURE_KINDS.other;
+    const raw = str(f.kind, "building", 40);
+    // Anything unrecognised draws as a building rather than vanishing or inventing a third look.
+    const kind = FEATURE_KINDS[raw] ? raw : (LEGACY_KINDS[raw] ?? "building");
+    const spec = FEATURE_KINDS[kind];
     /* Ids must be unique -- the editor addresses a feature by id, and two rows sharing one means
        editing either moves whichever the renderer happens to find first. */
     let id = str(f.id, "", 40).replace(/[^a-zA-Z0-9_-]/g, "") || `f${seenIds.size + 1}`;

@@ -259,9 +259,9 @@ function deleteSelected() {
 
 /* ---------- drawing ---------- */
 
+// Keyed on the drawing, not the place -- see FEATURE_KINDS in server/lib/parkLayout.js.
 const FEATURE_STYLE = {
-  "dog-park-large": { stroke: "var(--cedar)", fill: "none", dash: "6 4" },
-  "dog-park-small": { stroke: "var(--cedar)", fill: "none", dash: "6 4" },
+  fenced: { stroke: "var(--cedar)", fill: "none", dash: "6 4" },
 };
 const FEATURE_STYLE_DEFAULT = { stroke: "var(--gold)", fill: "var(--bg-panel)", dash: "" };
 
@@ -386,7 +386,12 @@ function props() {
   box.innerHTML =
     `<p class="map-selname">${escapeHtml(title)}</p>` +
     (isFeature
-      ? `<div class="map-rows"><label for="map-label">Name</label><input type="text" id="map-label" value="${escapeHtml(it.label)}" maxlength="60" /></div>`
+      ? `<div class="map-rows"><label for="map-label">Name</label><input type="text" id="map-label" value="${escapeHtml(it.label)}" maxlength="60" />` +
+        `<label for="map-kind-sel">Draw as</label><select id="map-kind-sel">` +
+        Object.entries(kinds)
+          .map(([k, spec]) => `<option value="${escapeHtml(k)}"${k === it.kind ? " selected" : ""}>${escapeHtml(spec.label)}</option>`)
+          .join("") +
+        `</select></div>`
       : `<div class="map-rows">${numField("map-n", "Site number", it.n)}</div>`) +
     `<div class="map-rows">` +
     numField("map-x", "Left ft", it.x) +
@@ -416,6 +421,17 @@ function props() {
         again.focus();
         again.setSelectionRange(again.value.length, again.value.length);
       }
+    });
+  }
+
+  /* Changing the type of an existing feature. Without this, adding one as the wrong kind meant
+     deleting and re-adding it -- which is exactly what happened to the park's two dog parks. */
+  const kindSel = document.getElementById("map-kind-sel");
+  if (kindSel) {
+    kindSel.addEventListener("change", () => {
+      it.kind = kindSel.value;
+      redraw();
+      status(`Now drawn as a ${(kinds[it.kind]?.label ?? it.kind).toLowerCase()}.`);
     });
   }
 
