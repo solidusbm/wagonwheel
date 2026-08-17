@@ -29,6 +29,26 @@ const DEFAULT_GBP_COMPOSE = "https://business.google.com/posts";
 
 const dollars = (cents) => `$${Math.round(cents / 100)}`;
 
+/* A starting photo for each draft, picked from the homepage set (snap.photos) by matching words
+ * in its caption. This is a GUESS, not a fact -- unlike the text, which is only ever numbers read
+ * straight out of the database, there is no correct photo for a post about the amenities. So the
+ * panel shows whichever one this picks and lets the office change it from a dropdown of the same
+ * list; getting the guess wrong costs one click, not a wrong statement in public.
+ *
+ * Keywords are tried in order and the first match wins, so put anything caption-writers use
+ * loosely (e.g. "site") after anything more specific ("dog park") or the specific photo would
+ * never be reached. Falls back to the first homepage photo -- some picture beats none -- and to
+ * nothing at all if the park has not flagged any photo for the homepage yet. */
+function pickPhoto(snap, keywords) {
+  const photos = snap?.photos ?? [];
+  if (!photos.length) return null;
+  for (const word of keywords) {
+    const hit = photos.find((p) => p.caption?.toLowerCase().includes(word));
+    if (hit) return hit.id;
+  }
+  return photos[0].id;
+}
+
 /** The coming Friday to Sunday. Returns the same weekend all week, and rolls over on Monday.
  *  Exported for its own sake -- the day arithmetic is the part of this file most likely to be
  *  wrong, and it is invisible in the finished draft. */
@@ -112,6 +132,7 @@ export async function draftPosts() {
           `${open} site${open === 1 ? " is" : "s are"} open this weekend at the Wagon Wheel` +
           `${from}. Full hookups, 30 and 50 amp, park-wide WiFi, laundry and showers, ` +
           `seven minutes from downtown Bandera.\n\nBook at ${site}`,
+        photoId: pickPhoto(snap, ["site", "sunset"]),
       });
     } else {
       drafts.push({
@@ -121,6 +142,7 @@ export async function draftPosts() {
         text:
           `We're full this weekend — thank you. If you're planning ahead, the calendar at ` +
           `${site} shows what's open, and we take bookings by the night, the week or the month.`,
+        photoId: pickPhoto(snap, ["sunset", "site"]),
       });
     }
   }
@@ -139,6 +161,7 @@ export async function draftPosts() {
         `laundry and showers. Electric is metered separately on monthly stays.\n\n` +
         `Most of the park is people staying a while — it's a settled place, not a holiday ` +
         `campground that empties out on Sunday night.\n\n${site}/monthly-stays.html`,
+      photoId: pickPhoto(snap, ["site", "office"]),
     });
   }
 
@@ -151,6 +174,7 @@ export async function draftPosts() {
         `What's here at the Wagon Wheel:\n\n` +
         snap.amenities.map((a) => `• ${a}`).join("\n") +
         `\n\nSeven minutes from downtown Bandera. ${site}`,
+      photoId: pickPhoto(snap, ["dog park", "laundry", "bathroom", "shower"]),
     });
   }
 
@@ -159,7 +183,8 @@ export async function draftPosts() {
     label: "Something else",
     note: "Write your own. Nothing here is posted for you either way.",
     text: "",
+    photoId: null,
   });
 
-  return { drafts, links, weekend };
+  return { drafts, links, weekend, photos: snap?.photos ?? [] };
 }

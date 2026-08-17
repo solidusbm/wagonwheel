@@ -1,10 +1,19 @@
 /* Social posts -- drafts written from the park's own data, for a person to publish.
  *
- * It copies text and opens a tab. It does not post anything, and that is deliberate: see the note
- * at the top of server/lib/socialPosts.js before anyone "finishes" this by wiring it to Meta and
- * Google. The short version is that Google gates its Business Profile API behind an approval the
- * park does not control, Facebook page tokens expire in ways that fail silently, and an automatic
- * "three sites open this weekend" can be false within a minute of publishing.
+ * It copies text, suggests a photo, and opens a tab. It does not post anything, and that is
+ * deliberate: see the note at the top of server/lib/socialPosts.js before anyone "finishes" this
+ * by wiring it to Meta and Google. The short version is that Google gates its Business Profile API
+ * behind an approval the park does not control, Facebook page tokens expire in ways that fail
+ * silently, and an automatic "three sites open this weekend" can be false within a minute of
+ * publishing.
+ *
+ * The photo is a GUESS -- picked server-side by matching words in a caption, which has no
+ * guarantee of being right the way the text's numbers do. That's why it is a dropdown over the
+ * whole homepage set rather than a fixed choice: getting it wrong costs the office one click, not
+ * a wrong photo in public. There is no attach-to-post button for the same reason there is no
+ * publish button -- uploading a photo through either platform's API needs the same permissions as
+ * posting text, so it would reopen exactly the problem this panel exists to avoid. Dragging the
+ * thumbnail into the compose window, or opening it full size and saving it, is the whole feature.
  *
  * Its own file rather than more of admin.js, and self-contained rather than importing from it.
  * admin.js is a module loaded by its own <script src>, which the asset versioner stamps with a
@@ -43,8 +52,32 @@ async function load() {
   render();
 }
 
+/** The photo block for one draft: a dropdown over every homepage photo, a thumbnail, and a
+ *  full-size link -- or nothing, if the park hasn't flagged any photo for the homepage yet. */
+function photoBlock(photos, photoId, i) {
+  if (!photos.length) return "";
+  const options =
+    `<option value=""${photoId ? "" : " selected"}>No photo</option>` +
+    photos
+      .map(
+        (p) =>
+          `<option value="${p.id}"${p.id === photoId ? " selected" : ""}>${escapeHtml(p.caption || `Photo ${p.id}`)}</option>`
+      )
+      .join("");
+  const shown = photoId ? "" : ' hidden="hidden"';
+  const alt = escapeHtml(photos.find((p) => p.id === photoId)?.caption || "");
+  return `
+        <div class="social-photo">
+          <select id="photo-sel-${i}" aria-label="Photo for this post">${options}</select>
+          <div class="social-photo-preview"${shown} id="photo-preview-${i}">
+            <img id="photo-img-${i}" src="/photos/${photoId}/image?w=320" alt="${alt}" />
+            <a id="photo-link-${i}" href="/photos/${photoId}/image" target="_blank" rel="noopener">Open full size</a>
+          </div>
+        </div>`;
+}
+
 function render() {
-  const { drafts, links } = data;
+  const { drafts, links, photos } = data;
   host.innerHTML =
     `<div class="social-links">
        <div class="map-rows">
@@ -65,15 +98,34 @@ function render() {
         <h3>${escapeHtml(d.label)}</h3>
         <p class="social-note">${escapeHtml(d.note)}</p>
         <textarea id="draft-${i}" rows="${rowsFor(d.text)}">${escapeHtml(d.text)}</textarea>
+        ${photoBlock(photos, d.photoId, i)}
         <div class="social-actions">
-          <button type="button" class="btn btn-primary" data-copy="${i}">Copy</button>
+          <button type="button" class="btn btn-primary" data-copy="${i}">Copy text</button>
           <a class="btn btn-ghost" href="${escapeHtml(links.facebook)}" target="_blank" rel="noopener">Open Facebook</a>
           <a class="btn btn-ghost" href="${escapeHtml(links.google)}" target="_blank" rel="noopener">Open Google</a>
           <span class="social-status" data-status="${i}"></span>
         </div>
+        ${photos.length ? `<p class="social-photo-hint">Drag the photo above into the post window, or open it full size and save it &mdash; there's no automatic attach, so this is the whole step.</p>` : ""}
       </div>`
       )
       .join("");
+
+  photos.length &&
+    host.querySelectorAll("[id^='photo-sel-']").forEach((sel) => {
+      sel.addEventListener("change", () => {
+        const i = sel.id.replace("photo-sel-", "");
+        const preview = document.getElementById(`photo-preview-${i}`);
+        if (!sel.value) {
+          preview.hidden = true;
+          return;
+        }
+        const chosen = photos.find((p) => String(p.id) === sel.value);
+        document.getElementById(`photo-img-${i}`).src = `/photos/${sel.value}/image?w=320`;
+        document.getElementById(`photo-img-${i}`).alt = chosen?.caption || "";
+        document.getElementById(`photo-link-${i}`).href = `/photos/${sel.value}/image`;
+        preview.hidden = false;
+      });
+    });
 
   host.querySelectorAll("[data-copy]").forEach((btn) => {
     btn.addEventListener("click", async () => {
