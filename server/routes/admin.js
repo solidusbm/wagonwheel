@@ -8,6 +8,7 @@ import { mailConfigStatus, sendTestEmail, sendSampleGuestEmail } from "../lib/em
 import { listLocations, refundPayment } from "../lib/square.js";
 import { shrinkImage } from "../lib/imageResize.js";
 import { readLayout, writeLayout, FEATURE_KINDS } from "../lib/parkLayout.js";
+import { draftPosts, KEY_FB_COMPOSE, KEY_GBP_COMPOSE } from "../lib/socialPosts.js";
 import {
   reviewSettings,
   blockedReason,
@@ -1520,6 +1521,53 @@ router.put("/park-layout", async (req, res, next) => {
     }
     const layout = await writeLayout(raw);
     res.json({ layout });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* ---------- social posts ----------
+   Drafts written from live data for a person to publish. Deliberately not an API integration --
+   the reasoning is in lib/socialPosts.js and is worth reading before anyone "finishes" this by
+   wiring it to Meta and Google. The PUT only stores where the office goes to publish, because
+   both platforms move those pages and a broken link shouldn't need a deploy. */
+router.get("/social-posts", async (req, res, next) => {
+  try {
+    res.json(await draftPosts());
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put("/social-posts/links", async (req, res, next) => {
+  const { facebook, google } = req.body ?? {};
+  const writes = [];
+  for (const [key, value] of [[KEY_FB_COMPOSE, facebook], [KEY_GBP_COMPOSE, google]]) {
+    if (value === undefined) continue;
+    if (value !== null && typeof value !== "string") {
+      return res.status(400).json({ error: "Links must be text" });
+    }
+    const url = (value ?? "").trim();
+    // Empty clears it, falling back to the built-in default. Anything else must be a real link --
+    // a typo here sends the office to a page that doesn't exist with no clue why.
+    if (url && !/^https:\/\/[^\s]+$/.test(url)) {
+      return res.status(400).json({ error: "Links must start with https:// and contain no spaces" });
+    }
+    writes.push([key, url]);
+  }
+  try {
+    for (const [key, value] of writes) {
+      if (value) {
+        await pool.query(
+          `INSERT INTO app_settings (key, value, updated_at) VALUES ($1, $2, now())
+             ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+          [key, value]
+        );
+      } else {
+        await pool.query(`DELETE FROM app_settings WHERE key = $1`, [key]);
+      }
+    }
+    res.json(await draftPosts());
   } catch (err) {
     next(err);
   }

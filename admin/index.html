@@ -144,6 +144,17 @@
      next field's label and reads as though it belongs to that one instead. */
   #review-panel .field{margin-bottom:20px;}
 
+  /* ---- social posts ---- */
+  .social-links{background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px; margin-bottom:16px;}
+  .social-links .map-rows{max-width:560px;}
+  .social-draft{border-top:1px solid rgba(60,42,26,0.11); padding:16px 0;}
+  .social-draft h3{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); margin:0 0 4px; font-weight:400;}
+  .social-note{font-size:12.5px; color:var(--parchment-dim); font-style:italic; margin:0 0 8px;}
+  .social-draft textarea{width:100%; font-family:'Zilla Slab',serif; font-size:14px; line-height:1.6; padding:10px 12px; border:1px solid var(--line); border-radius:var(--radius); background:var(--bg); color:var(--parchment); resize:vertical;}
+  .social-actions{display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:9px;}
+  .social-actions .btn{font-size:11px; padding:7px 12px; text-decoration:none;}
+  .social-status{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--cedar);}
+
   /* ---- park map editor ---- */
   .map-toolbar{display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-bottom:10px;}
   /* Tighter than the page's other buttons: at the admin's default padding these eight controls
@@ -449,6 +460,12 @@
   </details>
 
   <details class="sync-feeds">
+    <summary><h2>Social posts</h2></summary>
+    <div class="sub">Drafts written from the park's own data &mdash; this weekend's actual free sites, the real monthly rates, the current amenity list. Edit a draft, press Copy, then Open Facebook or Open Google and paste. <b>Nothing is posted for you.</b> That's on purpose: an automatic "three sites open this weekend" can be wrong a minute after it publishes, and a person reading the words first is the whole safeguard.</div>
+    <div id="social-panel"><p class="empty-note">Loading&hellip;</p></div>
+  </details>
+
+  <details class="sync-feeds">
     <summary><h2>Search &amp; sharing</h2></summary>
     <div class="sub">How the park looks in a Google result and when someone posts a link to Facebook or texts it to a friend. Everything that can be worked out from the park's own data already is &mdash; the headline comes from each page, and the rates and amenities in the structured data come from the Sites and Amenities panels above. What's left here is the three things that need a person's judgement.</div>
     <div id="seo-panel"><p class="empty-note">Loading&hellip;</p></div>
@@ -498,5 +515,6 @@
 <script type="module" src="/admin/js/seo-panel.js"></script>
 <script type="module" src="/admin/js/review-panel.js"></script>
 <script type="module" src="/admin/js/map-panel.js"></script>
+<script type="module" src="/admin/js/social-panel.js"></script>
 </body>
 </html>
