@@ -7,6 +7,7 @@ import { applySchema, applySeed, applyContentSeed, sitesCount } from "../lib/dbB
 import { mailConfigStatus, sendTestEmail, sendSampleGuestEmail } from "../lib/email.js";
 import { listLocations, refundPayment } from "../lib/square.js";
 import { shrinkImage } from "../lib/imageResize.js";
+import { readLayout, writeLayout, FEATURE_KINDS } from "../lib/parkLayout.js";
 import {
   reviewSettings,
   blockedReason,
@@ -1489,6 +1490,36 @@ router.post("/review-requests/preview", async (req, res, next) => {
 router.post("/review-requests/run", async (req, res, next) => {
   try {
     res.json(await sendDueReviewRequests());
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* ---------- park map ----------
+   The park's physical layout, edited in /admin -> Park map and drawn on the homepage. Stored as a
+   single JSON document in app_settings rather than a table of shapes: it is read whole and written
+   whole, never queried across, and a row per pad would buy nothing but joins.
+
+   The PUT hands back the stored document rather than 204. normalise() clamps sizes, drops
+   incomplete roads and de-duplicates ids, so what the editor sent and what was saved can differ --
+   and the editor should show what is actually on the guest map, not its own optimistic copy. */
+router.get("/park-layout", async (req, res) => {
+  res.json({ layout: await readLayout(), kinds: FEATURE_KINDS });
+});
+
+router.put("/park-layout", async (req, res, next) => {
+  try {
+    const raw = req.body?.layout;
+    if (!raw || typeof raw !== "object") {
+      return res.status(400).json({ error: "layout must be an object" });
+    }
+    if (!Array.isArray(raw.bays) || !raw.bays.length) {
+      // Saving an empty layout is almost certainly a bug in the editor rather than a park with no
+      // pads, and it would blank the homepage map. Refuse rather than store it.
+      return res.status(400).json({ error: "A layout needs at least one site." });
+    }
+    const layout = await writeLayout(raw);
+    res.json({ layout });
   } catch (err) {
     next(err);
   }

@@ -29,18 +29,29 @@
  *
  * Pad sizes are a uniform 20 x 55 ft -- a sensible default, NOT measured. Road widths are a
  * uniform 24 ft on the same basis. Positions came off the plan; the dimensions are still to be
- * confirmed by pacing the park. To update, re-open the layout editor, adjust, and paste the
- * exported JSON over the object below -- nothing else in the app needs touching, but re-check
- * the numbering above, because the editor exports whatever order it was given.
+ * confirmed by pacing the park.
  *
- * Last arranged: 2026-08-10. Numbering corrected: 2026-08-14. Pending: on-site measurement.
+ * *** THIS FILE IS THE FALLBACK, NOT THE LIVE LAYOUT. ***
+ *
+ * The park now edits the map itself in /admin -> Park map, and the result is stored as JSON in
+ * app_settings under `park_layout`. The app reads that; this object is what it falls back to when
+ * no row has been saved yet or the database is unreachable, so the map still draws. Same rule as
+ * the SEO settings: an absent row means "use the built-in default". Editing this file changes the
+ * fallback only -- to change what guests actually see, use /admin.
+ *
+ * `features` are the buildings and fenced areas: the office, the bathhouse, the two dog parks.
+ * It replaced a single hardcoded `office` object in v2. `kind` drives how one is drawn and
+ * nothing else, so an unfamiliar kind still renders as a labelled box rather than vanishing.
+ *
+ * Last arranged: 2026-08-10. Numbering corrected: 2026-08-14. Became a fallback: 2026-08-16.
+ * Pending: on-site measurement.
  */
 export const PARK_LAYOUT = {
-  version: 1,
+  version: 2,
   units: "feet",
   bearing: -18,
   world: { w: 400, h: 340 },
-  office: { x: 303, y: 49, w: 45, h: 40, rot: 0 },
+  features: [{ id: "office", kind: "office", label: "Office", x: 303, y: 49, w: 45, h: 40, rot: 0 }],
   bays: [
     { n: 1, x: 142, y: 49, w: 20, h: 55, rot: 0 },
     { n: 2, x: 93, y: 52, w: 20, h: 55, rot: 0 },

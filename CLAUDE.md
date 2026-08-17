@@ -540,11 +540,31 @@ What's still open:
       here" duly shipped to a live marketing page and had to be pulled. **Don't restate pad shape
       in prose anywhere** — `data-ssr="site-shape"` in `server/lib/ssr.js` counts it from the
       table. The map itself doesn't draw the distinction, so it's not affected either way.
-  **The layout now lives in `public/js/park-layout.js` — real feet, one object.** It was arranged
-  by hand in a layout editor against the marked-up plan; `renderSiteMap()` in `app.js` only draws
-  it, matching bays to sites by the number in the site name. To change where anything sits, edit
-  that file; don't reach into the renderer. A site with no bay in the layout is drawn in an
-  overflow row beneath the park rather than silently vanishing.
+  **The layout is edited in `/admin` → Park map and stored in the database (2026-08-17).** It is
+  one JSON document in `app_settings` under `park_layout`, owned by `server/lib/parkLayout.js`.
+  `public/js/park-layout.js` is now only the **fallback** — what draws when nothing has been saved
+  yet or the database is unreachable. Editing that file changes the fallback, *not* what guests
+  see; use `/admin`. It used to be the source of truth, arranged in a standalone artifact editor
+  whose JSON was pasted in by hand, which made the map the one thing on the site nobody could
+  change without a developer and a deploy.
+
+  Shape (v2): `bearing`, `world`, `bays` (pads, keyed by site **number**), `roads` (polylines with
+  a width), and `features` — the buildings and fenced areas. `features` **replaced a single
+  hardcoded `office` object**; `normalise()` migrates a v1 layout on read, so an old document still
+  loads. `kind` picks styling only — `office`/`bathhouse`/`dog-park-large`/`dog-park-small`/`other`,
+  with dog parks drawn dashed and unfilled because that is what a fence looks like from above. An
+  unknown kind still draws, as a labelled box; don't make the renderer depend on the enum.
+
+  **Everything written passes through `normalise()`, and that is the only validation there is.** It
+  is deliberately total: sizes clamped, roads with fewer than two points dropped, duplicate site
+  numbers and feature ids collapsed, unknown fields discarded. A layout that fails to draw takes
+  the homepage map with it, so a bad save has to be impossible rather than unlikely. If you add a
+  field, add it there too or it will be silently stripped on the next save.
+
+  `renderSiteMap()` in `app.js` only draws; it matches bays to sites by the number in the site
+  name. A site with no bay is drawn in an overflow row beneath the park rather than silently
+  vanishing — which is also what happens when a pad is removed in the editor, since taking a pad
+  off the map does not touch the `sites` row.
 
   What is *not* measured is sizes: every pad is a uniform 20 × 55 ft and every road 24 ft wide.
   Positions came off the plan; those two are defaults. The map says so on its face ("PAD SIZES NOT

@@ -65,6 +65,10 @@ async function init() {
     return null;
   });
 
+  // Not awaited: the map has a bundled fallback and nothing on the page waits for the real
+  // geometry, so fetching it must not delay the booking form coming up.
+  loadParkLayout();
+
   renderTrail();
 }
 
@@ -330,8 +334,30 @@ const PLAN_MARGIN = 30; // feet of breathing room around the park
 const NUM_FT = 11; // site number height, in feet
 const JOIN_FT = 15; // two road ends closer than this are the same junction
 
+/* The layout the park last saved in /admin -> Park map. Null until it arrives, and null for good
+   if the request fails -- in which case the bundled PARK_LAYOUT still draws the map. That fallback
+   is the reason this is a plain `let` rather than something the render awaits: a slow or failed
+   layout request must not leave a hole where the park is. */
+let livePlan = null;
+
+async function loadParkLayout() {
+  try {
+    const res = await fetch("/api/park-layout");
+    if (!res.ok) return;
+    const plan = await res.json();
+    // An empty layout would blank the map. The server refuses to store one, but a stale cache or a
+    // half-written response is still cheaper to ignore here than to debug from a guest's report.
+    if (!plan || !Array.isArray(plan.bays) || !plan.bays.length) return;
+    livePlan = plan;
+    // The map may already be on screen from the bundled fallback -- redraw it with the real thing.
+    if (state.sites.length) renderSiteMap(state.sites);
+  } catch {
+    /* Bundled layout stands. */
+  }
+}
+
 function renderSiteMap(sites) {
-  const plan = PARK_LAYOUT;
+  const plan = livePlan ?? PARK_LAYOUT;
   const bearing = plan.bearing || 0;
 
   const byNumber = new Map();
@@ -363,7 +389,11 @@ function renderSiteMap(sites) {
   // rather than guessed.
   const extent = [];
   placed.forEach((b) => extent.push(...corners(b)));
-  extent.push(...corners(plan.office));
+  (plan.features ?? []).forEach((f) => {
+    extent.push(...corners(f));
+    // Room for a caption that didn't fit inside and now sits under the shape.
+    extent.push({ x: f.x + f.w / 2, y: f.y + f.h + FEATURE_MIN_FT * 2 });
+  });
   plan.roads.forEach((r) => {
     const half = r.w / 2;
     r.pts.forEach((p) => {
@@ -400,11 +430,7 @@ function renderSiteMap(sites) {
     roads += `<path d="${d}" stroke="var(--line)" stroke-width="${r.w}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
   });
 
-  const o = plan.office;
-  const office =
-    `<g transform="rotate(${o.rot || 0} ${o.x + o.w / 2} ${o.y + o.h / 2})">` +
-    `<rect x="${o.x}" y="${o.y}" width="${o.w}" height="${o.h}" rx="3" fill="var(--bg-panel-2)" stroke="var(--gold)" stroke-width="2"/></g>` +
-    mapText(o.x + o.w / 2, o.y + o.h / 2 + 4, "OFFICE", { size: 11, fill: "var(--gold)", tilt: -bearing });
+  const features = (plan.features ?? []).map((f) => featureMarkup(f, bearing)).join("");
 
   const bays = placed.map((b) => bayMarkup(byNumber.get(b.n), b, bearing)).join("");
 
@@ -452,7 +478,7 @@ function renderSiteMap(sites) {
       <text x="0" y="20" text-anchor="middle" fill="var(--parchment-dim)" font-family="JetBrains Mono, monospace" font-size="10">N</text>
     </g>
     <g transform="rotate(${bearing} ${pivot.x} ${pivot.y})">
-      ${roads}${office}${bays}${overflow}${gateLabels}
+      ${roads}${features}${bays}${overflow}${gateLabels}
     </g>
   `;
 
@@ -526,8 +552,49 @@ function labelExtent(spec, tilt) {
 }
 
 function mapText(x, y, text, opts = {}) {
-  const { size = 11, fill = "var(--parchment-dim)", anchor = "middle", tilt = 0, ls = 0.6 } = opts;
-  return `<text x="${x}" y="${y}" transform="rotate(${tilt} ${x} ${y})" text-anchor="${anchor}" fill="${fill}" font-family="JetBrains Mono, monospace" font-size="${size}" letter-spacing="${ls}">${escapeHtml(text)}</text>`;
+  const { size = 11, fill = "var(--parchment-dim)", anchor = "middle", tilt = 0, ls = 0.6, halo = false } = opts;
+  /* halo: paint the glyphs' own outline in the page background first, so a caption stays readable
+     where it crosses something. Buildings are drawn before the pads -- a bathhouse label that sits
+     just outside its box would otherwise be painted over by the pad next door. */
+  const ring = halo ? ` stroke="var(--bg)" stroke-width="${size / 4}" paint-order="stroke" stroke-linejoin="round"` : "";
+  return `<text x="${x}" y="${y}" transform="rotate(${tilt} ${x} ${y})" text-anchor="${anchor}" fill="${fill}" font-family="JetBrains Mono, monospace" font-size="${size}" letter-spacing="${ls}"${ring}>${escapeHtml(text)}</text>`;
+}
+
+/* A building or fenced area from the layout's `features` array -- the office, the bathhouse, the
+   two dog parks. It replaced a hardcoded `office` box, so the park can add and move these itself
+   in /admin -> Park map without a deploy.
+
+   `kind` only picks the styling. An unrecognised kind still draws, as a plain labelled box: the
+   office can invent a feature the app has never heard of, and a missing shed is a better failure
+   than a blank map. Fenced areas are dashed and unfilled because that is what a fence looks like
+   from above, which saves the label having to say so. */
+const FEATURE_STYLE = {
+  "dog-park-large": { stroke: "var(--cedar-light)", fill: "none", dash: "6 4" },
+  "dog-park-small": { stroke: "var(--cedar-light)", fill: "none", dash: "6 4" },
+};
+const FEATURE_STYLE_DEFAULT = { stroke: "var(--gold)", fill: "var(--bg-panel-2)", dash: "" };
+const FEATURE_FIT = 0.62; // monospace glyph width, as a fraction of font size
+const FEATURE_MIN_FT = 7.5; // smaller than this and a caption stops being a word
+
+function featureMarkup(f, bearing) {
+  const st = FEATURE_STYLE[f.kind] ?? FEATURE_STYLE_DEFAULT;
+  const cx = f.x + f.w / 2;
+  const cy = f.y + f.h / 2;
+  const label = String(f.label ?? "").trim();
+  /* Shrink the caption to fit its box -- but only so far. "Laundry & bathhouse" in a 40 ft
+     building came out at 5 ft of type, which is a grey smudge rather than a word. Below the
+     readable floor the label moves OUT, centred under the shape, at a size someone can actually
+     read. 0.62 is the monospace width ratio labelExtent uses, so the two agree about text width. */
+  const fitted = label ? (f.w - 6) / (label.length * FEATURE_FIT) : 0;
+  const inside = fitted >= FEATURE_MIN_FT;
+  const size = inside ? Math.min(11, fitted) : FEATURE_MIN_FT;
+  const ty = inside ? cy + size / 2.6 : f.y + f.h + size * 1.2;
+  return (
+    `<g transform="rotate(${f.rot || 0} ${cx} ${cy})">` +
+    `<rect x="${f.x}" y="${f.y}" width="${f.w}" height="${f.h}" rx="3" fill="${st.fill}" ` +
+    `stroke="${st.stroke}" stroke-width="2"${st.dash ? ` stroke-dasharray="${st.dash}"` : ""}/></g>` +
+    (label ? mapText(cx, ty, label, { size, fill: st.stroke, tilt: -bearing, halo: true }) : "")
+  );
 }
 
 function bayMarkup(site, bay, bearing) {

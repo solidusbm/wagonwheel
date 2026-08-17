@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { pool } from "../db.js";
 import { quote, isPriceable } from "../lib/pricing.js";
+import { readLayout } from "../lib/parkLayout.js";
 
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -146,6 +147,18 @@ router.get("/homepage-amenities", async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+/* The park's physical layout for the guest site map (see /admin -> Park map). Public because the
+   map is on the homepage, and it carries nothing private -- pad positions and building outlines,
+   no rates and no occupancy. readLayout() falls back to the bundled layout rather than failing, so
+   this route cannot 500 and take the map down with it.
+
+   Cached for a minute at the edge: the geometry changes a few times a year, and the alternative is
+   a database read on every homepage view for a fence that has not moved since spring. */
+router.get("/park-layout", async (req, res) => {
+  res.set("Cache-Control", "public, max-age=60");
+  res.json(await readLayout());
 });
 
 // Editable text (see /admin -> Content) as a flat { key: value } map for public/js/content.js
