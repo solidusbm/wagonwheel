@@ -99,7 +99,13 @@ toggleBtn.addEventListener("click", async () => {
   }
 
   try {
-    await navigator.serviceWorker.register("sw.js");
+    /* Absolute, not "sw.js". The admin is served at both /admin and /admin/ (express.static
+       hands back index.html either way), and a relative URL resolves against the *page*: from
+       /admin it asks for /sw.js, which is a 404 and a root scope. Pinning the scope matters for
+       the same reason -- navigator.serviceWorker.ready below only resolves for a registration
+       whose scope covers the current page, so the redirect to /admin/ in server/index.js is
+       load-bearing here. */
+    await navigator.serviceWorker.register("/admin/sw.js", { scope: "/admin/" });
     await refreshStatus();
   } catch (err) {
     statusEl.textContent = "Couldn't set up push notifications: " + err.message;

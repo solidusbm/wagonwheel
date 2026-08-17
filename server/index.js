@@ -68,6 +68,19 @@ const resolveAsset = (urlPath) =>
     ? path.join(adminDir, urlPath.slice("/admin".length))
     : path.join(publicDir, urlPath);
 
+/* The mount below answers /admin and /admin/ with the same index.html -- express.static sees
+   req.url === "/" in both cases and never does its usual trailing-slash redirect. That is fine for
+   the page itself and fatal for the service worker: a registration is scoped to /admin/, and a
+   scope only covers URLs that start with it, so on /admin the worker cannot control the page and
+   navigator.serviceWorker.ready never settles. One canonical URL avoids the whole class of
+   problem (the web app manifest's start_url and scope are /admin/ for the same reason). */
+app.get("/admin", (req, res, next) => {
+  // The router matches this handler for /admin/ as well -- trailing slashes are not significant
+  // to it unless "strict routing" is on, which would change matching for every other route here.
+  // So check the URL as it actually arrived, or /admin/ redirects to itself forever.
+  if (req.originalUrl.startsWith("/admin/")) return next();
+  res.redirect(302, "/admin/" + req.originalUrl.slice("/admin".length));
+});
 app.use("/admin", adminAuth, makeAssetVersioner(adminDir, resolveAsset), express.static(adminDir));
 app.use("/calendar", calendarRouter);
 app.use(photosRouter);
