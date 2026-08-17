@@ -181,6 +181,10 @@
   .map-road.sel{stroke:var(--gold);}
   .map-vtx{fill:var(--gold-bright); stroke:var(--ink); stroke-width:1; cursor:grab;}
   .map-handle{fill:var(--parchment); stroke:var(--ink); stroke-width:1; cursor:nwse-resize;}
+  /* Map captions. Draggable, so they get a move cursor and a hit area wider than the glyphs. */
+  .map-label{cursor:move;}
+  .map-label text{font-family:'JetBrains Mono',monospace; pointer-events:none;}
+  .map-label.sel text{font-weight:700;}
   .seo-danger p{margin:0; font-size:13.5px;}
   /* The lead photo is the one guests actually see, so it says so rather than relying on the order. */
   .site-photo-picker .lead{position:absolute; top:5px; right:5px; background:var(--gold); color:var(--btn-text);

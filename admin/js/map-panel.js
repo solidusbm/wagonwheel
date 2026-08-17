@@ -117,6 +117,91 @@ function localPoint(evt) {
 
 const snap = (v) => Math.round(v / SNAP) * SNAP;
 
+/* Where the map's own captions sit. ENTRANCE, the second way in and the street name are placed off
+   the ROAD ENDS -- a gate is an end that meets no other road -- so they follow the layout instead
+   of being pinned to particular roads. Deliberately the same rule as the guest map (app.js); if it
+   changes, change it in both or the editor will show captions the guest map doesn't draw.
+
+   Only their OFFSETS are stored, in labelOffsets, because the automatic placement is right until
+   two captions land on each other. */
+const JOIN_FT = 15; // two road ends closer than this are the same junction
+
+function distToSegment(p, a, b) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = dx * dx + dy * dy;
+  let t = len === 0 ? 0 : ((p.x - a.x) * dx + (p.y - a.y) * dy) / len;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}
+
+function openEnds() {
+  const ends = [];
+  L.roads.forEach((r, i) => {
+    [r.pts[0], r.pts[r.pts.length - 1]].forEach((end) => {
+      const met = L.roads.some((other, j) => {
+        if (j === i) return false;
+        for (let k = 1; k < other.pts.length; k++) {
+          if (distToSegment(end, other.pts[k - 1], other.pts[k]) <= JOIN_FT) return true;
+        }
+        return false;
+      });
+      if (!met) ends.push(end);
+    });
+  });
+  return ends.sort((a, b) => a.y - b.y);
+}
+
+/** Read a caption's nudge without creating it. */
+const readOffset = (key) =>
+  (key === "street" ? L.labelOffsets?.street : L.labelOffsets?.gates?.[key]) ?? { dx: 0, dy: 0 };
+
+/** The same, but ready to be written to -- fills the gates array out to the index if need be. */
+function editOffset(key) {
+  if (!L.labelOffsets) L.labelOffsets = { gates: [], street: { dx: 0, dy: 0 } };
+  if (key === "street") {
+    if (!L.labelOffsets.street) L.labelOffsets.street = { dx: 0, dy: 0 };
+    return L.labelOffsets.street;
+  }
+  if (!Array.isArray(L.labelOffsets.gates)) L.labelOffsets.gates = [];
+  while (L.labelOffsets.gates.length <= Number(key)) L.labelOffsets.gates.push({ dx: 0, dy: 0 });
+  return L.labelOffsets.gates[Number(key)];
+}
+
+/** Every caption on the map, with where it currently sits. One list, so drawing and the
+ *  properties panel can never disagree about which caption is which. */
+function mapLabels() {
+  const gates = openEnds();
+  const out = gates.map((g, i) => {
+    const first = i === 0;
+    const o = readOffset(i);
+    return {
+      key: String(i),
+      text: first ? "ENTRANCE" : "SECOND ACCESS",
+      x: g.x + (first ? 4 : 6) + o.dx,
+      y: g.y + (first ? -24 : 8) + o.dy,
+      size: first ? 13 : 11,
+      anchor: first ? "end" : "start",
+      tilt: -L.bearing,
+      fill: first ? "var(--gold)" : "var(--parchment-dim)",
+    };
+  });
+  if (gates.length) {
+    const o = readOffset("street");
+    out.push({
+      key: "street",
+      text: "POLLY PEAK DR.",
+      x: Math.max(...gates.map((g) => g.x)) + 96 + o.dx,
+      y: gates.reduce((sum, g) => sum + g.y, 0) / gates.length + o.dy,
+      size: 11,
+      anchor: "middle",
+      tilt: -L.bearing - 90,
+      fill: "var(--parchment-dim)",
+    });
+  }
+  return out;
+}
+
 /* ---------- chrome (built once) ---------- */
 
 function chrome() {
@@ -159,6 +244,7 @@ function chrome() {
       <b>Move</b> — drag a pad, building or road point. <b>Resize</b> — drag the corner square.
       <b>Nudge</b> — arrow keys by 1&nbsp;ft, hold Shift for 10. <b>Delete</b> — select and press
       Delete. <b>Finish a road</b> — press Enter or double-click.
+      <b>Captions</b> — drag ENTRANCE, SECOND ACCESS or the street name to stop them overlapping.
       Nothing reaches the guest map until you press <b>Save map</b>.
     </p>
   `;
@@ -240,6 +326,9 @@ function addFeature() {
 
 function deleteSelected() {
   if (!sel) return;
+  // A caption isn't a thing you can remove -- its wording comes from the layout. "Put it back"
+  // is the only reset it has.
+  if (sel.kind === "label") return;
   if (sel.kind === "road") {
     L.roads.splice(sel.i, 1);
     status("Road removed.");
@@ -280,6 +369,50 @@ function grid() {
 
 const handle = (b) =>
   `<rect class="map-handle" data-handle="1" x="${b.x + b.w - 3}" y="${b.y + b.h - 3}" width="6" height="6"/>`;
+
+/* The visible area. NOT just the lot rectangle: the park is drawn rotated on an unrotated grid,
+   and the access roads deliberately run off the lot to reach the street -- so "0 0 w h" clipped the
+   entrance captions at the edge. That was survivable while they were scenery and is not now they
+   are things you drag. */
+function viewBox() {
+  const c = centre();
+  const pts = [
+    { x: 0, y: 0 },
+    { x: L.world.w, y: 0 },
+    { x: L.world.w, y: L.world.h },
+    { x: 0, y: L.world.h },
+  ];
+  const corners = (b) => {
+    const bx = b.x + b.w / 2;
+    const by = b.y + b.h / 2;
+    return [
+      { x: b.x, y: b.y },
+      { x: b.x + b.w, y: b.y },
+      { x: b.x + b.w, y: b.y + b.h },
+      { x: b.x, y: b.y + b.h },
+    ].map((p) => spin(spin(p, { x: bx, y: by }, b.rot || 0), c, L.bearing));
+  };
+  [...L.bays, ...L.features].forEach((b) => pts.push(...corners(b)));
+  L.roads.forEach((r) => {
+    const half = r.w / 2;
+    r.pts.forEach((p) => {
+      const q = spin(p, c, L.bearing);
+      pts.push({ x: q.x - half, y: q.y - half }, { x: q.x + half, y: q.y + half });
+    });
+  });
+  mapLabels().forEach((lb) => {
+    const w = Math.max(12, lb.text.length * lb.size * 0.62);
+    const q = spin({ x: lb.x, y: lb.y }, c, L.bearing);
+    pts.push({ x: q.x - w, y: q.y - w }, { x: q.x + w, y: q.y + w });
+  });
+
+  const xs = pts.map((p) => p.x);
+  const ys = pts.map((p) => p.y);
+  const pad = 10;
+  const minX = Math.min(...xs) - pad;
+  const minY = Math.min(...ys) - pad;
+  return `${minX} ${minY} ${Math.max(...xs) + pad - minX} ${Math.max(...ys) + pad - minY}`;
+}
 
 function redraw() {
   const svg = document.getElementById("map-board");
@@ -328,12 +461,29 @@ function redraw() {
       `</g>`;
   });
 
+  /* The captions, drawn last so they sit on top of everything and stay grabbable. Each carries a
+     transparent hit rectangle: glyphs alone are a thin target, and this has to be draggable with a
+     thumb on a phone at the park. */
+  mapLabels().forEach((lb) => {
+    const on = sel?.kind === "label" && sel.key === lb.key;
+    const w = Math.max(12, lb.text.length * lb.size * 0.62);
+    const x0 = lb.anchor === "end" ? lb.x - w : lb.anchor === "middle" ? lb.x - w / 2 : lb.x;
+    park +=
+      `<g class="map-label${on ? " sel" : ""}" data-label="${lb.key}" ` +
+      `transform="rotate(${lb.tilt} ${lb.x} ${lb.y})">` +
+      `<rect x="${x0 - 3}" y="${lb.y - lb.size}" width="${w + 6}" height="${lb.size * 1.5}" ` +
+      `fill="transparent"/>` +
+      `<text x="${lb.x}" y="${lb.y}" font-size="${lb.size}" text-anchor="${lb.anchor}" ` +
+      `fill="${on ? "var(--gold-bright)" : lb.fill}" letter-spacing="0.6">${escapeHtml(lb.text)}</text>` +
+      `</g>`;
+  });
+
   if (draft?.pts.length) {
     const d = draft.pts.map((p, k) => `${k ? "L" : "M"}${p.x} ${p.y}`).join(" ");
     park += `<path d="${d}" stroke="var(--gold)" stroke-width="${draft.w}" fill="none" opacity="0.5" stroke-linecap="round"/>`;
   }
 
-  svg.setAttribute("viewBox", `0 0 ${L.world.w} ${L.world.h}`);
+  svg.setAttribute("viewBox", viewBox());
   svg.innerHTML =
     `<rect x="0" y="0" width="${L.world.w}" height="${L.world.h}" fill="var(--bg)"/>${grid()}` +
     `<g transform="rotate(${L.bearing} ${c.x} ${c.y})">${park}</g>`;
@@ -366,6 +516,31 @@ function props() {
   const box = document.getElementById("map-props");
   if (!sel) {
     box.innerHTML = `<p class="empty-note">Nothing selected. Click a pad, a building or a road.</p>`;
+    return;
+  }
+
+  if (sel.kind === "label") {
+    const lb = mapLabels().find((l) => l.key === sel.key);
+    if (!lb) {
+      sel = null;
+      box.innerHTML = `<p class="empty-note">That caption has gone — the roads changed.</p>`;
+      return;
+    }
+    const off = editOffset(sel.key);
+    box.innerHTML =
+      `<p class="map-selname">${escapeHtml(lb.text)}</p>` +
+      `<div class="map-rows">${numField("map-ldx", "Move right ft", off.dx)}${numField("map-ldy", "Move down ft", off.dy)}</div>` +
+      `<button type="button" class="btn btn-ghost" id="map-lreset">Put it back</button>` +
+      `<p class="map-hint">Drag it on the map, or type exact figures. The wording itself comes from the ` +
+      `layout — this only moves it, so two captions stop sitting on each other.</p>`;
+    bindNum("map-ldx", (v) => (off.dx = v));
+    bindNum("map-ldy", (v) => (off.dy = v));
+    document.getElementById("map-lreset").addEventListener("click", () => {
+      off.dx = 0;
+      off.dy = 0;
+      redraw();
+      status("Caption back where it started.");
+    });
     return;
   }
 
@@ -461,9 +636,20 @@ function onPointerDown(evt) {
     return;
   }
 
-  const t = evt.target;
   const svg = document.getElementById("map-board");
+  const t = evt.target;
   const vtx = t.getAttribute?.("data-vtx");
+  const lb = t.closest?.("[data-label]");
+  if (lb) {
+    const key = lb.getAttribute("data-label");
+    const off = editOffset(key);
+    sel = { kind: "label", key };
+    drag = { mode: "label", off, ox: p.x, oy: p.y, dx0: off.dx, dy0: off.dy };
+    svg.setPointerCapture(evt.pointerId);
+    redraw();
+    return;
+  }
+
   const g = t.closest?.("[data-bay],[data-feature],[data-road]");
 
   if (t.getAttribute?.("data-handle") && sel && sel.kind !== "road") {
@@ -504,6 +690,9 @@ function onPointerMove(evt) {
   if (drag.mode === "move") {
     drag.it.x = snap(drag.x0 + (p.x - drag.ox));
     drag.it.y = snap(drag.y0 + (p.y - drag.oy));
+  } else if (drag.mode === "label") {
+    drag.off.dx = snap(drag.dx0 + (p.x - drag.ox));
+    drag.off.dy = snap(drag.dy0 + (p.y - drag.oy));
   } else if (drag.mode === "resize") {
     drag.it.w = Math.max(3, snap(drag.w0 + (p.x - drag.ox)));
     drag.it.h = Math.max(3, snap(drag.h0 + (p.y - drag.oy)));
@@ -557,6 +746,16 @@ function onKey(evt) {
     return deleteSelected();
   }
   if (!sel || sel.kind === "road") return;
+  if (sel.kind === "label") {
+    const off = editOffset(sel.key);
+    const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[evt.key];
+    if (!d) return;
+    evt.preventDefault();
+    const step = evt.shiftKey ? 10 : 1;
+    off.dx += d[0] * step;
+    off.dy += d[1] * step;
+    return redraw();
+  }
 
   const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[evt.key];
   if (!d) return;
