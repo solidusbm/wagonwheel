@@ -492,6 +492,23 @@ What's still open:
   overrode a business decision the flag had already expressed. Don't rebuild it. If a *new*
   amenity ever needs qualifying, the park will say so; ask rather than inferring it from a count.
 
+- **Cloudflare email obfuscation is ON, and the user deferred deciding about it (2026-08-16).**
+  Found by crawling the live site. Cloudflare rewrites every `mailto:` in the page body to
+  `/cdn-cgi/l/email-protection#<hex>` and decodes it with an injected script at
+  `/cdn-cgi/scripts/…/email-decode.min.js`. What that costs: the footer and contact addresses do
+  not work for anyone without JavaScript, and no crawler reads a plain address anywhere on the
+  site. `href="mailto:"` occurrences surviving in the served HTML: **zero**.
+
+  Two things it does **not** break, both verified rather than assumed, so don't re-panic about
+  them: the JSON-LD `email` is untouched (`banderawagonwheelrv@gmail.com` — Cloudflare skips
+  `<script type="application/ld+json">`), so structured data still carries the address; and the
+  decode script is **same-origin**, so `/privacy.html`'s "almost nothing loads from anywhere else"
+  claim still holds — this adds no third-party request.
+
+  The toggle lives in the **client's** Cloudflare account (Scrape Shield → Email Address
+  Obfuscation), not in this repo, so it can't be changed from here. Don't work around it in markup
+  — leave the `mailto:` links as they are. Raise it when the user picks this back up.
+
 - Real footages for the site map. The map was rebuilt on 2026-08-10 against the filed plan
   (Mangold Engineering dwg 100-7799, sheet 2 of 5, "System Layout", 1" = 100'), supplied by the
   park first as a photo of the printed sheet and then as a copy marked up by hand — roads in
