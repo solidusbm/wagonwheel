@@ -177,7 +177,7 @@ function mapLabels() {
     const o = readOffset(i);
     return {
       key: String(i),
-      text: first ? "ENTRANCE" : "SECOND ACCESS",
+      text: first ? "ENTRANCE" : "EXIT",
       x: g.x + (first ? 4 : 6) + o.dx,
       y: g.y + (first ? -24 : 8) + o.dy,
       size: first ? 13 : 11,
@@ -244,7 +244,7 @@ function chrome() {
       <b>Move</b> — drag a pad, building or road point. <b>Resize</b> — drag the corner square.
       <b>Nudge</b> — arrow keys by 1&nbsp;ft, hold Shift for 10. <b>Delete</b> — select and press
       Delete. <b>Finish a road</b> — press Enter or double-click.
-      <b>Captions</b> — drag ENTRANCE, SECOND ACCESS or the street name to stop them overlapping.
+      <b>Captions</b> — drag ENTRANCE, EXIT or the street name to stop them overlapping.
       Nothing reaches the guest map until you press <b>Save map</b>.
     </p>
   `;

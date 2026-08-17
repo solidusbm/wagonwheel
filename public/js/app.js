@@ -448,7 +448,7 @@ function renderSiteMap(sites) {
     const o = nudge(i);
     const spec = first
       ? { text: "ENTRANCE", x: g.x + 4 + o.dx, y: g.y - 24 + o.dy, size: 13, anchor: "end", fill: "var(--gold)" }
-      : { text: "SECOND ACCESS", x: g.x + 6 + o.dx, y: g.y + 8 + o.dy, size: 11, anchor: "start", fill: "var(--parchment-dim)" };
+      : { text: "EXIT", x: g.x + 6 + o.dx, y: g.y + 8 + o.dy, size: 11, anchor: "start", fill: "var(--parchment-dim)" };
     gateLabels += mapText(spec.x, spec.y, spec.text, {
       size: spec.size,
       fill: spec.fill,
