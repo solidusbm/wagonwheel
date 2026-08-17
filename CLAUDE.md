@@ -478,6 +478,20 @@ What's still open:
 - Site 10 having no amenities is **deliberate** — confirmed by the park 2026-08-14. It's the one
   site without Wired Ethernet. Don't "fix" it by copying the other eleven.
 
+  **And Wired Ethernet is still marketed park-wide. That is a decision, not an oversight** — the
+  park's call, confirmed 2026-08-16, after this came up once too often. Eleven of the twelve sites
+  have it, Site 10 carries the note "Only site with no Wired Ethernet", and that note renders on
+  the site card (`.site-notes`, `app.js`) where a guest reads it *before* choosing the site. The
+  exception is accounted for at the point of decision, so the homepage grid and the JSON-LD
+  `amenityFeature` both state it flat, from the `show_on_homepage` flag.
+
+  So: **`show_on_homepage` means "claim this at park level", full stop.** It is the office's
+  declaration, not a hint to be second-guessed against `site_amenities` coverage. A previous
+  session built exactly that second-guess — counting coverage and demoting anything short of every
+  bookable site to "on 4 of the 5 sites open" — and it was reverted the same day, because it
+  overrode a business decision the flag had already expressed. Don't rebuild it. If a *new*
+  amenity ever needs qualifying, the park will say so; ask rather than inferring it from a count.
+
 - Real footages for the site map. The map was rebuilt on 2026-08-10 against the filed plan
   (Mangold Engineering dwg 100-7799, sheet 2 of 5, "System Layout", 1" = 100'), supplied by the
   park first as a photo of the printed sheet and then as a copy marked up by hand — roads in
