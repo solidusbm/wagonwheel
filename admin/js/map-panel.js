@@ -117,6 +117,73 @@ function localPoint(evt) {
 
 const snap = (v) => Math.round(v / SNAP) * SNAP;
 
+/* Ways in and out. Deliberately the same rule as the guest map (app.js): a gate is a road end that
+   meets no other road, so entrances follow the layout instead of being pinned to particular roads.
+   Duplicated rather than imported for the reason in the header -- an import here would fetch an
+   unversioned second copy of a public script. If the rule changes, change it in BOTH or the editor
+   will offer to name a gate the guest map doesn't draw. */
+const JOIN_FT = 15; // two road ends closer than this are the same junction
+const GATE_MATCH_FT = 80; // how far a gate can move and keep its name
+
+function distToSegment(p, a, b) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len = dx * dx + dy * dy;
+  let t = len === 0 ? 0 : ((p.x - a.x) * dx + (p.y - a.y) * dy) / len;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}
+
+function openEnds() {
+  const ends = [];
+  L.roads.forEach((r, i) => {
+    [r.pts[0], r.pts[r.pts.length - 1]].forEach((end) => {
+      const met = L.roads.some((other, j) => {
+        if (j === i) return false;
+        for (let k = 1; k < other.pts.length; k++) {
+          if (distToSegment(end, other.pts[k - 1], other.pts[k]) <= JOIN_FT) return true;
+        }
+        return false;
+      });
+      if (!met) ends.push(end);
+    });
+  });
+  return ends.sort((a, b) => a.y - b.y);
+}
+
+/** The saved name for a detected gate, or the default the guest map would use. */
+function gateName(gate, i) {
+  const saved = savedGate(gate);
+  return saved ? saved.label : i === 0 ? "ENTRANCE" : "EXIT";
+}
+
+function savedGate(gate) {
+  let best = null;
+  let bestDist = GATE_MATCH_FT;
+  for (const g of L.gates ?? []) {
+    const d = Math.hypot(g.x - gate.x, g.y - gate.y);
+    if (d < bestDist) {
+      bestDist = d;
+      best = g;
+    }
+  }
+  return best;
+}
+
+/** Names a detected gate, moving the stored entry onto its current position so later nudges of the
+ *  road keep matching it. */
+function setGateName(gate, label) {
+  if (!Array.isArray(L.gates)) L.gates = [];
+  const existing = savedGate(gate);
+  if (existing) {
+    existing.label = label;
+    existing.x = gate.x;
+    existing.y = gate.y;
+  } else {
+    L.gates.push({ x: gate.x, y: gate.y, label });
+  }
+}
+
 /* ---------- chrome (built once) ---------- */
 
 function chrome() {
@@ -150,6 +217,7 @@ function chrome() {
             <label for="map-bearing">Bearing °</label><input type="number" id="map-bearing" step="1" />
             <label for="map-world-w">Lot width ft</label><input type="number" id="map-world-w" step="10" />
             <label for="map-world-h">Lot depth ft</label><input type="number" id="map-world-h" step="10" />
+            <label for="map-street">Street</label><input type="text" id="map-street" maxlength="60" />
           </div>
           <p class="map-hint">Bearing turns the whole block at once, so pads stay square while you work.</p>
         </div>
@@ -187,6 +255,11 @@ function chrome() {
   worldNum("map-bearing", (v) => (L.bearing = v));
   worldNum("map-world-w", (v) => (L.world.w = Math.max(60, v)));
   worldNum("map-world-h", (v) => (L.world.h = Math.max(60, v)));
+  // The road the park opens onto, drawn once beside the entrances. Clear it to show nothing.
+  on("map-street", "input", (e) => {
+    L.street = e.target.value;
+    redraw();
+  });
 
   const svg = document.getElementById("map-board");
   svg.addEventListener("pointerdown", onPointerDown);
@@ -240,6 +313,9 @@ function addFeature() {
 
 function deleteSelected() {
   if (!sel) return;
+  // A gate is a road end, not a thing in its own right -- there is nothing to delete. Clearing its
+  // name is what "remove this label" means, and that is the Name box.
+  if (sel.kind === "gate") return;
   if (sel.kind === "road") {
     L.roads.splice(sel.i, 1);
     status("Road removed.");
@@ -280,6 +356,50 @@ function grid() {
 
 const handle = (b) =>
   `<rect class="map-handle" data-handle="1" x="${b.x + b.w - 3}" y="${b.y + b.h - 3}" width="6" height="6"/>`;
+
+/* The visible area. NOT simply the lot rectangle: the park is drawn rotated by `bearing` on top of
+   an unrotated grid, and the access roads deliberately run off the lot to meet the street -- so a
+   viewBox of "0 0 w h" clipped the entrance markers at the edge, which mattered the moment gates
+   became things you click and name. Covers the grid and the rotated content both. */
+function viewBox() {
+  const c = centre();
+  const pts = [
+    { x: 0, y: 0 },
+    { x: L.world.w, y: 0 },
+    { x: L.world.w, y: L.world.h },
+    { x: 0, y: L.world.h },
+  ];
+  const boxCorners = (b) => {
+    const bx = b.x + b.w / 2;
+    const by = b.y + b.h / 2;
+    return [
+      { x: b.x, y: b.y },
+      { x: b.x + b.w, y: b.y },
+      { x: b.x + b.w, y: b.y + b.h },
+      { x: b.x, y: b.y + b.h },
+    ].map((p) => spin(spin(p, { x: bx, y: by }, b.rot || 0), c, L.bearing));
+  };
+  [...L.bays, ...L.features].forEach((b) => pts.push(...boxCorners(b)));
+  L.roads.forEach((r) => {
+    const half = r.w / 2;
+    r.pts.forEach((p) => {
+      const q = spin(p, c, L.bearing);
+      pts.push({ x: q.x - half, y: q.y - half }, { x: q.x + half, y: q.y + half });
+    });
+  });
+  // Room for the gate captions, which sit above their markers.
+  openEnds().forEach((g) => {
+    const q = spin(g, c, L.bearing);
+    pts.push({ x: q.x - 40, y: q.y - 22 }, { x: q.x + 40, y: q.y + 10 });
+  });
+
+  const xs = pts.map((p) => p.x);
+  const ys = pts.map((p) => p.y);
+  const pad = 10;
+  const minX = Math.min(...xs) - pad;
+  const minY = Math.min(...ys) - pad;
+  return `${minX} ${minY} ${Math.max(...xs) + pad - minX} ${Math.max(...ys) + pad - minY}`;
+}
 
 function redraw() {
   const svg = document.getElementById("map-board");
@@ -328,12 +448,28 @@ function redraw() {
       `</g>`;
   });
 
+  /* Gate markers. Drawn after the pads so a way in is never hidden behind one, and captioned with
+     whatever the guest map would show, so this reads as the real thing rather than a control panel. */
+  openEnds().forEach((g, i) => {
+    const on = sel?.kind === "gate" && sel.i === i;
+    const name = gateName(g, i);
+    park +=
+      `<g class="map-gate${on ? " sel" : ""}" data-gate="${i}">` +
+      `<circle cx="${g.x}" cy="${g.y}" r="${on ? 8 : 6}"/>` +
+      (name
+        ? `<text x="${g.x}" y="${g.y - 11}" font-size="10" text-anchor="middle" ` +
+          `transform="rotate(${-L.bearing} ${g.x} ${g.y})" stroke="var(--bg)" stroke-width="2.5" ` +
+          `paint-order="stroke" stroke-linejoin="round">${escapeHtml(name)}</text>`
+        : "") +
+      `</g>`;
+  });
+
   if (draft?.pts.length) {
     const d = draft.pts.map((p, k) => `${k ? "L" : "M"}${p.x} ${p.y}`).join(" ");
     park += `<path d="${d}" stroke="var(--gold)" stroke-width="${draft.w}" fill="none" opacity="0.5" stroke-linecap="round"/>`;
   }
 
-  svg.setAttribute("viewBox", `0 0 ${L.world.w} ${L.world.h}`);
+  svg.setAttribute("viewBox", viewBox());
   svg.innerHTML =
     `<rect x="0" y="0" width="${L.world.w}" height="${L.world.h}" fill="var(--bg)"/>${grid()}` +
     `<g transform="rotate(${L.bearing} ${c.x} ${c.y})">${park}</g>`;
@@ -342,6 +478,9 @@ function redraw() {
   document.getElementById("map-bearing").value = L.bearing;
   document.getElementById("map-world-w").value = L.world.w;
   document.getElementById("map-world-h").value = L.world.h;
+  const streetEl = document.getElementById("map-street");
+  // Skip while it has focus, or writing the value back moves the caret to the end mid-word.
+  if (streetEl && document.activeElement !== streetEl) streetEl.value = L.street ?? "";
   document.getElementById("map-save").textContent = dirty() ? "Save map •" : "Save map";
   props();
 }
@@ -366,6 +505,33 @@ function props() {
   const box = document.getElementById("map-props");
   if (!sel) {
     box.innerHTML = `<p class="empty-note">Nothing selected. Click a pad, a building or a road.</p>`;
+    return;
+  }
+
+  if (sel.kind === "gate") {
+    const gate = openEnds()[sel.i];
+    if (!gate) {
+      // The road it belonged to was reshaped out from under the selection.
+      sel = null;
+      box.innerHTML = `<p class="empty-note">That way in has moved. Click it again.</p>`;
+      return;
+    }
+    box.innerHTML =
+      `<p class="map-selname">Way in / out</p>` +
+      `<div class="map-rows"><label for="map-gate">Name</label>` +
+      `<input type="text" id="map-gate" value="${escapeHtml(gateName(gate, sel.i))}" maxlength="40" /></div>` +
+      `<p class="map-hint">Shown on the guest map beside this opening. Clear it to show nothing. ` +
+      `To move it, move the road — this marker is the end of the road itself.</p>`;
+    const input = document.getElementById("map-gate");
+    input.addEventListener("input", () => {
+      setGateName(gate, input.value);
+      redraw();
+      const again = document.getElementById("map-gate");
+      if (again) {
+        again.focus();
+        again.setSelectionRange(again.value.length, again.value.length);
+      }
+    });
     return;
   }
 
@@ -448,7 +614,7 @@ function onPointerDown(evt) {
   const t = evt.target;
   const svg = document.getElementById("map-board");
   const vtx = t.getAttribute?.("data-vtx");
-  const g = t.closest?.("[data-bay],[data-feature],[data-road]");
+  const g = t.closest?.("[data-bay],[data-feature],[data-road],[data-gate]");
 
   if (t.getAttribute?.("data-handle") && sel && sel.kind !== "road") {
     const it = sel.kind === "feature" ? L.features[sel.i] : L.bays[sel.i];
@@ -468,6 +634,12 @@ function onPointerDown(evt) {
     return;
   }
 
+  if (g.hasAttribute("data-gate")) {
+    // Gates aren't draggable -- their position IS the road end, so it's moved by moving the road.
+    sel = { kind: "gate", i: Number(g.getAttribute("data-gate")) };
+    redraw();
+    return;
+  }
   if (g.hasAttribute("data-road")) {
     sel = { kind: "road", i: Number(g.getAttribute("data-road")) };
     redraw();
@@ -540,7 +712,7 @@ function onKey(evt) {
     evt.preventDefault();
     return deleteSelected();
   }
-  if (!sel || sel.kind === "road") return;
+  if (!sel || sel.kind === "road" || sel.kind === "gate") return;
 
   const d = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[evt.key];
   if (!d) return;

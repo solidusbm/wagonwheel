@@ -181,6 +181,12 @@
   .map-road.sel{stroke:var(--gold);}
   .map-vtx{fill:var(--gold-bright); stroke:var(--ink); stroke-width:1; cursor:grab;}
   .map-handle{fill:var(--parchment); stroke:var(--ink); stroke-width:1; cursor:nwse-resize;}
+  /* Ways in and out. Hollow rather than filled, because a gate is a gap in the boundary rather than
+     a thing sitting on the ground -- and it makes the road visible through it. */
+  .map-gate circle{fill:var(--bg); stroke:var(--rust); stroke-width:2; cursor:pointer;}
+  .map-gate.sel circle{stroke:var(--gold-bright); stroke-width:3;}
+  .map-gate text{fill:var(--rust); font-family:'JetBrains Mono',monospace; pointer-events:none;}
+  .map-gate.sel text{fill:var(--gold);}
   .seo-danger p{margin:0; font-size:13.5px;}
   /* The lead photo is the one guests actually see, so it says so rather than relying on the order. */
   .site-photo-picker .lead{position:absolute; top:5px; right:5px; background:var(--gold); color:var(--btn-text);
