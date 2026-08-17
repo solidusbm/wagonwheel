@@ -440,14 +440,10 @@ function renderSiteMap(sites) {
   const gates = openEnds(plan.roads).sort((a, b) => a.y - b.y);
   let gateLabels = "";
   gates.forEach((g, i) => {
-    const text = gateLabel(plan, g, i);
-    // An empty name means the office chose not to caption this way in. Drawing nothing is the
-    // point of that, so it must not fall back to a default here.
-    if (!text) return;
     const first = i === 0;
     const spec = first
-      ? { text, x: g.x + 4, y: g.y - 24, size: 13, anchor: "end", fill: "var(--gold)" }
-      : { text, x: g.x + 6, y: g.y + 8, size: 11, anchor: "start", fill: "var(--parchment-dim)" };
+      ? { text: "ENTRANCE", x: g.x + 4, y: g.y - 24, size: 13, anchor: "end", fill: "var(--gold)" }
+      : { text: "SECOND ACCESS", x: g.x + 6, y: g.y + 8, size: 11, anchor: "start", fill: "var(--parchment-dim)" };
     gateLabels += mapText(spec.x, spec.y, spec.text, {
       size: spec.size,
       fill: spec.fill,
@@ -456,10 +452,9 @@ function renderSiteMap(sites) {
     });
     extent.push(...labelExtent(spec, -bearing));
   });
-  const street = plan.street ?? "";
-  if (gates.length && street) {
+  if (gates.length) {
     const spec = {
-      text: street,
+      text: "POLLY PEAK DR.",
       x: Math.max(...gates.map((g) => g.x)) + 96,
       y: gates.reduce((sum, g) => sum + g.y, 0) / gates.length,
       size: 11,
@@ -515,31 +510,6 @@ function boundsOf(pts) {
 /* Road ends that no other road reaches -- the park's openings onto the street.
    Measured against whole segments, not just vertices: a rung that meets the west leg
    halfway along it is joined, even though it is nowhere near either of the leg's ends. */
-/* What to call a way in or out. The gate positions come from the road geometry, so they can't be
-   stored -- but the NAMES are the office's, edited in /admin -> Park map. Each saved name carries
-   the position its gate was at when it was typed, and is matched back by proximity: nudging the
-   entrance road keeps its name, while redrawing the roads somewhere else lets the label fall back
-   to the default rather than attaching itself to the wrong end of the park.
-
-   Falls back to ENTRANCE for the northernmost and EXIT for the rest, which is what the map said
-   before any of this was editable -- except that it used to say "SECOND ACCESS", which is a
-   surveyor's phrase rather than something a guest towing a fifth wheel is looking for. */
-const GATE_MATCH_FT = 80;
-
-function gateLabel(plan, gate, i) {
-  let best = null;
-  let bestDist = GATE_MATCH_FT;
-  for (const saved of plan.gates ?? []) {
-    const d = Math.hypot(saved.x - gate.x, saved.y - gate.y);
-    if (d < bestDist) {
-      bestDist = d;
-      best = saved;
-    }
-  }
-  if (best) return best.label;
-  return i === 0 ? "ENTRANCE" : "EXIT";
-}
-
 function openEnds(roads) {
   const ends = [];
   roads.forEach((r, i) => {

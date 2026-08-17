@@ -49,7 +49,6 @@ const MAX_FEATURES = 40;
 const MAX_BAYS = 120;
 const MAX_ROADS = 60;
 const MAX_PTS = 40;
-const MAX_GATES = 12;
 
 /** Accepts anything -- a v1 layout with a single `office`, a v2 one with `features`, a half-typed
  *  object from the editor, or junk -- and returns a layout that is safe to draw. */
@@ -66,15 +65,6 @@ export function normalise(raw) {
     features: [],
     bays: [],
     roads: [],
-    /* The name of the road the park opens onto. Drawn once, alongside the entrances. */
-    street: typeof src.street === "string" ? src.street.trim().slice(0, 60) : "POLLY PEAK DR.",
-    /* Captions for the ways in and out. The GATES THEMSELVES ARE NOT STORED -- they are found
-       geometrically, as road ends that meet no other road, so they follow the layout instead of
-       being pinned to particular entries in it. Only the words are kept, each with the position
-       its gate was at when it was named, and the renderer matches by proximity. That way nudging
-       the entrance road by a few feet keeps its name, while genuinely redrawing the roads lets
-       the labels fall back to their defaults rather than landing on the wrong end. */
-    gates: [],
   };
 
   /* v1 -> v2. The old shape carried exactly one building, as `office`, with no label or kind.
@@ -137,17 +127,6 @@ export function normalise(raw) {
     // which finds gates by looking for road ends that meet no other road.
     if (pts.length < 2) continue;
     out.roads.push({ w: num(r.w, 24, 4, 400), pts });
-  }
-
-  /* An empty label is meaningful -- it means "don't caption this gate" -- so this can't go through
-     str(), which would substitute a default for it. */
-  for (const g of (Array.isArray(src.gates) ? src.gates : []).slice(0, MAX_GATES)) {
-    if (!g || typeof g !== "object") continue;
-    out.gates.push({
-      x: num(g.x, 0, -MAX_FT, MAX_FT),
-      y: num(g.y, 0, -MAX_FT, MAX_FT),
-      label: typeof g.label === "string" ? g.label.trim().slice(0, 40) : "",
-    });
   }
 
   return out;

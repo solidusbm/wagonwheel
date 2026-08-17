@@ -52,14 +52,6 @@ export const PARK_LAYOUT = {
   bearing: -18,
   world: { w: 400, h: 340 },
   features: [{ id: "office", kind: "office", label: "Office", x: 303, y: 49, w: 45, h: 40, rot: 0 }],
-  /* The road the park opens onto. Present here, not just in normalise(), because renderSiteMap
-     reads this object directly when the layout request fails -- leaving it out would quietly drop
-     the street name from the map on exactly the days the site is already having a bad time. */
-  street: "POLLY PEAK DR.",
-  /* Names for the ways in and out. Empty means "use the defaults", which are ENTRANCE for the
-     northernmost opening and EXIT for the rest. The gates themselves are found from the road
-     geometry, so there is nothing to list here until the office renames one. */
-  gates: [],
   bays: [
     { n: 1, x: 142, y: 49, w: 20, h: 55, rot: 0 },
     { n: 2, x: 93, y: 52, w: 20, h: 55, rot: 0 },
