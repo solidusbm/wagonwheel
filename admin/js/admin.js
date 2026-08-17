@@ -1047,56 +1047,6 @@ The booking is cancelled.`
   }
 }
 
-/* ---------- payments ---------- */
-const squareCheckBtn = document.getElementById("square-check-btn");
-const squareResult = document.getElementById("square-result");
-
-squareCheckBtn.addEventListener("click", async () => {
-  squareCheckBtn.disabled = true;
-  squareResult.textContent = "Asking Square…";
-  try {
-    const res = await fetch("/api/admin/square/locations");
-    const d = await res.json();
-    if (!d.ok) {
-      squareResult.innerHTML =
-        "<strong>Square refused the request.</strong> " + escapeHtml(d.error ?? "Unknown error") +
-        (d.code ? " (" + escapeHtml(d.code) + ")" : "") +
-        "<br>Usually the access token does not match the environment, or it belongs to a different Square account.";
-      return;
-    }
-    const rows = d.locations
-      .map((l) => {
-        const marks = [];
-        if (l.isConfigured) marks.push("<strong>this site uses this one</strong>");
-        marks.push(l.canTakePayments ? "can take cards" : "<strong>cannot take cards</strong>");
-        if (l.status) marks.push(escapeHtml(l.status.toLowerCase()));
-        return "<div class=\"app-row\"><b>" + escapeHtml(l.name || l.id) + "</b> " +
-          escapeHtml(l.id) + " &mdash; " + marks.join(" &middot; ") + "</div>";
-      })
-      .join("");
-
-    let verdict;
-    if (!d.found) {
-      verdict = "<strong>The configured location is not in this Square account.</strong> " +
-        escapeHtml(d.configuredLocationId ?? "(none set)") +
-        " was not returned by these credentials — either it is from a different account, or from the other environment.";
-    } else if (!d.canTakePayments) {
-      verdict = "<strong>The configured location cannot take card payments.</strong> This is an account activation matter, not a setting: Square withholds card processing until business details and a bank account are on file and verified.";
-    } else {
-      verdict = "<strong>Ready.</strong> The configured location exists and can take card payments.";
-    }
-
-    squareResult.innerHTML =
-      "<div style=\"margin-bottom:10px\">Environment: <b>" + escapeHtml(d.environment) + "</b></div>" +
-      (rows || "<div>No locations returned at all.</div>") +
-      "<div style=\"margin-top:10px\">" + verdict + "</div>";
-  } catch (err) {
-    squareResult.textContent = "Failed: " + err.message;
-  } finally {
-    squareCheckBtn.disabled = false;
-  }
-});
-
 /* ---------- booking alert email ---------- */
 const emailStatusEl = document.getElementById("email-status");
 const emailTestBtn = document.getElementById("email-test-btn");

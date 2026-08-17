@@ -225,12 +225,18 @@ the exact string `"production"`, so `Production` silently leaves the app in sand
 bookings and charging nobody; `server/index.js` warns at boot about that and about an
 environment/application-ID mismatch.
 
-**Diagnose payment failures with `/admin` → Payments → "Check Square setup"** before assuming
-anything. It asks Square which locations the token can actually see and whether the configured one
-carries `CREDIT_CARD_PROCESSING`. "Not authorized to take payments with location ID" means one of
-three things — wrong location, location in a different Square account, or an account not cleared
-for cards — and they are indistinguishable at checkout. Both times it looked like an activation
-problem it was a **truncated location ID**; Square location IDs are 13 characters.
+**The `/admin` → Payments → "Check Square setup" diagnostic panel was removed 2026-08-17** at the
+user's direction (called it superfluous). It asked Square which locations the token could
+actually see and whether the configured one carried `CREDIT_CARD_PROCESSING` — useful history if
+this needs rebuilding: "not authorized to take payments with location ID" is ambiguous on its own
+(wrong location, location in a different Square account, or an account not cleared for cards, are
+indistinguishable at checkout), and both times it looked like an activation problem it was a
+**truncated location ID** (Square location IDs are 13 characters). The panel, its
+`GET /api/admin/square/locations` route, and the backing `listLocations()` in `server/lib/square.js`
+were all deleted together rather than just hiding the UI — `refundPayment()` in the same file is
+unrelated and still used by the refund flow below. If a payment starts failing with "not
+authorized," that ambiguity is still real; it just now has to be worked out by hand (check
+`SQUARE_LOCATION_ID` for truncation first, then the Square dashboard) rather than asked of a panel.
 
 **Refunds run through the app** (built 2026-08-11 — this section used to say there was no refund
 path; there is). `/admin` has a refund-quote + refund action per reservation, and guests can

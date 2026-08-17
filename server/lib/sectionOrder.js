@@ -18,7 +18,6 @@ export const SECTION_KEYS = [
   "push",
   "reviews",
   "feeds",
-  "payments",
   "email",
 ];
 

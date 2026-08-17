@@ -5,7 +5,7 @@ import { quote, cancellationQuote, isPriceable } from "../lib/pricing.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
 import { applySchema, applySeed, applyContentSeed, sitesCount } from "../lib/dbBootstrap.js";
 import { mailConfigStatus, sendTestEmail, sendSampleGuestEmail } from "../lib/email.js";
-import { listLocations, refundPayment } from "../lib/square.js";
+import { refundPayment } from "../lib/square.js";
 import { shrinkImage } from "../lib/imageResize.js";
 import { readLayout, writeLayout, FEATURE_KINDS } from "../lib/parkLayout.js";
 import { readSectionOrder, writeSectionOrder } from "../lib/sectionOrder.js";
@@ -1140,25 +1140,6 @@ router.post("/photos/optimize", async (req, res, next) => {
     res.json({ ok: true, photos: results.length, savedKb: Math.round(saved / 1024), results });
   } catch (err) {
     next(err);
-  }
-});
-
-/* ---------- payments ----------
-   Asks Square which locations the configured token can see. Checkout failing with "not
-   authorized to take payments with location ID" is ambiguous on its own -- it means either the
-   wrong location, a location in a different Square account, or an account that has not finished
-   activation. This distinguishes them without putting a card through. */
-router.get("/square/locations", async (req, res) => {
-  try {
-    const result = await listLocations();
-    res.json({ ok: true, environment: process.env.SQUARE_ENVIRONMENT === "production" ? "production" : "sandbox", ...result });
-  } catch (err) {
-    console.error("[square] Could not list locations", err);
-    res.status(400).json({
-      ok: false,
-      error: err?.errors?.[0]?.detail ?? err.message,
-      code: err?.errors?.[0]?.code ?? err.code ?? null,
-    });
   }
 });
 
