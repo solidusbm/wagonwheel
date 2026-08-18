@@ -505,12 +505,13 @@ What's still open:
   overrode a business decision the flag had already expressed. Don't rebuild it. If a *new*
   amenity ever needs qualifying, the park will say so; ask rather than inferring it from a count.
 
-- **Cloudflare email obfuscation is ON, and the user deferred deciding about it (2026-08-16).**
-  Found by crawling the live site. Cloudflare rewrites every `mailto:` in the page body to
+- **Cloudflare email obfuscation is ON. Decided 2026-08-17: turn it OFF** (deferred on 2026-08-16,
+  resolved the next day). Cloudflare currently rewrites every `mailto:` in the page body to
   `/cdn-cgi/l/email-protection#<hex>` and decodes it with an injected script at
   `/cdn-cgi/scripts/…/email-decode.min.js`. What that costs: the footer and contact addresses do
   not work for anyone without JavaScript, and no crawler reads a plain address anywhere on the
-  site. `href="mailto:"` occurrences surviving in the served HTML: **zero**.
+  site. `href="mailto:"` occurrences surviving in the served HTML: **zero**. That cost is why the
+  decision was to turn it off rather than leave it.
 
   Two things it does **not** break, both verified rather than assumed, so don't re-panic about
   them: the JSON-LD `email` is untouched (`banderawagonwheelrv@gmail.com` — Cloudflare skips
@@ -519,19 +520,20 @@ What's still open:
   claim still holds — this adds no third-party request.
 
   The toggle lives in the **client's** Cloudflare account (Scrape Shield → Email Address
-  Obfuscation), not in this repo, so it can't be changed from here. Don't work around it in markup
-  — leave the `mailto:` links as they are. Raise it when the user picks this back up.
+  Obfuscation), not in this repo, so it can't be changed from here — **still needs someone with
+  access to that account to flip it off.** Nothing in this repo's markup needs to change either
+  before or after: the `mailto:` links already in `public/index.html`'s footer are real links,
+  Cloudflare was only rewriting them at the edge, so turning the toggle off is the entire fix.
 
-- **Cloudflare Web Analytics is ON — found 2026-08-17, same category as email obfuscation above.**
+- **Cloudflare Web Analytics is ON. Decided 2026-08-17: keep it on** (same day it was found).
   `static.cloudflareinsights.com/beacon.min.js` plus a `POST /cdn-cgi/rum` load on every guest
   page. It is real-user-monitoring, cookieless per Cloudflare's own docs, but it directly
   contradicted `/privacy.html`'s original "runs no analytics" wording, which was written before
   this was checked. Confirmed via a repo-wide grep that it isn't in this app's own code — it's
   injected at Cloudflare's edge by a toggle in the **client's** Cloudflare account (Speed/Analytics
   → Web Analytics), not something this repo controls. `/privacy.html` was amended the same day to
-  disclose it by name instead of denying it (see "Privacy" above) — that is the fix that was within
-  reach; disabling the beacon itself is not. If the user turns it off in Cloudflare, revert the
-  privacy-page wording back to the flat "no analytics" claim.
+  disclose it by name instead of denying it (see "Privacy" above), and that disclosure is now the
+  settled state, not a stopgap — no further doc change needed unless the decision changes.
 
 - **`ADMIN_EMAIL` includes a personal address, not just the park's own — found 2026-08-17.** The
   Coolify env var that `/admin` → Booking alert email sends to is
