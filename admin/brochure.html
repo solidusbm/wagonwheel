@@ -142,9 +142,12 @@
 <div class="toolbar">
   <a href="/admin" class="btn btn-ghost">&larr; Back to admin</a>
   <span class="spacer"></span>
-  <button type="button" class="btn btn-ghost" id="print-color">Print (color)</button>
-  <button type="button" class="btn btn-primary" id="print-bw">Print (black &amp; white)</button>
-  <p class="note">Print double-sided, short-edge flip, then fold into three panels &mdash; the front cover is the rightmost panel on the outside sheet.</p>
+  <button type="button" class="btn btn-ghost" id="print-color">Save as PDF (color)</button>
+  <button type="button" class="btn btn-primary" id="print-bw">Save as PDF (black &amp; white)</button>
+  <p class="note">In the save dialog, set <b>Paper size</b> to <b>11 x 8.5 in</b> (or Layout &rarr; Landscape) before
+    saving &mdash; browsers don't always pick that up from the page automatically, and the front cover (the
+    rightmost panel) gets cropped off if it saves as a portrait Letter page instead. Print double-sided,
+    short-edge flip, then fold into three panels.</p>
 </div>
 
 <div class="sheet-label">Outside &mdash; cover, back, and the inside-left flap</div>
