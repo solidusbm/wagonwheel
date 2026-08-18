@@ -381,9 +381,16 @@ nothing to break, so monitoring would only have delayed the protection.
 
 `/privacy.html` went up 2026-08-14, linked from every footer and from the booking form itself. It
 is written to describe **only what the app actually does** — verified before writing, not assumed:
-no cookies, no analytics, no trackers; card details go straight to Square and never reach this
-server; the public iCal feeds carry dates only. If you change what is collected, stored, or shared,
-that page has to change with it, or it becomes a false statement on a live commercial site.
+no cookies of its own, no advertising/social trackers; card details go straight to Square and
+never reach this server; the public iCal feeds carry dates only. If you change what is collected,
+stored, or shared, that page has to change with it, or it becomes a false statement on a live
+commercial site.
+
+**Amended 2026-08-17:** a pre-launch review found `static.cloudflareinsights.com/beacon.min.js` +
+a `POST /cdn-cgi/rum` loading on every page, which the page's original "runs no analytics" wording
+didn't account for — see "Cloudflare Web Analytics" under "Known unresolved" below. The page now
+discloses it by name rather than denying it. If the user disables it in Cloudflare, this page can
+revert to the stronger "no analytics" wording.
 
 Two things it deliberately does **not** promise: automatic deletion after N months (nothing in the
 app does that), or a fixed retention period. It says the park keeps records for its accounts and
@@ -463,11 +470,11 @@ privacy page, and the fields actually being optional.
   misconfiguration — a reservation showing `bookingFeeCents: 0` is correct. Do not restore the old
   $5 default.
 - **Square is live.** Production credentials since 2026-08-11, verified end to end with a real card
-  (reservation `8YLQCZ5`, Square payment `fn2lStJEApIXYYPArBO1YUgxhgEZY`, refunded afterward).
-  `/admin` -> Payments -> "Check Square setup" asks Square which locations the token can see and
-  whether the configured one carries `CREDIT_CARD_PROCESSING` — use it before assuming a payment
-  failure is an account-activation problem. It was a truncated location ID both times it looked
-  like one (`LWB7T9H` vs the real 13-character `LWB7T9H0GY58E`).
+  (reservation `8YLQCZ5`, Square payment `fn2lStJEApIXYYPArBO1YUgxhgEZY`, refunded afterward). The
+  `/admin` → Payments → "Check Square setup" diagnostic that used to be the first stop for a
+  payment failure was **removed 2026-08-17** — see "Payments" above for what it did and why a
+  truncated `SQUARE_LOCATION_ID` (`LWB7T9H` vs the real 13-character `LWB7T9H0GY58E`) is the first
+  thing to check by hand now.
 
 ## Known unresolved / don't guess at these
 
@@ -514,6 +521,27 @@ What's still open:
   The toggle lives in the **client's** Cloudflare account (Scrape Shield → Email Address
   Obfuscation), not in this repo, so it can't be changed from here. Don't work around it in markup
   — leave the `mailto:` links as they are. Raise it when the user picks this back up.
+
+- **Cloudflare Web Analytics is ON — found 2026-08-17, same category as email obfuscation above.**
+  `static.cloudflareinsights.com/beacon.min.js` plus a `POST /cdn-cgi/rum` load on every guest
+  page. It is real-user-monitoring, cookieless per Cloudflare's own docs, but it directly
+  contradicted `/privacy.html`'s original "runs no analytics" wording, which was written before
+  this was checked. Confirmed via a repo-wide grep that it isn't in this app's own code — it's
+  injected at Cloudflare's edge by a toggle in the **client's** Cloudflare account (Speed/Analytics
+  → Web Analytics), not something this repo controls. `/privacy.html` was amended the same day to
+  disclose it by name instead of denying it (see "Privacy" above) — that is the fix that was within
+  reach; disabling the beacon itself is not. If the user turns it off in Cloudflare, revert the
+  privacy-page wording back to the flat "no analytics" claim.
+
+- **`ADMIN_EMAIL` includes a personal address, not just the park's own — found 2026-08-17.** The
+  Coolify env var that `/admin` → Booking alert email sends to is
+  `banderawagonwheelrv@gmail.com,solidusbm@gmail.com` — every real guest booking (name, dates,
+  contact details, amount charged) alerts the developer's personal Gmail alongside the park's own
+  address. `ADMIN_EMAIL` is read straight from `process.env` in `server/lib/email.js` and
+  `server/routes/admin.js` with no database or admin-UI path to change it (confirmed by grep), so
+  it can only be edited in Coolify → `wwrvb` → Environment Variables, which this repo/Claude has no
+  access to. Flagged, not changed — raise it with the user before the park's data keeps flowing
+  there past the development phase.
 
 - Real footages for the site map. The map was rebuilt on 2026-08-10 against the filed plan
   (Mangold Engineering dwg 100-7799, sheet 2 of 5, "System Layout", 1" = 100'), supplied by the
@@ -584,9 +612,10 @@ before assuming something is or isn't done.
 ## Testing UI changes
 
 There's no automated test suite. For anything touching the booking flow, admin panel, or payment
-form, actually click through it — locally with `npm run dev`, or against the live Render URL for
-anything that depends on production-only config (Square sandbox, the live database). Screenshot
-or describe what you verified rather than assuming code review is sufficient.
+form, actually click through it — locally with `npm run dev`, or against the live site
+(https://banderawagonwheelrv.com/) for anything that depends on production-only config (real
+Square credentials, the live database). Screenshot or describe what you verified rather than
+assuming code review is sufficient.
 
 **Testing phone/tablet layouts:** the browser automation's `resize_window` doesn't actually change
 `window.innerWidth` in this environment (only the outer window bounds) — CSS media queries won't
