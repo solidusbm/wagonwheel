@@ -38,23 +38,45 @@
   <svg class="hero-art" viewBox="0 0 1200 520" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
     <!-- Colours come from the --hero-* tokens, never literal hex. They were hardcoded to the dark
          palette's values, so this artwork stayed night-time when the site went light. -->
+    <!-- Below 820px this SVG is absolutely-positioned and cropped to cover (see .hero-art in
+         style.css), centered on x=600 -- at a phone width that shows roughly x 420-780 of this
+         1200-wide viewBox and nothing outside it. The sun (was cx=980) and half the cacti used to
+         sit entirely outside that window and simply never appeared on a phone; both are positioned
+         with that visible band in mind now, not just the desktop-width composition. -->
+    <defs>
+      <symbol id="hero-cactus" viewBox="-20 -58 40 58">
+        <!-- A small prickly-pear cluster: a base pad plus three smaller pads at angles off it. The
+             stroke is a ground tone, not a true outline colour -- it's there so overlapping pads
+             read as separate paddles instead of blurring into one round blob. -->
+        <g stroke="var(--hero-ground-3)" stroke-width="1.2" stroke-linejoin="round">
+          <ellipse cx="0" cy="-11" rx="11" ry="15"/>
+          <ellipse cx="-13" cy="-32" rx="8" ry="13" transform="rotate(-28 -13 -32)"/>
+          <ellipse cx="12" cy="-36" rx="7.5" ry="12" transform="rotate(24 12 -36)"/>
+          <ellipse cx="-2" cy="-52" rx="6" ry="10" transform="rotate(-8 -2 -52)"/>
+        </g>
+      </symbol>
+    </defs>
     <rect width="1200" height="520" fill="var(--hero-sky)"/>
-    <circle cx="980" cy="120" r="150" fill="var(--hero-sun)" opacity="0.55"/>
+    <circle cx="820" cy="120" r="150" fill="var(--hero-sun)" opacity="0.55"/>
     <g stroke="var(--hero-sun-ring)" stroke-width="4" opacity="0.4">
-      <circle cx="980" cy="120" r="150" fill="none"/>
-      <line x1="980" y1="-30" x2="980" y2="270"/>
-      <line x1="830" y1="120" x2="1130" y2="120"/>
-      <line x1="874" y1="14" x2="1086" y2="226"/>
-      <line x1="874" y1="226" x2="1086" y2="14"/>
+      <circle cx="820" cy="120" r="150" fill="none"/>
+      <line x1="820" y1="-30" x2="820" y2="270"/>
+      <line x1="670" y1="120" x2="970" y2="120"/>
+      <line x1="714" y1="14" x2="926" y2="226"/>
+      <line x1="714" y1="226" x2="926" y2="14"/>
     </g>
     <polygon points="0,520 0,300 200,240 400,310 620,220 820,300 1000,250 1200,320 1200,520" fill="var(--hero-ground-1)"/>
     <polygon points="0,520 0,370 250,330 500,390 750,320 1000,380 1200,350 1200,520" fill="var(--hero-ground-2)"/>
     <polygon points="0,520 0,430 300,410 600,440 900,410 1200,440 1200,520" fill="var(--hero-ground-3)"/>
-    <g fill="var(--hero-trees)">
-      <ellipse cx="150" cy="405" rx="7" ry="34"/><circle cx="150" cy="368" r="26"/>
-      <ellipse cx="270" cy="420" rx="6" ry="28"/><circle cx="270" cy="390" r="22"/>
-      <ellipse cx="980" cy="410" rx="7" ry="32"/><circle cx="980" cy="376" r="24"/>
-      <ellipse cx="1100" cy="425" rx="6" ry="26"/><circle cx="1100" cy="397" r="20"/>
+    <g fill="var(--hero-cacti)">
+      <use href="#hero-cactus" x="130" y="348" width="40" height="58"/>
+      <use href="#hero-cactus" x="253" y="371.7" width="34" height="49.3"/>
+      <use href="#hero-cactus" x="504" y="369.6" width="32" height="46.4"/>
+      <use href="#hero-cactus" x="602" y="386.3" width="26" height="37.7"/>
+      <use href="#hero-cactus" x="681" y="352.9" width="38" height="55.1"/>
+      <use href="#hero-cactus" x="815" y="376.5" width="30" height="43.5"/>
+      <use href="#hero-cactus" x="960" y="353" width="40" height="58"/>
+      <use href="#hero-cactus" x="1084" y="379.6" width="32" height="46.4"/>
     </g>
     <path d="M0,470 Q150,450 300,472 T600,468 T900,474 T1200,466 L1200,520 L0,520 Z" fill="var(--hero-water)" opacity="0.55"/>
   </svg>
