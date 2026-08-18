@@ -505,25 +505,16 @@ What's still open:
   overrode a business decision the flag had already expressed. Don't rebuild it. If a *new*
   amenity ever needs qualifying, the park will say so; ask rather than inferring it from a count.
 
-- **Cloudflare email obfuscation is ON. Decided 2026-08-17: turn it OFF** (deferred on 2026-08-16,
-  resolved the next day). Cloudflare currently rewrites every `mailto:` in the page body to
-  `/cdn-cgi/l/email-protection#<hex>` and decodes it with an injected script at
-  `/cdn-cgi/scripts/…/email-decode.min.js`. What that costs: the footer and contact addresses do
-  not work for anyone without JavaScript, and no crawler reads a plain address anywhere on the
-  site. `href="mailto:"` occurrences surviving in the served HTML: **zero**. That cost is why the
-  decision was to turn it off rather than leave it.
-
-  Two things it does **not** break, both verified rather than assumed, so don't re-panic about
-  them: the JSON-LD `email` is untouched (`banderawagonwheelrv@gmail.com` — Cloudflare skips
-  `<script type="application/ld+json">`), so structured data still carries the address; and the
-  decode script is **same-origin**, so `/privacy.html`'s "almost nothing loads from anywhere else"
-  claim still holds — this adds no third-party request.
-
-  The toggle lives in the **client's** Cloudflare account (Scrape Shield → Email Address
-  Obfuscation), not in this repo, so it can't be changed from here — **still needs someone with
-  access to that account to flip it off.** Nothing in this repo's markup needs to change either
-  before or after: the `mailto:` links already in `public/index.html`'s footer are real links,
-  Cloudflare was only rewriting them at the edge, so turning the toggle off is the entire fix.
+- **Cloudflare email obfuscation was ON, deferred 2026-08-16, decided and DONE 2026-08-17: turned
+  off.** Flipped in the **client's** Cloudflare account (Security → Settings → Email Address
+  Obfuscation, not in this repo) and verified live the same day — `/privacy.html`'s `mailto:` link
+  (the only one in the codebase; `grep -r mailto: public/` finds it nowhere else — the footer
+  address in `public/index.html` is plain text, not a link) now serves as
+  `href="mailto:banderawagonwheelrv@gmail.com"` instead of being rewritten to
+  `/cdn-cgi/l/email-protection#<hex>` and decoded by an injected script. Nothing in this repo's
+  markup changed or needed to — the link was always real; Cloudflare was only rewriting it at the
+  edge, so flipping the account toggle was the entire fix. Don't re-add any workaround for
+  obfuscation in markup; there's nothing to work around any more.
 
 - **Cloudflare Web Analytics is ON. Decided 2026-08-17: keep it on** (same day it was found).
   `static.cloudflareinsights.com/beacon.min.js` plus a `POST /cdn-cgi/rum` load on every guest
