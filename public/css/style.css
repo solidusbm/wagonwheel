@@ -143,8 +143,11 @@ a{color:var(--gold);}
 .stat .l{font-size:12px; color:var(--parchment-dim); text-transform:uppercase; letter-spacing:0.06em; font-family:'JetBrains Mono',monospace;}
 
 /* ---------- gallery ---------- */
-.gallery{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px; padding-bottom:16px;}
-.gallery figure{margin:0; background:var(--bg-panel); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius); overflow:hidden;}
+/* A swipeable strip, not a grid: scroll-snap does the carousel work with no JS and no auto-motion
+   -- a guest can actually stop and look at a photo. Each figure is a fixed width so the row always
+   has a visible "next one" peeking at the edge, which is the whole affordance for "this scrolls". */
+.gallery{display:flex; overflow-x:auto; scroll-snap-type:x proximity; gap:18px; padding-bottom:16px; -webkit-overflow-scrolling:touch;}
+.gallery figure{flex:0 0 260px; scroll-snap-align:start; margin:0; background:var(--bg-panel); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius); overflow:hidden;}
 .gallery svg{display:block; width:100%; height:auto;}
 /* <picture> is inline by default -- left as-is it adds a baseline strip under each tile. */
 .gallery picture{display:block;}
@@ -158,6 +161,15 @@ a{color:var(--gold);}
 .amenity{background:var(--bg-panel); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius); padding:20px; text-align:center;}
 .amenity svg{width:30px; height:30px; color:var(--gold-bright); margin-bottom:10px;}
 .amenity .t{font-size:14.5px; font-weight:600;}
+/* Below 560px, minmax(200px,1fr) only ever fits one column, so all 13 tiles stack -- a long scroll
+   for what's static reference info, not something to read top to bottom. Forced to 2 columns with
+   smaller icons/padding/text so each tile still has room to breathe at half the width. */
+@media(max-width:560px){
+  .amenities-grid{grid-template-columns:1fr 1fr; gap:10px;}
+  .amenity{padding:14px 10px;}
+  .amenity svg{width:24px; height:24px; margin-bottom:6px;}
+  .amenity .t{font-size:12.5px;}
+}
 
 /* ---------- nearby ---------- */
 .nearby-list{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; padding-bottom:56px;}
