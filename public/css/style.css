@@ -123,6 +123,13 @@ a{color:var(--gold);}
 
 /* ---------- section shells ---------- */
 .section-pad{padding:64px 0 8px;}
+/* A small rustic divider above a section heading -- dashed lines flanking the park's own wagon-wheel
+   mark (the same SVG as the nav brand, not a generic ornament) rather than a plain hairline. Marks
+   the start of Gallery/Amenities/Nearby/Reservations, not About -- About already reads as the start
+   of the page, right under the hero, so it doesn't need one. */
+.section-divider{display:flex; align-items:center; gap:14px; max-width:260px; margin:0 auto 22px;}
+.section-divider::before, .section-divider::after{content:""; flex:1; height:0; border-top:1px dashed var(--line);}
+.section-divider svg{width:20px; height:20px; color:var(--gold); flex:0 0 auto;}
 .section-head{max-width:640px; margin:0 auto 32px; text-align:center;}
 .section-head .eyebrow{font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;}
 /* h1 and h2 styled identically here on purpose. The heading that names a page is an <h1> -- it was
@@ -138,7 +145,10 @@ a{color:var(--gold);}
 @media(max-width:760px){.about-grid{grid-template-columns:1fr;}}
 .about-grid p{line-height:1.7; font-size:15.5px; color:var(--parchment);}
 .stat-list{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
-.stat{background:var(--bg-panel); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius); padding:18px;}
+/* Double-line frame: a solid gold outer edge plus an inset dashed line, rather than the near-invisible
+   rgba border this used to carry. Same treatment on .amenity and .panel below -- one card language
+   for the whole site, not just this section. */
+.stat{background:var(--bg-panel); border:1px solid var(--gold); outline:1px dashed var(--line); outline-offset:-6px; border-radius:var(--radius); padding:18px;}
 .stat .n{font-family:'JetBrains Mono',monospace; font-size:26px; color:var(--gold-bright);}
 .stat .l{font-size:12px; color:var(--parchment-dim); text-transform:uppercase; letter-spacing:0.06em; font-family:'JetBrains Mono',monospace;}
 
@@ -148,12 +158,18 @@ a{color:var(--gold);}
    motion, this is what stays. js/gallery-scroll.js enhances it into a self-scrolling banner by
    wrapping the figures in .gallery-track and adding .gallery-auto -- see the rules below. */
 .gallery{display:flex; overflow-x:auto; scroll-snap-type:x proximity; gap:18px; padding-bottom:16px; -webkit-overflow-scrolling:touch;}
-.gallery figure{flex:0 0 260px; scroll-snap-align:start; margin:0; background:var(--bg-panel); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius); overflow:hidden;}
+/* Corner brackets instead of a full frame -- opposite corners only (top-left, bottom-right), like
+   the photo mounts in an old album. overflow can't stay hidden here (it would clip the brackets,
+   which sit partly outside the image's own box), so the image itself gets the radius instead. */
+.gallery figure{flex:0 0 260px; scroll-snap-align:start; margin:0; background:var(--bg-panel); border-radius:var(--radius); position:relative; padding:10px;}
+.gallery figure::before, .gallery figure::after{content:""; position:absolute; width:20px; height:20px; pointer-events:none;}
+.gallery figure::before{top:5px; left:5px; border-top:2px solid var(--gold); border-left:2px solid var(--gold);}
+.gallery figure::after{bottom:5px; right:5px; border-bottom:2px solid var(--gold); border-right:2px solid var(--gold);}
 .gallery svg{display:block; width:100%; height:auto;}
 /* <picture> is inline by default -- left as-is it adds a baseline strip under each tile. */
 .gallery picture{display:block;}
-.gallery img{display:block; width:100%; height:216px; object-fit:cover;}
-.gallery figcaption{padding:12px 14px; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--parchment-dim); display:flex; justify-content:space-between; gap:8px;}
+.gallery img{display:block; width:100%; height:216px; object-fit:cover; border-radius:2px;}
+.gallery figcaption{padding:12px 6px 0; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--parchment-dim); display:flex; justify-content:space-between; gap:8px;}
 .gallery figcaption b{color:var(--parchment); font-family:'Zilla Slab',serif; font-size:13px; font-weight:600;}
 .gallery-more{text-align:center; margin:0 0 44px;}
 
@@ -167,7 +183,7 @@ a{color:var(--gold);}
 
 /* ---------- amenities ---------- */
 .amenities-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; padding-bottom:56px;}
-.amenity{background:var(--bg-panel); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius); padding:20px; text-align:center;}
+.amenity{background:var(--bg-panel); border:1px solid var(--gold); outline:1px dashed var(--line); outline-offset:-6px; border-radius:var(--radius); padding:20px; text-align:center;}
 .amenity svg{width:30px; height:30px; color:var(--gold-bright); margin-bottom:10px;}
 .amenity .t{font-size:14.5px; font-weight:600;}
 /* Below 560px, minmax(200px,1fr) only ever fits one column, so all 13 tiles stack -- a long scroll
@@ -210,7 +226,7 @@ a{color:var(--gold);}
 .trail .line{height:1px; width:34px; background:var(--line); margin-top:5px;}
 
 /* ---------- panels ---------- */
-.panel{background:var(--bg-panel); border:1px solid rgba(232,220,196,0.1); border-radius:var(--radius); padding:32px; margin-bottom:24px;}
+.panel{background:var(--bg-panel); border:1px solid var(--gold); outline:1px dashed var(--line); outline-offset:-6px; border-radius:var(--radius); padding:32px; margin-bottom:24px;}
 /* 32px each side is right on a desktop and expensive on a phone: nested inside .wrap and a
    <details>, it left the site editor's photo grid 181px wide out of a 390px screen -- one column,
    for a form the office uses standing in the park. */
