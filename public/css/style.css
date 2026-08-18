@@ -166,9 +166,11 @@ a{color:var(--gold);}
    smaller icons/padding/text so each tile still has room to breathe at half the width. */
 @media(max-width:560px){
   .amenities-grid{grid-template-columns:1fr 1fr; gap:10px;}
-  .amenity{padding:14px 10px;}
-  .amenity svg{width:24px; height:24px; margin-bottom:6px;}
-  .amenity .t{font-size:12.5px;}
+  /* Icon beside the text instead of stacked above it -- one line tall instead of two, so the
+     2-column grid above takes noticeably less vertical space, not just narrower columns. */
+  .amenity{padding:12px 10px; display:flex; align-items:center; gap:10px; text-align:left;}
+  .amenity svg{width:22px; height:22px; margin-bottom:0; flex:0 0 auto;}
+  .amenity .t{font-size:12px;}
 }
 
 /* ---------- nearby ---------- */
@@ -177,6 +179,14 @@ a{color:var(--gold);}
 /* --bg-panel-2 is a fixed dark accent, not a style-preset var — text here must stay fixed too, not follow --parchment */
 .nearby-item .t{font-size:15px; font-weight:600; margin-bottom:4px; color:var(--parchment);}
 .nearby-item .d{font-size:13px; color:var(--parchment-dim); line-height:1.5;}
+/* Same fix as the amenities grid: minmax(220px,1fr) never fits two on a phone-width row, so six
+   cards stacked to one long column. Forced to 2 columns with tighter padding/text. */
+@media(max-width:560px){
+  .nearby-list{grid-template-columns:1fr 1fr; gap:10px;}
+  .nearby-item{padding:12px 12px;}
+  .nearby-item .t{font-size:13px;}
+  .nearby-item .d{font-size:11.5px; line-height:1.4;}
+}
 
 /* ---------- booking section ---------- */
 .booking-shell{padding-top:56px; border-top:1px solid rgba(232,220,196,0.14);}
