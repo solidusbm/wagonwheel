@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Park brochure — Wagon Wheel RV Park</title>
+<link rel="stylesheet" href="/css/fonts.css" />
+<link rel="stylesheet" href="/css/style.css" />
+<style>
+  /* Same "sheet of paper" family as admin/application.html, admin/summary.html and admin/guide.html,
+     scaled up to a full 11x8.5in landscape trifold -- two physical print pages (outside face, then
+     inside face), each split into three panels with CSS flex. Content mirrors the design canvas
+     brochure but lives here as plain HTML/CSS: real photo URLs instead of embedded images, so a
+     photo re-upload in /admin -> Photos updates this page too, and it never depends on a claude.ai
+     account to open or print. */
+  :root{
+    --accent:#87590f; --amt:#a9721f; --ink:#3c2a1a; --ink-dim:#6b5844;
+    --bg:#f6ecd8; --bg-panel:#fffaf0; --bg-panel-2:#efdfc0; --line:#d8c39d; --fold:rgba(216,195,157,0.6);
+    --cover-eyebrow:#d9a55c; --cover-text:#f7ecd8;
+    --scrim-a:rgba(43,29,16,0); --scrim-b:rgba(43,29,16,0.55); --scrim-c:rgba(43,29,16,0.94); --scrim-d:#2b1d10;
+    --photo-filter:none;
+  }
+  body.bw{
+    --accent:#000; --amt:#000; --ink:#000; --ink-dim:#444;
+    --bg:#fff; --bg-panel:#fff; --bg-panel-2:#fff; --line:#999; --fold:#bbb;
+    --cover-eyebrow:#fff; --cover-text:#fff;
+    --scrim-a:rgba(0,0,0,0); --scrim-b:rgba(0,0,0,0.55); --scrim-c:rgba(0,0,0,0.94); --scrim-d:#000;
+    --photo-filter:grayscale(1) contrast(1.08);
+  }
+  *{box-sizing:border-box;}
+  body{background:#e7e2d6; padding:0; margin:0; color:var(--ink);}
+  body.bw{background:#ddd;}
+  .toolbar{max-width:11in; margin:20px auto 0; display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .toolbar .spacer{flex:1;}
+  .toolbar a, .toolbar button{font-family:'JetBrains Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer;}
+  .toolbar .note{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#6b5844; font-style:italic; width:100%; margin:2px 0 0;}
+
+  .sheet-page{
+    width:11in; height:8.5in; margin:24px auto; background:#fff;
+    box-shadow:0 2px 18px rgba(0,0,0,0.18); display:flex; overflow:hidden;
+    font-family:'Zilla Slab', Georgia, serif; color:var(--ink);
+  }
+  .sheet-label{max-width:11in; margin:0 auto; font-family:'JetBrains Mono',monospace; font-size:10.5px;
+    color:#6b5844; text-transform:uppercase; letter-spacing:0.06em; padding:0 2px;}
+
+  .bpanel{width:33.334%; height:100%; display:flex; flex-direction:column; flex:0 0 33.334%; padding:0.42in 0.35in;}
+  .fold-line{width:1px; background:var(--fold);}
+  .eyebrow{font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase; color:var(--accent);}
+  h2{font-family:'Rye',serif; font-weight:400; margin:8px 0 0; color:var(--ink); font-size:23px; line-height:1.15;}
+  .rule{height:2px; background:var(--line); border:none; margin:14px 0 16px;}
+  a{color:var(--accent); text-decoration:none;}
+
+  img{filter:var(--photo-filter);}
+
+  /* ---- flap ---- */
+  .why-list{display:flex; flex-direction:column; gap:16px; margin-top:16px;}
+  .why-item{display:flex; gap:12px; align-items:flex-start;}
+  .why-item svg{width:20px; height:20px; flex:0 0 auto; color:var(--accent); margin-top:2px;}
+  .why-item p{margin:0; font-size:13.5px; line-height:1.5;}
+  .flap-stats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:22px;}
+  .flap-stat{text-align:center;}
+  .flap-stat .n{font-family:'JetBrains Mono',monospace; font-size:18px; color:var(--amt);}
+  .flap-stat .l{font-family:'JetBrains Mono',monospace; font-size:8.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-dim); margin-top:2px;}
+  .flap-photo{margin-top:auto;}
+  .flap-photo img{width:100%; height:150px; object-fit:cover; display:block;}
+  .flap-photo figcaption{margin:0; font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--ink-dim); padding:7px 0 0; text-transform:uppercase; letter-spacing:0.04em;}
+
+  /* ---- back cover ---- */
+  .back{background:var(--bg-panel);}
+  .back-brand{display:flex; align-items:center; gap:9px;}
+  .back-brand svg{color:var(--ink);}
+  .back-brand span{font-family:'Rye',serif; font-size:19px;}
+  .addr{font-size:14.5px; line-height:1.65; margin:22px 0 0;}
+  .addr strong{display:block; font-size:15.5px; margin-bottom:2px;}
+  .contact-row{display:flex; align-items:center; gap:9px; margin-top:8px; font-size:14px;}
+  .contact-row svg{width:15px; height:15px; color:var(--accent); flex:0 0 auto;}
+  .hours-table{margin-top:24px; width:100%; border-collapse:collapse;}
+  .hours-table td{font-size:12.5px; padding:4px 0; border-bottom:1px solid var(--line);}
+  .hours-table td:last-child{text-align:right; font-family:'JetBrains Mono',monospace; color:var(--ink-dim);}
+  .hours-note{font-size:11px; color:var(--ink-dim); font-style:italic; margin-top:10px; line-height:1.5;}
+  .qr-block{margin-top:auto; width:100%; display:flex; flex-direction:column; align-items:center; text-align:center; padding-top:22px;}
+  .qr-block .qr-svg{width:88px; height:88px; padding:10px; background:#fff; border:1px solid var(--line); border-radius:3px; color:var(--ink);}
+  .qr-block .cap{font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-dim); margin-top:10px;}
+  .qr-block .url{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--accent); margin-top:3px;}
+
+  /* ---- front cover ---- */
+  .cover{position:relative; background:var(--scrim-d); color:var(--cover-text); padding:0;}
+  .cover-photo{position:absolute; inset:0; width:100%; height:100%; object-fit:cover;}
+  .cover-mark{position:relative; z-index:2; padding:26px 0 0 30px; color:var(--cover-text); opacity:0.92;}
+  .cover-scrim{position:absolute; left:0; right:0; bottom:0; height:58%; z-index:1;
+    background:linear-gradient(180deg, var(--scrim-a) 0%, var(--scrim-b) 30%, var(--scrim-c) 78%, var(--scrim-d) 100%);}
+  .cover-text{position:relative; z-index:2; margin-top:auto; padding:0 30px 34px;}
+  .cover-text .eyebrow{color:var(--cover-eyebrow);}
+  .cover-text h1{font-family:'Rye',serif; font-weight:400; font-size:37px; line-height:1.08; margin:8px 0 12px; color:var(--cover-text);}
+  .cover-text .sub{font-size:14px; line-height:1.5; margin:0 0 14px; color:var(--cover-text);}
+  .cover-badge{display:inline-flex; align-items:center; gap:7px; font-family:'JetBrains Mono',monospace; font-size:10px;
+    text-transform:uppercase; letter-spacing:0.05em; color:var(--cover-text); border:1px solid rgba(247,236,216,0.4); border-radius:999px; padding:6px 12px;}
+  body.bw .cover-badge{border-color:rgba(255,255,255,0.6);}
+  .cover-badge svg{width:13px; height:13px;}
+
+  /* ---- inside: rates ---- */
+  .rate-row{display:flex; align-items:baseline; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line);}
+  .rate-row:first-child{padding-top:4px;}
+  .rate-row .term{font-size:14px;}
+  .rate-row .term small{display:block; font-family:'JetBrains Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-dim); margin-top:2px;}
+  .rate-row .amt{font-family:'JetBrains Mono',monospace; font-size:20px; color:var(--amt);}
+  .brate-note{font-size:11.5px; line-height:1.55; color:var(--ink-dim); margin:12px 0 0; font-style:italic;}
+  .rate-photo{margin-top:auto;}
+  .rate-photo img{width:100%; height:128px; object-fit:cover; display:block; border-radius:3px;}
+  .rate-photo figcaption{margin:7px 0 0; font-family:'JetBrains Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-dim);}
+
+  /* ---- inside: amenities ---- */
+  .amenity-grid{display:grid; grid-template-columns:1fr 1fr; gap:13px 10px; margin-top:4px;}
+  .amenity-item{display:flex; gap:8px; align-items:flex-start;}
+  .amenity-item svg{width:17px; height:17px; flex:0 0 auto; color:var(--accent); margin-top:1px;}
+  .amenity-item span{font-size:11.8px; line-height:1.3;}
+  .amenities-photo{margin-top:auto;}
+  .amenities-photo img{width:100%; height:110px; object-fit:cover; display:block; border-radius:3px;}
+
+  /* ---- inside: nearby / cta ---- */
+  .nearby-photo{width:100%; height:168px; object-fit:cover; display:block; border-radius:3px; margin-bottom:18px;}
+  .bnearby-item{padding:10px 0; border-bottom:1px solid var(--line);}
+  .bnearby-item:first-of-type{padding-top:0;}
+  .bnearby-item .t{font-size:13.5px; font-weight:600;}
+  .bnearby-item .d{font-size:11.8px; color:var(--ink-dim); margin-top:2px; line-height:1.4;}
+  .cta-block{margin-top:auto; background:var(--bg-panel-2); border:1px solid var(--line); border-radius:3px; padding:18px; text-align:center;}
+  .cta-block .t{font-family:'Rye',serif; font-size:17px;}
+  .cta-block .u{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--accent); margin-top:6px;}
+  .cta-block .p{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-dim); margin-top:4px;}
+
+  @media print{
+    body{background:#fff;}
+    .toolbar{display:none;}
+    .sheet-label{display:none;}
+    .sheet-page{box-shadow:none; margin:0;}
+    #outside{page-break-after:always;}
+    @page{size:11in 8.5in; margin:0;}
+  }
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <a href="/admin" class="btn btn-ghost">&larr; Back to admin</a>
+  <span class="spacer"></span>
+  <button type="button" class="btn btn-ghost" id="print-color">Print (color)</button>
+  <button type="button" class="btn btn-primary" id="print-bw">Print (black &amp; white)</button>
+  <p class="note">Print double-sided, short-edge flip, then fold into three panels &mdash; the front cover is the rightmost panel on the outside sheet.</p>
+</div>
+
+<div class="sheet-label">Outside &mdash; cover, back, and the inside-left flap</div>
+<div class="sheet-page" id="outside">
+
+  <!-- Panel 1: inside-left flap -->
+  <div class="bpanel flap">
+    <div class="eyebrow">Why stay with us</div>
+    <h2 style="font-size:23px; margin-top:6px;">Family-run.<br>Flood-safe.<br>Full hookups.</h2>
+    <hr class="rule">
+    <div class="why-list">
+      <div class="why-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg>
+        <p>The managers live on site &mdash; there's almost always someone around to help.</p>
+      </div>
+      <div class="why-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17h18"/><path d="M5 17V9l7-5 7 5v8"/><path d="M9 13v4M15 13v4"/></svg>
+        <p>The whole property sits outside the FEMA 100-year floodplain &mdash; high ground, on purpose.</p>
+      </div>
+      <div class="why-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a15.5 15.5 0 0 1 20 0"/><path d="M5.5 12a10.5 10.5 0 0 1 13 0"/><path d="M9 15.5a5.5 5.5 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg>
+        <p>New high-speed WiFi, park-wide &mdash; plus Wired Ethernet on 11 of 12 sites.</p>
+      </div>
+      <div class="why-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="8" r="1.6"/><circle cx="14.5" cy="7" r="1.6"/><circle cx="18" cy="11" r="1.6"/><circle cx="5" cy="12" r="1.6"/><path d="M12 21c-2.5 0-4-1.4-4-3.2 0-2 1.7-3.3 2.6-4.6.5-.8.9-1.4 1.4-1.4s.9.6 1.4 1.4c.9 1.3 2.6 2.6 2.6 4.6 0 1.8-1.5 3.2-4 3.2Z"/></svg>
+        <p>Bring the dog &mdash; pets are welcome, with a dog park (large and small) right on site.</p>
+      </div>
+    </div>
+    <div class="flap-stats">
+      <div class="flap-stat"><div class="n">12</div><div class="l">Sites total</div></div>
+      <div class="flap-stat"><div class="n">30/50</div><div class="l">Amp hookup</div></div>
+      <div class="flap-stat"><div class="n">7 min</div><div class="l">To downtown</div></div>
+    </div>
+    <figure class="flap-photo">
+      <img src="/photos/15/image?w=640" alt="The park's dog park">
+      <figcaption>Large &amp; small dog park, on site</figcaption>
+    </figure>
+  </div>
+
+  <div class="fold-line"></div>
+
+  <!-- Panel 2: back cover -->
+  <div class="bpanel back">
+    <div class="back-brand">
+      <svg width="22" height="22" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="5"/>
+        <circle cx="50" cy="50" r="10" fill="currentColor"/>
+        <g stroke="currentColor" stroke-width="5">
+          <line x1="50" y1="4" x2="50" y2="96"/><line x1="4" y1="50" x2="96" y2="50"/>
+          <line x1="16.6" y1="16.6" x2="83.4" y2="83.4"/><line x1="83.4" y1="16.6" x2="16.6" y2="83.4"/>
+        </g>
+      </svg>
+      <span>Wagon Wheel RV</span>
+    </div>
+
+    <div class="addr">
+      <strong>Bandera Wagon Wheel RV Park</strong>
+      325 Polly Peak Dr<br>Bandera, TX 78003
+      <div class="contact-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.6A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .3 2 .7 2.9a2 2 0 0 1-.4 2.1L8 10.1a16 16 0 0 0 6 6l1.4-1.4a2 2 0 0 1 2.1-.4c.9.4 1.9.6 2.9.7a2 2 0 0 1 1.7 2Z"/></svg>
+        (830) 850-0805
+      </div>
+      <div class="contact-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+        banderawagonwheelrv@gmail.com
+      </div>
+    </div>
+
+    <table class="hours-table">
+      <tr><td>Monday &ndash; Friday</td><td>8am &ndash; 5pm</td></tr>
+      <tr><td>Saturday</td><td>9am &ndash; 3pm</td></tr>
+      <tr><td>Sunday</td><td>1pm &ndash; 5pm</td></tr>
+    </table>
+    <p class="hours-note">All guests register at the office before parking &mdash; inside the entrance gate, to your right. Check-in 3:00pm &middot; check-out 1:00pm.</p>
+
+    <div class="qr-block">
+      <svg class="qr-svg" viewBox="0 0 31 31" shape-rendering="crispEdges"><path stroke="currentColor" d="M1 1.5h7m3 0h4m2 0h1m1 0h3m1 0h7M1 2.5h1m5 0h1m3 0h2m1 0h1m1 0h2m5 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m1 0h2m4 0h1m1 0h1m5 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h2m2 0h1m1 0h1m2 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m1 0h2m1 0h1m1 0h1m2 0h1m1 0h3m1 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m1 0h3m1 0h1m2 0h2m3 0h1m1 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M9 8.5h2m1 0h1m2 0h1m1 0h1m2 0h2M1 9.5h1m1 0h5m4 0h4m2 0h1m2 0h1m1 0h5M2 10.5h5m5 0h1m1 0h1m2 0h9m3 0h1M1 11.5h1m1 0h1m1 0h3m4 0h1m1 0h3m8 0h1M1 12.5h1m4 0h1m1 0h4m1 0h1m5 0h3m2 0h3m1 0h1M3 13.5h1m2 0h2m3 0h1m2 0h3m1 0h1m1 0h1m5 0h2M1 14.5h6m2 0h2m6 0h1m2 0h2m1 0h3m3 0h1M1 15.5h4m2 0h2m1 0h1m2 0h7m1 0h2m3 0h2M2 16.5h1m2 0h2m2 0h1m2 0h1m2 0h1m3 0h6m3 0h1M1 17.5h2m1 0h2m1 0h1m3 0h2m3 0h1m1 0h1m1 0h1m5 0h2M1 18.5h1m2 0h1m1 0h1m2 0h2m1 0h1m1 0h1m5 0h6m1 0h1m1 0h1M1 19.5h1m1 0h1m3 0h1m1 0h1m1 0h1m1 0h6m2 0h2m1 0h2m1 0h1M1 20.5h1m2 0h3m1 0h2m1 0h2m1 0h1m2 0h1m1 0h3m3 0h1m2 0h1M1 21.5h1m2 0h2m1 0h2m1 0h1m2 0h1m1 0h1m2 0h2m1 0h5m1 0h3M9 22.5h1m1 0h1m1 0h1m4 0h2m1 0h1m3 0h5M1 23.5h7m2 0h1m1 0h2m2 0h3m1 0h2m1 0h1m1 0h3M1 24.5h1m5 0h1m1 0h2m1 0h2m1 0h3m1 0h3m3 0h1m2 0h1M1 25.5h1m1 0h3m1 0h1m1 0h1m1 0h2m5 0h1m2 0h5m1 0h3M1 26.5h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h1m1 0h1m1 0h2m5 0h4M1 27.5h1m1 0h3m1 0h1m1 0h3m2 0h6m3 0h6M1 28.5h1m5 0h1m2 0h1m1 0h3m2 0h1m3 0h1m4 0h1m1 0h1M1 29.5h7m1 0h3m1 0h1m4 0h1m1 0h1m2 0h1m1 0h1m1 0h1"/></svg>
+      <div class="cap">Scan to check availability</div>
+      <div class="url">banderawagonwheelrv.com</div>
+    </div>
+  </div>
+
+  <div class="fold-line"></div>
+
+  <!-- Panel 3: front cover -->
+  <div class="bpanel cover">
+    <img class="cover-photo" src="/photos/18/image?w=640" alt="">
+    <div class="cover-mark">
+      <svg width="22" height="22" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="5"/>
+        <circle cx="50" cy="50" r="10" fill="currentColor"/>
+        <g stroke="currentColor" stroke-width="5">
+          <line x1="50" y1="4" x2="50" y2="96"/><line x1="4" y1="50" x2="96" y2="50"/>
+          <line x1="16.6" y1="16.6" x2="83.4" y2="83.4"/><line x1="83.4" y1="16.6" x2="16.6" y2="83.4"/>
+        </g>
+      </svg>
+    </div>
+    <div class="cover-scrim"></div>
+    <div class="cover-text">
+      <div class="eyebrow">Bandera, Texas &middot; Hill Country</div>
+      <h1>Bandera Wagon Wheel RV Park</h1>
+      <p class="sub">A rustic, family-run stop seven minutes from downtown Bandera &mdash; the Cowboy Capital of the World.</p>
+      <div class="cover-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5a11 11 0 0 1 14 0M8 16a6.5 6.5 0 0 1 8 0M12 19.5h.01"/></svg>
+        New high-speed WiFi, park-wide
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="sheet-label">Inside &mdash; rates, amenities, and getting here (reads left to right)</div>
+<div class="sheet-page" id="inside">
+
+  <!-- Panel 1: rates -->
+  <div class="bpanel">
+    <div class="eyebrow">Rates</div>
+    <h2>Simple pricing,<br>by the night,<br>week or month</h2>
+    <hr class="rule">
+    <div class="rate-row">
+      <div class="term">Nightly<small>Full hookup, 30/50 amp</small></div>
+      <div class="amt">$45</div>
+    </div>
+    <div class="rate-row">
+      <div class="term">Weekly<small>Electric included</small></div>
+      <div class="amt">$210</div>
+    </div>
+    <div class="rate-row">
+      <div class="term">Monthly<small>From $300, varies by site</small></div>
+      <div class="amt">$300+</div>
+    </div>
+    <p class="brate-note">Once a stay is long enough to reach the monthly rate, you're never charged more than that for each month you're here. Monthly electric is metered and settled separately.</p>
+    <figure class="rate-photo">
+      <img src="/photos/19/image?w=640" alt="Site 4, a pull-through site">
+      <figcaption>Site 4 &mdash; pull-through, full hookup</figcaption>
+    </figure>
+  </div>
+
+  <div class="fold-line"></div>
+
+  <!-- Panel 2: amenities -->
+  <div class="bpanel">
+    <div class="eyebrow">Amenities</div>
+    <h2 style="font-size:21px;">Everything you need, right on site</h2>
+    <hr class="rule">
+    <div class="amenity-grid">
+      <div class="amenity-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s7 7.5 7 12a7 7 0 0 1-14 0c0-4.5 7-12 7-12Z"/></svg>
+        <span>Water hookup</span>
+      </div>
+      <div class="amenity-item">
+        <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8Z"/></svg>
+        <span>30/50 amp electric</span>
+      </div>
+      <div class="amenity-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="16" rx="1.5"/><path d="M9 8v8M12 8v8M15 8v8"/></svg>
+        <span>Wastewater hookup</span>
+      </div>
+      <div class="amenity-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="7" r="1.4"/><circle cx="12.5" cy="6" r="1.4"/><circle cx="16.5" cy="9" r="1.4"/><circle cx="4.5" cy="11" r="1.4"/><path d="M11.5 19c-2.2 0-3.5-1.2-3.5-2.8 0-1.8 1.5-3 2.3-4 .4-.7.8-1.2 1.2-1.2s.8.5 1.2 1.2c.8 1 2.3 2.2 2.3 4 0 1.6-1.3 2.8-3.5 2.8Z"/></svg>
+        <span>Pet friendly</span>
+      </div>
+      <div class="amenity-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9"/></svg>
+        <span>Management on-site</span>
+      </div>
+      <div class="amenity-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12"/></svg>
+        <span>Trash service</span>
+      </div>
+      <div class="amenity-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a15.5 15.5 0 0 1 20 0"/><path d="M5.5 12a10.5 10.5 0 0 1 13 0"/><path d="M9 15.5a5.5 5.5 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></svg>
+        <span>New high-speed WiFi</span>
+      </div>
+      <div class="amenity-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><circle cx="12" cy="13" r="4.5"/><circle cx="7" cy="6" r="0.8" fill="currentColor" stroke="none"/></svg>
+        <span>Laundry on site</span>
+      </div>
+      <div class="amenity-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l2 2M14 9l2 2"/></svg>
+        <span>Keyless entry</span>
+      </div>
+      <div class="amenity-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a8 8 0 0 1 15-4"/><path d="M6 9h13M8 13v2M12 13v3M16 13v2"/></svg>
+        <span>Showers</span>
+      </div>
+      <div class="amenity-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V9M12 21V5M20 21V9M2 9h4M10 5h4M18 9h4"/></svg>
+        <span>Dog park &mdash; large &amp; small</span>
+      </div>
+      <div class="amenity-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 2.7 5.9 6.3.6-4.8 4.3 1.4 6.3L12 16l-5.6 3.1 1.4-6.3-4.8-4.3 6.3-.6L12 2Z"/></svg>
+        <span>10% military discount</span>
+      </div>
+      <div class="amenity-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="13" rx="1"/><path d="M9 16v2M12 16v2M15 16v2M9 21h6"/></svg>
+        <span>Wired Ethernet</span>
+      </div>
+    </div>
+    <figure class="amenities-photo">
+      <img src="/photos/5/image?w=640" alt="Sites and the office building">
+    </figure>
+  </div>
+
+  <div class="fold-line"></div>
+
+  <!-- Panel 3: getting here / cta -->
+  <div class="bpanel">
+    <img class="nearby-photo" src="/photos/12/image?w=640" alt="Sites with the Hill Country beyond">
+    <div class="eyebrow">Getting here</div>
+    <h2 style="font-size:21px;">Worth the short drive</h2>
+    <hr class="rule">
+    <div class="bnearby-item">
+      <div class="t">Medina River</div>
+      <div class="d">Tubing, kayaking, and riverside walks close to the park.</div>
+    </div>
+    <div class="bnearby-item">
+      <div class="t">Downtown Bandera</div>
+      <div class="d">Shops, cowboy bars, and honky-tonks in the Cowboy Capital of the World.</div>
+    </div>
+    <div class="bnearby-item">
+      <div class="t">Bandera Brewery</div>
+      <div class="d">Local taproom right on State Hwy 16, a few minutes from the park.</div>
+    </div>
+    <div class="cta-block">
+      <div class="t">Reserve your site</div>
+      <div class="u">banderawagonwheelrv.com</div>
+      <div class="p">(830) 850-0805</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  document.getElementById("print-color").addEventListener("click", () => window.print());
+  document.getElementById("print-bw").addEventListener("click", () => {
+    document.body.classList.add("bw");
+    window.print();
+  });
+  window.addEventListener("afterprint", () => document.body.classList.remove("bw"));
+</script>
+</body>
+</html>
