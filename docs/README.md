@@ -34,3 +34,28 @@ card on the counter just as much:
 - **Never show it only to guests you think are happy.** Handing the card to some guests and not
   others is review gating, which is against Google's policy for the same reason: it manufactures a
   rating rather than reflecting one.
+
+## `facebook-review-qr.png` — the park's Facebook review QR code
+
+Scans to the park's Reviews tab on Facebook:
+
+    https://www.facebook.com/61558321880729/reviews/
+
+Built from the numeric page ID on the park's Facebook Page (`facebook.com/people/Bandera-Wagon-
+Wheel-RV-Park/61558321880729/`) — the manager account that provided it doesn't have access to a
+direct "write a review" composer link the way a full admin would, so `.../reviews/` off the page's
+numeric ID is the closest deep link available. Verified 2026-08-18 by loading it in a browser: it
+lands directly on the page's Reviews section (confirmed against the "No reviews" empty state at the
+time), not just the page's timeline.
+
+**It is for physical use**, same as the Google QR above — not shown anywhere on the website.
+
+### This one is incentivized on purpose — Google's twin is not
+
+`admin/review-flyer.html` (the resident review flyer) offers **$10 off per person for a Facebook
+review, and asks for a Google review with nothing attached.** That split was a deliberate decision
+made 2026-08-18, not an inconsistency: Google explicitly prohibits incentivized reviews and removes
+ones it catches (see the two rules above, which still apply in full to the Google side of that
+flyer). Facebook does not carry the same blanket prohibition, and the park's owner chose to accept
+that risk specifically for Facebook after being told about it. If this flyer is ever revised, keep
+that asymmetry — don't "simplify" it into one offer covering both platforms.
