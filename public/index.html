@@ -44,10 +44,13 @@
          sit entirely outside that window and simply never appeared on a phone; both are positioned
          with that visible band in mind now, not just the desktop-width composition. -->
     <defs>
-      <symbol id="hero-cactus" viewBox="-20 -58 40 58">
+      <symbol id="hero-cactus" viewBox="-20 -58 40 58" overflow="visible">
         <!-- A small prickly-pear cluster: a base pad plus three smaller pads at angles off it. The
              stroke is a ground tone, not a true outline colour -- it's there so overlapping pads
-             read as separate paddles instead of blurring into one round blob. -->
+             read as separate paddles instead of blurring into one round blob.
+             overflow="visible" matters here: the top pad's ellipse pokes a few units past this
+             viewBox's own top edge, and <symbol> clips to its viewBox by default (that's what
+             "the tops of the cactus look cut off" was -- not a rendering glitch, an actual clip). -->
         <g stroke="var(--hero-ground-3)" stroke-width="1.2" stroke-linejoin="round">
           <ellipse cx="0" cy="-11" rx="11" ry="15"/>
           <ellipse cx="-13" cy="-32" rx="8" ry="13" transform="rotate(-28 -13 -32)"/>
