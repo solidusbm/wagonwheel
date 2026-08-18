@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin guide — Wagon Wheel RV Park</title>
+<link rel="stylesheet" href="/css/fonts.css" />
+<link rel="stylesheet" href="/css/style.css" />
+<style>
+  /* Same "sheet of paper" pattern as admin/application.html and admin/summary.html. This one is a
+     how-to reference rather than a form, so it's laid out as a series of short sections keyed to
+     the actual admin panel headings, in the order they appear on the live page. */
+  body{background:#e7e2d6; padding:0; margin:0;}
+  .sheet{
+    max-width:8.27in; margin:24px auto 60px; background:#fff; color:#2b1d10;
+    padding:0.75in 0.85in; box-shadow:0 2px 18px rgba(0,0,0,0.18);
+    font-family:'Zilla Slab',Georgia,serif; font-size:14px; line-height:1.6;
+  }
+  .toolbar{max-width:8.27in; margin:20px auto 0; display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .toolbar .spacer{flex:1;}
+  .toolbar a, .toolbar button{font-family:'JetBrains Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer;}
+
+  .sheet h1{font-family:'Rye',serif; font-size:26px; margin:0 0 4px; color:#2b1d10; letter-spacing:0;}
+  .park-line{font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; color:#6b5844; margin:0 0 22px;}
+  .lede{font-size:14.5px; margin:0 0 26px; padding-bottom:18px; border-bottom:2px solid #2b1d10;}
+
+  section{margin:0 0 22px; break-inside:avoid;}
+  section h2{font-family:'JetBrains Mono',monospace; font-size:12.5px; letter-spacing:0.08em; text-transform:uppercase;
+             color:#2b1d10; margin:0 0 4px; padding-bottom:5px; border-bottom:1px solid #b9ac93;}
+  .panel-loc{font-family:'JetBrains Mono',monospace; font-size:9.5px; color:#6b5844; text-transform:uppercase; letter-spacing:0.06em; margin:0 0 9px;}
+  section p{margin:0 0 8px;}
+  section ul{margin:0 0 8px; padding-left:20px;}
+  section ol{margin:0 0 8px; padding-left:20px;}
+  section li{margin:0 0 6px;}
+  .field-name, kbd{font-family:'JetBrains Mono',monospace; font-size:0.92em; background:#f3ede1; border:1px solid #d9cfba; border-radius:3px; padding:0 4px;}
+
+  .closing{margin-top:28px; padding-top:18px; border-top:2px solid #2b1d10;}
+  .closing h2{font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; margin:0 0 10px;}
+  .closing table{width:100%; border-collapse:collapse; font-size:13px; margin:8px 0;}
+  .closing td{padding:6px 8px 6px 0; vertical-align:top; border-bottom:1px solid #e2dbcb;}
+  .closing td:first-child{font-weight:600; white-space:nowrap; width:1%;}
+
+  @media print{
+    body{background:#fff;}
+    .toolbar{display:none;}
+    .sheet{box-shadow:none; margin:0; max-width:none; padding:0.4in 0.5in; font-size:12px;}
+    section{break-inside:avoid;}
+    @page{size:letter portrait; margin:0.4in;}
+  }
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <a href="/admin" class="btn btn-ghost">&larr; Back to admin</a>
+  <span class="spacer"></span>
+  <button type="button" class="btn btn-primary" id="print-btn">Print</button>
+</div>
+<div class="sheet">
+  <h1>Admin Guide</h1>
+  <p class="park-line">How to use banderawagonwheelrv.com/admin</p>
+  <p class="lede">This walks through every section of the admin panel in the order it appears on
+    the page, with the everyday tasks for each one. It's written for the office, not for a
+    developer &mdash; if a step here doesn't match what you're seeing, the panel may have been
+    reordered since this was written (sections can be moved with the arrows in each heading), so
+    look for the section by name rather than by position.</p>
+
+  <section>
+    <h2>Reservations</h2>
+    <p class="panel-loc">Top of the page</p>
+    <p>Every upcoming and pending booking, sorted by check-in date.</p>
+    <ul>
+      <li><strong>Add a phone-in or walk-in booking:</strong> press <span class="field-name">+ New
+        booking</span>, fill in the site, dates, and guest details, and press
+        <span class="field-name">Save booking</span>. No card is charged from this form &mdash;
+        it's for bookings taken outside the website.</li>
+      <li><strong>Edit a booking:</strong> press <span class="field-name">Edit</span> on its row.</li>
+      <li><strong>View or print a guest's application:</strong> press
+        <span class="field-name">Application</span> on the row. From there you can edit any field,
+        and there's a link to open the printable paper version to hand to the guest at check-in.</li>
+      <li><strong>Cancel a booking:</strong> press <span class="field-name">Cancel</span> on the
+        row and confirm. This releases the site for those dates.</li>
+      <li><strong>Refund a guest:</strong> if the booking was paid by card, a
+        <span class="field-name">Refund &amp; cancel</span> button appears on its row. Pressing it
+        refunds the guest through Square and cancels the booking in the same step, so the dates are
+        released right away.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Social posts</h2>
+    <p class="panel-loc">Collapsible section</p>
+    <p>Ready-to-post text for Facebook and Google, written from the park's real, current data
+      &mdash; which sites are actually free, the real rates.</p>
+    <ol>
+      <li>Read the draft and edit the text if you want to change anything.</li>
+      <li>Press <span class="field-name">Copy text</span>.</li>
+      <li>Press <span class="field-name">Open Facebook</span> or <span class="field-name">Open
+        Google</span> and paste it in.</li>
+      <li>If a draft has a photo attached, drag it into the post window yourself, or open it full
+        size and save it &mdash; there's no automatic attachment.</li>
+    </ol>
+    <p><strong>Nothing posts on its own</strong> &mdash; every draft has to be copied and pasted by
+      hand. If Facebook's or Google's own posting page ever moves, update the two links at the top
+      of this section and press <span class="field-name">Save links</span>.</p>
+  </section>
+
+  <section>
+    <h2>Sites</h2>
+    <p class="panel-loc">Collapsible section</p>
+    <p>Every site's name, rates, and details, including which per-site amenities (from the
+      Amenities catalog below) apply to it.</p>
+    <ul>
+      <li><strong>Add a new site:</strong> press <span class="field-name">+ New site</span>.</li>
+      <li><strong>Change a site's rate:</strong> press <span class="field-name">Edit</span> on its
+        row, then type the new figure into <span class="field-name">Price per night</span>,
+        <span class="field-name">Price per week</span>, or <span class="field-name">Price per
+        month</span>. If a site isn't rented on a given term, tick that term's
+        <span class="field-name">N/A</span> box instead of leaving it blank &mdash; at least one
+        term has to stay set.</li>
+      <li><strong>Mark a site permanently occupied</strong> (a long-term resident, not available to
+        book): set <span class="field-name">Permanently occupied</span> to
+        <span class="field-name">Yes</span> in the site editor.</li>
+      <li><strong>Choose a site's photos, and which one guests see first:</strong> open the
+        <span class="field-name">Photos</span> section inside the site editor and tick the ones
+        that apply &mdash; the first one you tick is the one guests see on that site's card.</li>
+      <li>Press <span class="field-name">Save site</span> when you're done.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Photos</h2>
+    <p class="panel-loc">Collapsible section</p>
+    <p>Upload and manage the park's photo library. Every uploaded photo also appears on the public
+      gallery page, whether or not it's flagged for the homepage.</p>
+    <ul>
+      <li><strong>Upload a photo:</strong> choose a file, optionally add a caption, tick
+        <span class="field-name">Show on homepage</span> if it should appear there, and press
+        <span class="field-name">Upload</span>. Files over 8MB are rejected.</li>
+      <li><strong>Reorder photos:</strong> use the &larr; and &rarr; arrows on each photo. A photo
+        marked "Home #" shows its position in the homepage gallery specifically.</li>
+      <li><strong>Remove a photo:</strong> press <span class="field-name">Delete</span> on it.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Review requests</h2>
+    <p class="panel-loc">Collapsible section</p>
+    <p>An automatic email asking a guest for a Google review, sent a day or two after they check
+      out.</p>
+    <ul>
+      <li>Turn the toggle on, paste the park's Google review link into
+        <span class="field-name">Your Google review link</span>, set
+        <span class="field-name">Days to wait after check-out</span>, and press
+        <span class="field-name">Save</span>. Nothing sends until both the toggle is on and a link
+        is saved.</li>
+      <li><strong>See what a guest gets:</strong> press <span class="field-name">Send me a
+        preview</span>.</li>
+      <li><strong>Send any that are currently due:</strong> press <span class="field-name">Send any
+        that are due now</span>.</li>
+    </ul>
+    <p>It goes to every guest who stayed, with nothing offered in exchange &mdash; picking and
+      choosing who gets asked is against Google's rules and risks the listing.</p>
+  </section>
+
+  <section>
+    <h2>Amenities</h2>
+    <p class="panel-loc">Collapsible section</p>
+    <p>One shared list of amenities used by both the homepage and individual site cards.</p>
+    <ul>
+      <li><strong>Add one:</strong> type its name and press <span class="field-name">+ Add</span>.</li>
+      <li>Each amenity can be checked to show on the homepage's "what every site includes" grid,
+        to be toggleable per site, or both.</li>
+      <li><strong>Turn one off without deleting it:</strong> press
+        <span class="field-name">Deactivate</span>. <strong>Remove it entirely:</strong> press
+        <span class="field-name">Delete</span>.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Content</h2>
+    <p class="panel-loc">Collapsible section</p>
+    <p>Direct editing of the homepage and hours-page text &mdash; the hero heading and subtitle,
+      the About section, and the hours-page intro.</p>
+    <p>Click into any text box, make your change, and click away. A small
+      <span class="field-name">Saved</span> confirmation appears next to the field. Changes go live
+      the next time someone loads the page &mdash; no developer or deploy needed.</p>
+  </section>
+
+  <section>
+    <h2>Park map</h2>
+    <p class="panel-loc">Collapsible section</p>
+    <p>The map guests see when choosing a site &mdash; where every pad, road, and building actually
+      sits, in real feet.</p>
+    <ul>
+      <li><strong>Move a pad, road, or building:</strong> with the <span class="field-name">Select</span>
+        tool active, drag it. Drag a corner to resize, or click it and type exact numbers in the
+        panel that appears.</li>
+      <li><strong>Add a pad:</strong> <span class="field-name">+ Site</span>.
+        <strong>Add a building:</strong> <span class="field-name">+ Building</span>.
+        <strong>Draw a road:</strong> switch to the <span class="field-name">Draw road</span> tool.</li>
+      <li><strong>Remove something from the map:</strong> click it, then
+        <span class="field-name">Take off the map</span> (or the equivalent remove button). This
+        only removes it from the map &mdash; it does not delete the site itself, which is still
+        managed in the Sites section above.</li>
+      <li><strong>Nothing changes for guests until you press <span class="field-name">Save
+        map</span>.</strong> <span class="field-name">Revert</span> discards anything you haven't
+        saved yet.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Search &amp; sharing</h2>
+    <p class="panel-loc">Collapsible section</p>
+    <p>How the park shows up in a Google search result and in a shared link's preview card. Most of
+      this is already worked out automatically from the Sites and Amenities panels &mdash; what's
+      here is the handful of things that need a person's judgment: the Google Search Console
+      verification code, which photo appears on shared links, and the written description for each
+      page's search result. Press <span class="field-name">Save search settings</span> after
+      changing any of them.</p>
+  </section>
+
+  <section>
+    <h2>RoverPass / Hipcamp sync feeds</h2>
+    <p class="panel-loc">Collapsible section</p>
+    <p>One calendar feed per site, listing only which dates are booked here (no guest details).
+      Press <span class="field-name">Copy</span> next to a site and paste that link into
+      RoverPass's or Hipcamp's "import calendar" field, once those accounts exist. That keeps a
+      booking made directly on this site from also being bookable through those platforms.</p>
+  </section>
+
+  <section>
+    <h2>Booking alert email</h2>
+    <p class="panel-loc">Collapsible section</p>
+    <p>When a guest completes a booking, the park's email address gets a message with the site,
+      dates, guest details, and total. More than one address can receive it &mdash; the alert
+      address can hold a comma-separated list.</p>
+    <ul>
+      <li><strong>Test that alerts are working:</strong> press <span class="field-name">Send a test
+        email</span>.</li>
+      <li><strong>See exactly what a guest's own confirmation looks like:</strong> press
+        <span class="field-name">Preview the guest email</span>. The sample shown is a
+        monthly-rate booking on purpose, since that version carries every possible line the email
+        can include (the electric-not-included notice and the flat cancellation fee wording).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Push notifications</h2>
+    <p class="panel-loc">Collapsible section</p>
+    <p>Get notified right on this device the moment a guest books, in addition to the email alert.
+      Press <span class="field-name">Enable on this device</span> to turn it on.</p>
+    <p><strong>On iPhone or iPad:</strong> Safari only delivers notifications to a site that's been
+      added to the Home Screen. Tap Share, then <span class="field-name">Add to Home Screen</span>,
+      and turn notifications on from the icon you get on the Home Screen rather than from Safari
+      directly.</p>
+  </section>
+
+  <div class="closing">
+    <h2>If something looks wrong</h2>
+    <p>Who to reach depends on what's actually broken:</p>
+    <table>
+      <tr><td>A guest's card was charged wrong, or a refund needs looking into</td>
+        <td>Handle it in Reservations first (Refund &amp; cancel shows the Square payment ID for
+          that booking); Square's own support can also look up a specific charge directly.</td></tr>
+      <tr><td>A guest wants to cancel</td>
+        <td>They can use the cancel link in their own confirmation email, or the office can cancel
+          (and refund, if paid) from the Reservations section above.</td></tr>
+      <tr><td>The site or admin panel won't load, or looks broken</td>
+        <td>Check whether it's just this device first. If it's the whole site, it may be a domain
+          or hosting issue &mdash; Cloudflare manages the park's domain and email routing and can
+          help with either.</td></tr>
+      <tr><td>Something in the app itself is behaving wrong (a form not saving, a page showing the
+          wrong information, anything that looks like a bug rather than a one-off)</td>
+        <td>Contact the developer directly &mdash; this isn't something Square or Cloudflare's
+          support can fix.</td></tr>
+    </table>
+    <p>For anything guest-facing, the park's own listed phone number and email (in the site's
+      footer) are the right place to send a guest who calls in confused.</p>
+  </div>
+</div>
+<script>
+  document.getElementById("print-btn").addEventListener("click", () => window.print());
+</script>
+</body>
+</html>

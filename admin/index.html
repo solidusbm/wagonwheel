@@ -14,6 +14,10 @@
   body{padding:0 0 60px;}
   .admin-wrap{max-width:1080px; margin:0 auto; padding:32px 24px;}
   .admin-wrap h1{font-size:26px; margin:0 0 4px;}
+  /* Printable reference docs -- above Reservations so office staff find them without hunting
+     through the collapsible sections below. */
+  .admin-docs-links{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
+  .admin-docs-links a{font-size:12px; padding:7px 12px;}
   .admin-sub{color:var(--parchment-dim); font-size:13px; margin:0 0 24px; font-style:italic;}
   .admin-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;}
   /* Reservations/Sites tables have more columns than a phone/tablet is wide. Above 820px this is
@@ -275,6 +279,10 @@
 </head>
 <body>
 <div class="admin-wrap">
+  <div class="admin-docs-links">
+    <a href="/admin/summary.html" class="btn btn-ghost">Client work-summary</a>
+    <a href="/admin/guide.html" class="btn btn-ghost">Admin guide</a>
+  </div>
   <h1>Reservations</h1>
   <p class="admin-sub">Upcoming and pending bookings, sorted by check-in date.</p>
 
