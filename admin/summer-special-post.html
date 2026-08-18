@@ -49,13 +49,6 @@
     color:#3c2a1a; background:#f6ecd8; border:1px solid #d8c39d; border-radius:3px; padding:14px; resize:vertical;
   }
 
-  @media print{
-    body{background:#fff;}
-    .toolbar{display:none;}
-    .copy-box{display:none;}
-    .sheet{box-shadow:none; margin:0; max-width:none; border-radius:0; padding:0.5in 0.6in;}
-    @page{size:letter portrait; margin:0.4in;}
-  }
 </style>
 </head>
 <body>
@@ -65,7 +58,7 @@
   <button type="button" class="btn btn-primary" id="copy-btn">Copy text</button>
   <a href="https://business.facebook.com/latest/composer" target="_blank" rel="noopener" class="btn btn-ghost">Open Facebook</a>
   <a href="https://business.google.com/posts" target="_blank" rel="noopener" class="btn btn-ghost">Open Google</a>
-  <button type="button" class="btn btn-ghost" id="print-btn">Print</button>
+  <a href="/admin/summer-special-flyer.html" class="btn btn-ghost">Get printable flyer</a>
   <span class="status" id="copy-status"></span>
 </div>
 
@@ -153,7 +146,6 @@ banderawagonwheelrv.com</textarea>
     }
     setTimeout(() => (status.textContent = ""), 4000);
   });
-  document.getElementById("print-btn").addEventListener("click", () => window.print());
 </script>
 </body>
 </html>
