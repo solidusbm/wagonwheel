@@ -831,6 +831,7 @@ const photoFileInput = document.getElementById("photo-file-input");
 const photoCaptionInput = document.getElementById("photo-caption-input");
 const photoHomepageInput = document.getElementById("photo-homepage-input");
 const photoUploadError = document.getElementById("photo-upload-error");
+const photoUploadStatus = document.getElementById("photo-upload-status");
 const photoUploadBtn = document.getElementById("photo-upload-btn");
 
 photoUploadForm.addEventListener("submit", onUploadPhoto);
@@ -955,30 +956,55 @@ async function onDeletePhoto(id) {
   await loadPhotos();
 }
 
+// Multiple files upload one at a time against the same single-file endpoint, rather than a batch
+// route -- the office is on a phone at the park, often on cellular, so a sequential loop with
+// per-file progress is more useful than firing everything at once and waiting on a black box. One
+// failure (a bad file, a dropped connection) doesn't stop the rest, and the caption/homepage flag
+// picked in the form is applied to every file selected.
 async function onUploadPhoto(event) {
   event.preventDefault();
   photoUploadError.hidden = true;
+  photoUploadStatus.hidden = true;
 
-  const file = photoFileInput.files[0];
-  if (!file) return;
+  const files = Array.from(photoFileInput.files);
+  if (files.length === 0) return;
 
-  const formData = new FormData();
-  formData.append("file", file);
-  if (photoCaptionInput.value.trim()) formData.append("caption", photoCaptionInput.value.trim());
-  formData.append("showOnHomepage", String(photoHomepageInput.checked));
+  const caption = photoCaptionInput.value.trim();
+  const showOnHomepage = String(photoHomepageInput.checked);
+  const failures = [];
 
   photoUploadBtn.disabled = true;
   try {
-    const res = await fetch("/api/admin/photos", { method: "POST", body: formData });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error ?? "Upload failed");
+    for (let i = 0; i < files.length; i++) {
+      if (files.length > 1) {
+        photoUploadStatus.textContent = `Uploading ${i + 1} of ${files.length}…`;
+        photoUploadStatus.hidden = false;
+      }
+      const formData = new FormData();
+      formData.append("file", files[i]);
+      if (caption) formData.append("caption", caption);
+      formData.append("showOnHomepage", showOnHomepage);
+
+      try {
+        const res = await fetch("/api/admin/photos", { method: "POST", body: formData });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Upload failed");
+      } catch (err) {
+        failures.push(`${files[i].name}: ${err.message}`);
+      }
     }
-    photoUploadForm.reset();
+
+    photoUploadStatus.hidden = true;
+    if (failures.length > 0) {
+      photoUploadError.textContent =
+        failures.length === files.length
+          ? `Upload failed. ${failures.join(" ")}`
+          : `${files.length - failures.length} of ${files.length} uploaded. ${failures.join(" ")}`;
+      photoUploadError.hidden = false;
+    } else {
+      photoUploadForm.reset();
+    }
     await loadPhotos();
-  } catch (err) {
-    photoUploadError.textContent = err.message;
-    photoUploadError.hidden = false;
   } finally {
     photoUploadBtn.disabled = false;
   }
