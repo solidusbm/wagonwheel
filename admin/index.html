@@ -456,7 +456,7 @@
     <summary><h2>Photos</h2></summary>
     <div class="sub">Upload photos here — check "Show on homepage" for the ones that should appear in the gallery on the home page. Every uploaded photo (homepage or not) also shows on the public <a href="/gallery.html" target="_blank" style="color:var(--gold);">/gallery.html</a> page. Images over 8MB are rejected.</div>
     <form id="photo-upload-form" class="photo-upload-row">
-      <input type="file" id="photo-file-input" accept="image/*" required />
+      <input type="file" id="photo-file-input" accept="image/*,.heic,.heif" required />
       <input type="text" id="photo-caption-input" placeholder="Caption (optional)" />
       <label class="photo-homepage-check"><input type="checkbox" id="photo-homepage-input" /> Show on homepage</label>
       <button type="submit" class="btn btn-primary" id="photo-upload-btn">Upload</button>

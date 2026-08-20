@@ -44,8 +44,16 @@ const PHOTO_MAX_BYTES = 8 * 1024 * 1024;
 const photoUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: PHOTO_MAX_BYTES },
+  // Client-asserted mimetype is trusted for the reject-obviously-not-an-image check only -- HEIC
+  // in particular is reported inconsistently (some browsers send "image/heic", others fall back to
+  // "application/octet-stream" for a type they don't recognise), so a plain image/* check would
+  // bounce a real photo before it ever reaches shrinkImage's own content-based HEIC detection.
+  // The extension fallback covers exactly that gap; it decides nothing about how the file is
+  // actually processed.
   fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith("image/")) {
+    const looksLikeImage =
+      file.mimetype.startsWith("image/") || /\.(heic|heif|jpe?g|png|webp|gif|avif)$/i.test(file.originalname);
+    if (!looksLikeImage) {
       return cb(new Error("Only image files are allowed"));
     }
     cb(null, true);
