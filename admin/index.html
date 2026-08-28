@@ -299,6 +299,12 @@
     <a href="/admin/summer-special-post.html" class="btn btn-ghost">End of Summer post</a>
     <a href="/admin/summer-special-flyer.html" class="btn btn-ghost">End of Summer flyer</a>
     <a href="/admin/summer-special-ad.html" class="btn btn-ghost">End of Summer Facebook ad</a>
+    <!-- A real form post, not a link: signing out changes state, and a GET that logs you out gets
+         fired by anything that prefetches links. Sits with the other header buttons because the
+         old Basic Auth had no sign-out at all -- closing the browser was the only way. -->
+    <form method="POST" action="/admin/logout" style="display:inline;">
+      <button type="submit" class="btn btn-ghost">Sign out</button>
+    </form>
   </div>
   <h1>Reservations</h1>
   <p class="admin-sub">Upcoming and pending bookings, sorted by check-in date.</p>

@@ -13,7 +13,15 @@ import { applyHead, snapshot } from "./lib/seo.js";
 import { applyBody } from "./lib/ssr.js";
 import { startReviewRequestJob } from "./lib/reviewRequest.js";
 import { startBookingAlertJob } from "./lib/push.js";
-import { adminAuth } from "./middleware/adminAuth.js";
+import {
+  adminAuth,
+  hasSession,
+  verifyCredentials,
+  startSession,
+  endSession,
+  safeNext,
+} from "./middleware/adminAuth.js";
+import { makeRateLimit } from "./middleware/rateLimit.js";
 import { makeAssetVersioner } from "./lib/assetVersion.js";
 import { styleGalleryCors } from "./middleware/styleGalleryCors.js";
 import { applySchema, applySeed, applyContentSeed, sitesCount } from "./lib/dbBootstrap.js";
@@ -100,6 +108,39 @@ app.get("/admin", (req, res, next) => {
    tools/make-icons.mjs about auth'd icon fetches coming back 401 and rendering a grey square. */
 app.get("/admin/manifest.json", (req, res) => {
   res.sendFile(path.join(adminDir, "manifest.json"));
+});
+
+/* Sign-in, mounted ahead of adminAuth for the obvious reason: a login page behind the login is a
+   redirect loop. Nothing here reveals anything -- the form, and whether a given username/password
+   pair is right, which is what a login is. */
+const loginLimit = makeRateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: "Too many sign-in attempts from this connection. Wait a few minutes and try again.",
+});
+
+app.get("/admin/login", (req, res) => {
+  if (hasSession(req)) return res.redirect(302, "/admin/");
+  res.sendFile(path.join(adminDir, "login.html"));
+});
+
+// The form posts urlencoded and index.js only mounts express.json(), so the parser is attached
+// to this one route rather than widened globally.
+app.post("/admin/login", loginLimit, express.urlencoded({ extended: false }), (req, res) => {
+  const { username, password, next: requested } = req.body ?? {};
+
+  if (!verifyCredentials(username, password)) {
+    const suffix = typeof requested === "string" && requested ? `&next=${encodeURIComponent(requested)}` : "";
+    return res.redirect(302, `/admin/login?error=1${suffix}`);
+  }
+
+  startSession(req, res);
+  res.redirect(302, safeNext(requested));
+});
+
+app.post("/admin/logout", (req, res) => {
+  endSession(req, res);
+  res.redirect(302, "/admin/login");
 });
 
 /* sw.js is the one asset under /admin that cannot be content-hashed: a service worker

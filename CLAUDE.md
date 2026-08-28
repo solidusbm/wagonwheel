@@ -13,7 +13,7 @@ an earlier static-site + third-party-widget alternative (see the `static-site` b
 now a design-reference hub only — not a competing implementation, don't merge the two).
 
 **Live URL:** https://banderawagonwheelrv.com/ (also served at https://wwrvb.sastx.net/)
-**Admin:** https://banderawagonwheelrv.com/admin (HTTP Basic Auth — see "Admin access" below)
+**Admin:** https://banderawagonwheelrv.com/admin (session-cookie login — see "Admin access" below)
 **Hosting:** Coolify app `wwrvb` on the SaStx IONOS VPS, against the shared `sastx-shared-pg`
 Postgres. **Render is gone** — decommissioned 2026-08-11, don't look for it.
 
@@ -65,13 +65,40 @@ never requires exposing DB credentials at all.
 
 ## Admin access
 
-`/admin` is protected by HTTP Basic Auth via `ADMIN_USERNAME`/`ADMIN_PASSWORD`, set as Coolify
+`/admin` is protected by a signed session cookie via `ADMIN_USERNAME`/`ADMIN_PASSWORD`, set as Coolify
 environment variables (Coolify → `wwrvb` → Environment Variables) — never hardcoded in this repo.
 **Rotated off the `admin`/`admin` placeholder by the user on 2026-08-11.** Claude does not hold
 these credentials, so anything that needs to be checked or changed inside `/admin` has to be done
 by the user — don't ask for the password unprompted. `server/index.js` still warns at boot if
 `ADMIN_PASSWORD` is ever set back to a known-weak value; `/admin` exposes guest names, emails and
 phone numbers, so that warning is worth heeding.
+
+### It was HTTP Basic Auth until 2026-08-28. Don't put it back.
+
+Basic Auth and a service worker on the same origin are a documented Chrome failure: with a worker
+registered, `/admin` answers **401 with no password prompt at all** — a blank page nobody can get
+into. It also made the manifest unfetchable, so `/admin` could not be installed as a PWA, and on
+iOS a Home Screen install is the *only* thing that receives web push. So Basic Auth was costing the
+office its booking notifications entirely on iPhone.
+
+What replaced it, in `server/middleware/adminAuth.js`:
+
+- A signed cookie (`ww_admin`), HttpOnly + SameSite=Lax, 30 days. Value is `issuedAt.HMAC`.
+- **The signing key is derived from `ADMIN_PASSWORD`, not a separate secret.** Deliberate: a
+  `SESSION_SECRET` nobody remembered to set in Coolify would lock everyone out, on a change whose
+  whole point was to stop doing that. Side benefit — rotating the password kills every session.
+- `Secure` is set only when the request is provably HTTPS. It errs *off*, because a Secure cookie
+  on a connection the server wrongly thinks is plain HTTP is silently dropped, which is an
+  unbreakable login loop.
+- **A `Basic` header is still accepted, but `WWW-Authenticate` is never sent.** Requesting it is
+  what caused the trouble; accepting it keeps curl working and meant the migration locked nobody
+  out. Don't "tidy" that branch away without a reason.
+- Unauthenticated HTML requests get a 302 to `/admin/login`; anything under `/api/` gets 401 JSON,
+  because the admin's own `fetch` calls must not follow a redirect and parse a login page as data.
+
+`node tools/check-admin-auth.mjs` exercises all of it — forged and expired cookies, open-redirect
+attempts on `next=`, password rotation, and that an unconfigured server 503s rather than opening.
+It sets its own credentials, so it never touches the live ones. **Run it after touching that file.**
 
 Every section below Reservations (Sites, Photos, Amenities, Content, Push notifications,
 RoverPass/Hipcamp sync) is a `<details class="sync-feeds">`, closed by default. Keep

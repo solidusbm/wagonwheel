@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sign in — Wagon Wheel RV Park Admin</title>
+<!-- Both public assets. This page is served ahead of the auth check, so anything it needs must be
+     reachable without a session or the login screen itself renders unstyled. -->
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="/css/fonts.css" />
+<link rel="stylesheet" href="/css/style.css" />
+<meta name="robots" content="noindex, nofollow" />
+<style>
+  body{display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px;}
+  .login-card{width:100%; max-width:360px;}
+  .login-card h1{font-size:22px; margin:0 0 4px;}
+  .login-card .sub{margin:0 0 20px;}
+  .login-card label{display:block; font-family:'JetBrains Mono',monospace; font-size:11px;
+    text-transform:uppercase; letter-spacing:0.08em; margin:0 0 6px;}
+  .login-card input{width:100%; margin:0 0 16px; padding:12px 14px; font-size:16px;}
+  .login-card button{width:100%;}
+  .login-error{margin:0 0 16px; padding:10px 12px; border-radius:var(--radius);
+    background:rgba(166,42,42,0.10); border:1px solid var(--rust-bright); font-size:13px;}
+</style>
+</head>
+<body>
+  <main class="login-card panel">
+    <h1>Wagon Wheel Admin</h1>
+    <p class="sub">Sign in to see bookings and manage the site.</p>
+
+    <!-- Inline display:none rather than the hidden attribute. hidden depends on a CSS rule this
+         page cannot guarantee is fresh (/css/style.css is not content-hashed here), and a stale
+         copy without it would show this error permanently, on every visit. -->
+    <div class="login-error" id="login-error" style="display:none;">That username and password didn&rsquo;t match. Try again.</div>
+
+    <form method="POST" action="/admin/login">
+      <label for="username">Username</label>
+      <!-- autocomplete hints matter here: without them a password manager won't offer to fill or
+           save, and the office is the kind of place where a password nobody can autofill becomes a
+           password written on a sticky note. -->
+      <input type="text" id="username" name="username" autocomplete="username" autocapitalize="none"
+             autocorrect="off" spellcheck="false" required autofocus />
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required />
+
+      <input type="hidden" name="next" id="next-field" />
+
+      <button type="submit" class="btn btn-primary">Sign in</button>
+    </form>
+  </main>
+
+<script type="module">
+  /* Read from the URL rather than templated into the HTML: this file is served as a static file
+     by express.static, so there is no render step to interpolate into -- and keeping user-supplied
+     text out of the markup entirely means there is nothing to escape. The server independently
+     rejects any next= that doesn't point at /admin, so this is convenience, not the check. */
+  const params = new URLSearchParams(location.search);
+  if (params.get("error")) document.getElementById("login-error").style.display = "block";
+
+  const next = params.get("next");
+  if (next && next.startsWith("/admin") && !next.startsWith("//")) {
+    document.getElementById("next-field").value = next;
+  }
+</script>
+</body>
+</html>
