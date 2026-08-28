@@ -377,6 +377,96 @@ authorisation record when reports go elsewhere, and nobody can create records un
 `p=reject` rather than the usual `p=none` monitoring phase because a domain that sends no mail has
 nothing to break, so monitoring would only have delayed the protection.
 
+## Booking alerts — they repeat until a human acknowledges
+
+Built 2026-08-28, after the park's **first real booking was missed**. The alert arrived on the
+office Android phone and nobody saw it. Two causes, and it is worth keeping them apart because
+only one of them was a bug:
+
+1. Sends went out at web push's default `urgency: "normal"`, which lets FCM hold a message until
+   the device next wakes on its own. Now `high`, with a 24h TTL.
+2. Android rendered it **silently**, which is a per-site *channel importance* setting living in
+   the phone's own settings. **Nothing server-side can override it.** The panel spells out where
+   it is; if an alert arrives without a banner, that is the first thing to check, ahead of any
+   code in this repo.
+
+### The shape of it
+
+A booking inserts a `booking_alerts` row. While `acknowledged_at IS NULL`, a job started from
+`index.js` (`startBookingAlertJob`, same bare-timer pattern as `startReviewRequestJob`) re-sends
+the push every 5 minutes to `MAX_ATTEMPTS` (6), then gives up with a loud `console.error`. It stops
+rather than repeating forever on purpose: an alert nobody has answered in half an hour will not be
+rescued by a sixth buzz, and a notification that cannot be silenced is one the office learns to
+swipe on reflex, which costs more than it buys.
+
+Acknowledging happens four ways, all landing on `acknowledgeAlert()`: the **"Got it" action on the
+notification**, tapping the notification body, the button in the admin panel, and **pressing 1 on
+the escalation phone call**. All four are equally good evidence a person saw it. Requiring the
+admin to be opened would make the alert hardest to answer in exactly the situation it exists for —
+a glance at a lock screen — and an alert that is awkward to answer gets swiped, which is
+indistinguishable from being handled.
+
+`body` is stored on the row rather than rebuilt from the reservation on each retry: a retry should
+re-send *the alert that was raised*, even if the booking was edited or cancelled in between.
+
+### `/api/alerts/*` is deliberately unauthenticated
+
+Two callers, neither of which can present Basic Auth: the **service worker** (its `fetch` does not
+reliably carry the browser's cached credentials, and an acknowledgement that only works while
+`/admin` happens to be open is one that fails exactly when needed) and **SignalWire**, fetching
+cXML when the escalation call connects.
+
+The `ack_token` is the credential instead — unguessable, single-purpose, grants nothing but
+acknowledging one alert. **Don't "fix" this by moving the routes under `adminAuth`;** it breaks
+both callers silently. `routes/alerts.js` also mounts its own `express.urlencoded()` because
+SignalWire posts form-encoded and `index.js` only mounts `express.json()`.
+
+### Phone escalation (SignalWire)
+
+At `ALERT_CALL_AFTER_ATTEMPT` (default 3, ~10 minutes ignored) the office gets rung. The call
+fetches cXML from **our own** `/api/alerts/voice/:token` rather than passing an inline `Laml`
+payload — inline can speak the booking fine but has nowhere to send a keypress back to.
+
+Exactly one call per booking, gated on `call_placed_at` rather than the attempt number so a restart
+or a slow tick cannot dial twice, and stamped *before* dialling because a call that throws halfway
+may still have rung.
+
+Inert until **all** of `SIGNALWIRE_SPACE_URL`, `SIGNALWIRE_PROJECT_ID`, `SIGNALWIRE_API_TOKEN`,
+`SIGNALWIRE_FROM_NUMBER` and `ALERT_CALL_NUMBERS` are set in Coolify. On a trial SignalWire project
+**every destination must be verified first** or the call is refused; that refusal is logged with
+SignalWire's own message body, which names the actual cause.
+
+The number is also intended as the park's public business line. Outbound caller ID and inbound
+handling are independent settings there, so one number does both — but **nothing answers inbound
+yet**, so a customer calling it currently gets dead air. Point it somewhere before advertising it.
+
+### What this does not fix
+
+Repeating a push does not solve silent rendering — six silent notifications is still six silent
+notifications. What it buys is the case where nobody was looking. `renotify` plus a changed title
+(`Still unacknowledged — booking X`) makes each repeat re-buzz instead of swapping in quietly, and
+that is as far as web push goes. A channel with its own sound that ignores the silent switch
+(Pushover's emergency priority was the option considered) is a different product; the phone call is
+the escalation that actually clears this bar.
+
+### PWA install
+
+`admin/sw.js` has a `fetch` handler that exists **because Chrome will not fire
+`beforeinstallprompt` without one** (installing from Chrome's own menu stopped needing one in
+Chrome 108; the scripted prompt still does). It caches only `/admin/js/*.js` URLs carrying a `?v=`
+content hash, and **never intercepts navigations** — `/admin` is Basic Auth'd and full of guest
+PII, so nothing under it goes in the Cache API and the 401 challenge must reach the browser rather
+than a worker that cannot show a login box.
+
+`sw.js` is also served `Cache-Control: no-cache` from `index.js`. It is the one admin asset that
+cannot be content-hashed — a service worker registration is keyed on its URL — so without that it
+inherited the CDN's four-hour TTL and a corrected notification format sat unused on the phone.
+
+**iOS gets no install button and cannot.** Safari has never shipped `beforeinstallprompt` or any
+scripted install; `admin/js/install.js` opens the written steps there instead. On iOS an installed
+Home Screen app is the *only* thing that receives web push at all, so this is load-bearing, not
+polish — and deleting the Home Screen icon switches notifications off silently.
+
 ## Privacy
 
 `/privacy.html` went up 2026-08-14, linked from every footer and from the booking form itself. It
