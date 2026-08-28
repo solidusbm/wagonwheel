@@ -4,7 +4,10 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Wagon Wheel RV Park — Admin</title>
-<link rel="manifest" href="/admin/manifest.json" crossorigin="use-credentials" />
+<!-- No crossorigin="use-credentials": the manifest is served unauthenticated (see server/index.js),
+     because Chrome's manifest fetch does not reliably carry Basic Auth and that attribute was not
+     enough to save it. Putting it back re-breaks installability. -->
+<link rel="manifest" href="/admin/manifest.json" />
 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <meta name="apple-mobile-web-app-capable" content="yes" />

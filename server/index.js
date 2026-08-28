@@ -85,6 +85,23 @@ app.get("/admin", (req, res, next) => {
   if (req.originalUrl.startsWith("/admin/")) return next();
   res.redirect(302, "/admin/" + req.originalUrl.slice("/admin".length));
 });
+/* The manifest is served ahead of adminAuth, unauthenticated, deliberately. Chrome fetches a web
+   app manifest WITHOUT reliably attaching the browser's stored Basic Auth credentials -- a
+   long-standing bug that crossorigin="use-credentials" on the <link> is supposed to cover and
+   frequently doesn't. The fetch 401s, Chrome concludes the page has no manifest, and the site is
+   not installable at all: no beforeinstallprompt, and no "Add to Home screen" in Chrome's own
+   menu either. That is exactly what /admin was doing.
+
+   On iOS it is worse than cosmetic -- only a Home Screen install receives web push, so an
+   unfetchable manifest means the office iPhone can never be alerted at all.
+
+   Nothing in the file is private: an app name, two colours and three icon paths. The icons
+   themselves already live in public/ for precisely this reason -- see the note in
+   tools/make-icons.mjs about auth'd icon fetches coming back 401 and rendering a grey square. */
+app.get("/admin/manifest.json", (req, res) => {
+  res.sendFile(path.join(adminDir, "manifest.json"));
+});
+
 /* sw.js is the one asset under /admin that cannot be content-hashed: a service worker
    registration is keyed on its URL, so the URL has to stay put. Without an explicit no-cache it
    inherits the CDN's four-hour TTL for .js, and a corrected notification format sits unused on

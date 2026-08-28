@@ -462,6 +462,19 @@ than a worker that cannot show a login box.
 cannot be content-hashed — a service worker registration is keyed on its URL — so without that it
 inherited the CDN's four-hour TTL and a corrected notification format sat unused on the phone.
 
+**`/admin/manifest.json` is served before `adminAuth`, unauthenticated. Don't put it back behind
+the password.** Chrome fetches a web app manifest without reliably attaching stored Basic Auth
+credentials — a long-standing bug that `crossorigin="use-credentials"` on the `<link>` is meant to
+cover and frequently doesn't. The fetch 401s, Chrome decides the page has no manifest, and the site
+becomes **completely uninstallable**: no `beforeinstallprompt`, and no "Add to Home screen" in
+Chrome's own menu either. That was live from 2026-08-28 until it was caught the same day. Nothing
+in the file is private — an app name, two colours, three icon paths — and the icons already live in
+`public/` for the same reason.
+
+Symptom to recognise, because it points nowhere near the cause: the install button is absent (or
+present and inert) **and** Chrome's ⋮ menu offers no install. If only the button is missing, look
+at the service worker; if the menu item is missing too, the manifest isn't being fetched.
+
 **iOS gets no install button and cannot.** Safari has never shipped `beforeinstallprompt` or any
 scripted install; `admin/js/install.js` opens the written steps there instead. On iOS an installed
 Home Screen app is the *only* thing that receives web push at all, so this is load-bearing, not
