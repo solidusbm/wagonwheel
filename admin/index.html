@@ -4,8 +4,11 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Wagon Wheel RV Park — Admin</title>
-<link rel="manifest" href="/admin/manifest.json" />
+<link rel="manifest" href="/admin/manifest.json" crossorigin="use-credentials" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-title" content="WW Admin" />
 <meta name="theme-color" content="#f6ecd8" />
 <link rel="stylesheet" href="/css/fonts.css" />
@@ -504,9 +507,34 @@
     <summary><h2>Push notifications</h2></summary>
     <div class="sub">Get notified on this device the moment a guest books through the site — on top of, not instead of, the admin email.</div>
     <div class="push-status" id="push-status">Checking…</div>
+    <div class="push-status" id="push-devices"></div>
+    <div class="push-status" id="install-status"></div>
+    <button type="button" class="btn btn-ghost" id="install-btn" hidden style="margin-bottom:10px;">Install this app on this device</button>
     <button type="button" class="btn btn-primary" id="push-toggle-btn" hidden>Enable on this device</button>
+    <button type="button" class="btn btn-ghost" id="push-test-btn" style="margin-left:8px;">Send a test notification</button>
+    <p id="push-test-status" class="sub" style="margin-top:10px;"></p>
     <div class="ios-hint" id="ios-hint" hidden>
-      On iPhone/iPad: Safari only delivers push notifications to sites installed on the Home Screen. Tap Share → <strong>Add to Home Screen</strong>, then open Admin from that icon and enable notifications from there.
+      <strong>On an iPhone or iPad</strong>, Safari only delivers notifications to a site that has been added to the Home Screen. It takes about thirty seconds, once, per phone:
+      <ol style="margin:8px 0 0; padding-left:20px;">
+        <li>Open this page in <strong>Safari</strong> (not Chrome), on iOS 16.4 or newer.</li>
+        <li>Tap the <strong>Share</strong> button — the square with the arrow out of the top.</li>
+        <li>Scroll down and tap <strong>Add to Home Screen</strong>, then <strong>Add</strong>.</li>
+        <li>Close Safari and open Admin again from the <strong>new wagon-wheel icon</strong> on the Home Screen.</li>
+        <li>Come back to this panel and tap <strong>Enable on this device</strong>, then <strong>Allow</strong> when iOS asks.</li>
+      </ol>
+      <p style="margin:8px 0 0;">Deleting that Home Screen icon switches the notifications off again, silently — if alerts stop arriving on a phone, check the icon is still there before anything else.</p>
+    </div>
+    <div class="ios-hint" id="ios-installed-hint" hidden>
+      Running from the Home Screen icon — this iPhone can receive notifications. Tap <strong>Enable on this device</strong> above if it isn't already on.
+    </div>
+    <div class="ios-hint" id="android-hint" hidden>
+      <strong>Not seeing the alert on Android?</strong> A booking notification arrives, but Android decides how loudly. The banner-and-sound setting is per site and lives in the phone's own settings, not on this page:
+      <ol style="margin:8px 0 0; padding-left:20px;">
+        <li><strong>Settings → Notifications → App notifications → Chrome</strong>.</li>
+        <li>Open the entry for <strong>banderawagonwheelrv.com</strong> (it may sit under a “Sites” group).</li>
+        <li>Set it to <strong>Alerting</strong> / <strong>Urgent</strong> and turn on <strong>Pop on screen</strong>.</li>
+        <li>While there, allow it to <strong>override Do Not Disturb</strong> if bookings should wake the phone overnight.</li>
+      </ol>
     </div>
   </details>
 
@@ -535,6 +563,7 @@
 </div>
 <script type="module" src="/admin/js/admin.js"></script>
 <script type="module" src="/admin/js/push.js"></script>
+<script type="module" src="/admin/js/install.js"></script>
 <script type="module" src="/admin/js/seo-panel.js"></script>
 <script type="module" src="/admin/js/review-panel.js"></script>
 <script type="module" src="/admin/js/map-panel.js"></script>

@@ -81,7 +81,16 @@ app.get("/admin", (req, res, next) => {
   if (req.originalUrl.startsWith("/admin/")) return next();
   res.redirect(302, "/admin/" + req.originalUrl.slice("/admin".length));
 });
-app.use("/admin", adminAuth, makeAssetVersioner(adminDir, resolveAsset), express.static(adminDir));
+/* sw.js is the one asset under /admin that cannot be content-hashed: a service worker
+   registration is keyed on its URL, so the URL has to stay put. Without an explicit no-cache it
+   inherits the CDN's four-hour TTL for .js, and a corrected notification format sits unused on
+   the office's phone until that expires. no-cache still revalidates, so this is one 304 per load,
+   not a re-download. */
+app.use("/admin", adminAuth, makeAssetVersioner(adminDir, resolveAsset), express.static(adminDir, {
+  setHeaders(res, filePath) {
+    if (path.basename(filePath) === "sw.js") res.setHeader("Cache-Control", "no-cache");
+  },
+}));
 app.use("/calendar", calendarRouter);
 app.use(photosRouter);
 // /robots.txt, /sitemap.xml and the og:image share card. Ahead of the static mount so a stray

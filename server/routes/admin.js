@@ -5,6 +5,7 @@ import { quote, cancellationQuote, isPriceable } from "../lib/pricing.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
 import { applySchema, applySeed, applyContentSeed, sitesCount } from "../lib/dbBootstrap.js";
 import { mailConfigStatus, sendTestEmail, sendSampleGuestEmail } from "../lib/email.js";
+import { sendTestPush, subscriptionCount } from "../lib/push.js";
 import { refundPayment } from "../lib/square.js";
 import { shrinkImage } from "../lib/imageResize.js";
 import { readLayout, writeLayout, FEATURE_KINDS } from "../lib/parkLayout.js";
@@ -1177,6 +1178,31 @@ router.post("/photos/optimize", async (req, res, next) => {
 
 router.get("/push/vapid-public-key", (req, res) => {
   res.json({ publicKey: process.env.VAPID_PUBLIC_KEY ?? null });
+});
+
+/* Devices signed up across ALL phones, not just this one. The per-device toggle can only report
+   on the browser it's running in, so without this there's no way to tell "the office's iPhone is
+   registered" from "the office thinks it is". */
+router.get("/push/status", async (req, res, next) => {
+  try {
+    res.json({
+      configured: Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY),
+      devices: await subscriptionCount(),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/push/test", async (req, res) => {
+  try {
+    const result = await sendTestPush();
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    // Same shape as /email/test -- the underlying reason is the useful part, not a bare 500.
+    console.error("[push] Test send failed", err);
+    res.status(400).json({ ok: false, error: err.message });
+  }
 });
 
 router.post("/push/subscribe", async (req, res, next) => {
