@@ -1,6 +1,7 @@
 import webpush from "web-push";
 import { nanoid } from "nanoid";
 import { pool } from "../db.js";
+import { voiceConfigured, callAfterAttempt, placeAlertCall } from "./voiceCall.js";
 
 let configured = false;
 
@@ -126,7 +127,7 @@ export async function sendDueAlertReminders() {
   const dueBefore = new Date(Date.now() - REMINDER_INTERVAL_MS);
 
   const { rows } = await pool.query(
-    `SELECT id, reservation_code, ack_token, body, attempts
+    `SELECT id, reservation_code, ack_token, body, attempts, call_placed_at
        FROM booking_alerts
       WHERE acknowledged_at IS NULL
         AND attempts < $1
@@ -146,6 +147,17 @@ export async function sendDueAlertReminders() {
     await sendToAll(
       alertPayload({ reservationCode: row.reservation_code, body: row.body, ackToken: row.ack_token, attempt })
     );
+
+    /* Escalate to a phone call, once. Gated on call_placed_at rather than on the attempt number
+       alone so that a restart, a clock change, or a slow tick can't dial the office twice for one
+       booking -- >= rather than === for the same reason, since an attempt can be skipped if the
+       job was down when it came due. Stamped before dialling: a call that throws halfway is still
+       a call that may have rung, and ringing twice is worse than not retrying. */
+    if (voiceConfigured() && !row.call_placed_at && attempt >= callAfterAttempt()) {
+      await pool.query("UPDATE booking_alerts SET call_placed_at = now() WHERE id = $1", [row.id]);
+      const { placed } = await placeAlertCall(row.ack_token);
+      console.log(`[voice] Booking ${row.reservation_code} unacknowledged at attempt ${attempt} - called ${placed} number(s)`);
+    }
 
     if (attempt >= MAX_ATTEMPTS) {
       console.error(
@@ -168,6 +180,15 @@ export async function acknowledgeAlert(token, via) {
     [token, via]
   );
   return rows[0]?.reservation_code ?? null;
+}
+
+// Looked up by the cXML endpoints when SignalWire connects the call, to speak the right booking.
+export async function alertByToken(token) {
+  const { rows } = await pool.query(
+    "SELECT reservation_code, body, acknowledged_at FROM booking_alerts WHERE ack_token = $1",
+    [token]
+  );
+  return rows[0] ?? null;
 }
 
 // Drives the admin readout, so a still-shouting alert is visible on the page as well -- the

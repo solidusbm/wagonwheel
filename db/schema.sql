@@ -295,3 +295,8 @@ CREATE TABLE IF NOT EXISTS booking_alerts (
 -- acknowledged rows are the overwhelming majority over time and are never scanned again.
 CREATE INDEX IF NOT EXISTS booking_alerts_pending_idx
   ON booking_alerts (last_sent_at) WHERE acknowledged_at IS NULL;
+
+-- When the escalation phone call for this alert was placed. NULL means never, which is what keeps
+-- the call to exactly one per booking: the retry job checks this rather than counting attempts, so
+-- a restart mid-escalation cannot dial the office a second time.
+ALTER TABLE booking_alerts ADD COLUMN IF NOT EXISTS call_placed_at TIMESTAMPTZ;
