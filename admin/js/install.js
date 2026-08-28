@@ -65,9 +65,19 @@ installBtn?.addEventListener("click", async () => {
     return;
   }
 
-  // iOS: no API to call, so surface the steps and put them on screen.
-  iosHint.hidden = false;
-  iosHint.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  if (isIos) {
+    // No API to call on iOS, so surface the written steps and put them on screen.
+    iosHint.hidden = false;
+    iosHint.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    return;
+  }
+
+  /* Not iOS and no prompt to replay. This was reachable for real: a [hidden] that authored CSS
+     overrode meant the button rendered on Android before Chrome had offered anything, and the
+     click landed in the iOS branch and appeared to do nothing at all. Say something -- a button
+     that silently does nothing is the hardest kind of bug to report. */
+  installStatus.textContent =
+    "Chrome hasn't offered an install for this site on this device yet. Use its ⋮ menu → Add to Home screen, or reload and try again.";
 });
 
 (function init() {

@@ -52,6 +52,14 @@
   --hero-water:#7fa8c9;
 }
 *{box-sizing:border-box;}
+/* The browser hides [hidden] with a user-agent rule, and ANY author rule that sets display beats
+   it -- .btn below sets display:inline-block, so `<button class="btn" hidden>` rendered perfectly
+   visible. That is not cosmetic: /admin hides buttons it means to be unavailable, and they were
+   all live. The install button showed on phones Chrome had never offered an install for and did
+   nothing when tapped, and "Enable on this device" showed on an iPhone in Safari, where tapping
+   it reaches a Notification API that isn't there. Needs !important precisely because it has to
+   outrank every author display rule, present and future. */
+[hidden]{display:none !important;}
 html{scroll-behavior:smooth;}
 html,body{margin:0;padding:0;background:var(--bg);}
 body{font-family:'Zilla Slab', Georgia, serif; color:var(--parchment); min-height:100vh; overflow-x:hidden;}
