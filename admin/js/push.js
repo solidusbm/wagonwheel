@@ -1,4 +1,5 @@
 const statusEl = document.getElementById("push-status");
+const alertsEl = document.getElementById("push-alerts");
 const devicesEl = document.getElementById("push-devices");
 const toggleBtn = document.getElementById("push-toggle-btn");
 const testBtn = document.getElementById("push-test-btn");
@@ -43,6 +44,71 @@ async function refreshDeviceCount() {
     // A missing count is cosmetic; don't let it blank out the panel.
   }
 }
+
+/* Bookings still waiting on a human. Top of the panel and styled loudly on purpose: a notification
+   can be swiped away, and once it has been, this is the only thing left that still knows the
+   office never actually dealt with the booking. */
+async function refreshAlerts() {
+  try {
+    const res = await fetch("/api/admin/push/alerts");
+    if (!res.ok) return;
+    const { alerts, maxAttempts } = await res.json();
+
+    alertsEl.replaceChildren();
+    for (const alert of alerts) alertsEl.append(buildAlert(alert, maxAttempts));
+  } catch {
+    // Cosmetic. The notifications themselves are the channel that matters.
+  }
+}
+
+function buildAlert(alert, maxAttempts) {
+  const wrap = document.createElement("div");
+  wrap.className = "push-alert";
+
+  const title = document.createElement("strong");
+  title.textContent = `Not acknowledged — booking ${alert.reservation_code}`;
+
+  /* textContent rather than innerHTML, here and below: alert.body carries the guest's own name,
+     straight from the booking form and never escaped on the way in. */
+  const body = document.createElement("div");
+  body.className = "push-alert-body";
+  body.textContent = alert.body;
+
+  const meta = document.createElement("div");
+  meta.className = "sub";
+  meta.textContent =
+    alert.attempts >= maxAttempts
+      ? `Alerted ${alert.attempts} times with no response, and has stopped repeating.`
+      : `Alert ${alert.attempts} of ${maxAttempts} — repeating every 5 minutes until acknowledged.`;
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "btn btn-primary";
+  btn.textContent = "Acknowledge";
+  btn.addEventListener("click", async () => {
+    btn.disabled = true;
+    try {
+      await fetch("/api/alerts/ack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: alert.ack_token, via: "admin-panel" }),
+      });
+    } catch {
+      // Leave it pending. A failed acknowledgement should keep alerting, not quietly stop.
+      btn.disabled = false;
+    }
+    await refreshAlerts();
+  });
+
+  wrap.append(title, body, meta, btn);
+  return wrap;
+}
+
+/* Outside init() and its early returns on purpose. A pending alert is worth showing on a desktop
+   that can't do push at all, or an iPhone that hasn't been installed to the Home Screen yet --
+   those are precisely the machines where the notification never arrived in the first place. */
+refreshAlerts();
+setInterval(refreshAlerts, 30 * 1000);
 
 async function refreshStatus() {
   const subscription = await getSubscription();

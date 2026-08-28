@@ -8,9 +8,11 @@ import adminRouter from "./routes/admin.js";
 import calendarRouter from "./routes/calendar.js";
 import photosRouter from "./routes/photos.js";
 import seoRouter from "./routes/seo.js";
+import alertsRouter from "./routes/alerts.js";
 import { applyHead, snapshot } from "./lib/seo.js";
 import { applyBody } from "./lib/ssr.js";
 import { startReviewRequestJob } from "./lib/reviewRequest.js";
+import { startBookingAlertJob } from "./lib/push.js";
 import { adminAuth } from "./middleware/adminAuth.js";
 import { makeAssetVersioner } from "./lib/assetVersion.js";
 import { styleGalleryCors } from "./middleware/styleGalleryCors.js";
@@ -54,6 +56,8 @@ app.use("/api/admin/style-gallery-approvals", styleGalleryCors);
 
 app.use("/api", sitesRouter);
 app.use("/api/reservations", reservationsRouter);
+// Unauthenticated by design -- see the note in routes/alerts.js. Token-guarded, not open.
+app.use("/api/alerts", alertsRouter);
 app.use("/api/admin", adminAuth, adminRouter);
 const adminDir = path.join(__dirname, "..", "admin");
 const publicDir = path.join(__dirname, "..", "public");
@@ -201,3 +205,8 @@ app.listen(port, () => {
    switches it on in /admin AND supplies a link -- see lib/reviewRequest.js. Started after listen()
    so a mail problem can never stop the site coming up. */
 startReviewRequestJob();
+
+/* The unacknowledged-booking-alert retry. Also after listen(), same reasoning, and also inert
+   until it has something to do -- with no VAPID keys or no pending alert it is a query that
+   returns nothing. */
+startBookingAlertJob();

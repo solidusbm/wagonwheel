@@ -265,3 +265,33 @@ CREATE TABLE IF NOT EXISTS app_settings (
 -- getting the same message twice. On the reservation rather than in a side table because there is
 -- exactly one of these per booking and it is a fact about the booking.
 ALTER TABLE reservations ADD COLUMN IF NOT EXISTS review_request_sent_at TIMESTAMPTZ;
+
+-- An unacknowledged booking alert. The push for a new booking repeats until a person confirms they
+-- have actually seen it, and this row is that state: acknowledged_at IS NULL means still shouting.
+--
+-- A side table rather than a column on reservations, because the alert has its own lifecycle
+-- (attempts, a token, an eventual giving-up) that is not a fact about the booking -- a reservation
+-- whose alert nobody ever acknowledged is still a perfectly good reservation.
+--
+-- body is stored rather than rebuilt from the reservation on each retry. A retry is a re-send of
+-- the alert that was raised, so it should say what that one said even if the booking is edited or
+-- cancelled in between; it also keeps the retry loop off the reservations/sites join entirely.
+CREATE TABLE IF NOT EXISTS booking_alerts (
+  id SERIAL PRIMARY KEY,
+  reservation_code TEXT NOT NULL,
+  -- The credential for acknowledging without being logged in. It only ever travels inside a push
+  -- payload, which the browser's push service delivers to already-subscribed devices and nowhere
+  -- else, so a device that can read it is a device the office signed up.
+  ack_token TEXT NOT NULL UNIQUE,
+  body TEXT NOT NULL,
+  attempts INT NOT NULL DEFAULT 0,
+  last_sent_at TIMESTAMPTZ,
+  acknowledged_at TIMESTAMPTZ,
+  acknowledged_via TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- The retry job's only query: still-unacknowledged alerts, oldest send first. Partial, because
+-- acknowledged rows are the overwhelming majority over time and are never scanned again.
+CREATE INDEX IF NOT EXISTS booking_alerts_pending_idx
+  ON booking_alerts (last_sent_at) WHERE acknowledged_at IS NULL;

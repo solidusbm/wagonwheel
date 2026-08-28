@@ -1,4 +1,5 @@
 import webpush from "web-push";
+import { nanoid } from "nanoid";
 import { pool } from "../db.js";
 
 let configured = false;
@@ -61,6 +62,32 @@ export async function subscriptionCount() {
   return rows[0]?.n ?? 0;
 }
 
+/* How hard an alert pushes before it gives up. Every REMINDER_INTERVAL_MS an unacknowledged
+   booking alert is re-sent, up to MAX_ATTEMPTS counting the first -- so one immediate alert and
+   five reminders across the following twenty-five minutes, then silence and a loud log line.
+   It stops on purpose rather than repeating forever: an alert nobody has acknowledged in half an
+   hour is not going to be rescued by a sixth buzz, and a notification that can never be
+   silenced is one the office learns to swipe away on reflex, which costs more than it buys. */
+const REMINDER_INTERVAL_MS = 5 * 60 * 1000;
+// Exported so the admin panel can say "alert 3 of 6" without keeping its own copy of the number.
+export const MAX_ATTEMPTS = 6;
+
+/* attempt is 1-based and changes the title from the second one on. A repeat must not look
+   identical to the original -- "still unacknowledged" is the actual information, and without it a
+   second buzz reads as a second booking. The tag stays the reservation code either way, so a
+   repeat replaces its predecessor instead of stacking, and renotify in sw.js re-alerts on the
+   swap rather than swapping it in silently. */
+function alertPayload({ reservationCode, body, ackToken, attempt }) {
+  return JSON.stringify({
+    title: attempt > 1 ? `Still unacknowledged — booking ${reservationCode}` : `New booking ${reservationCode}`,
+    body,
+    url: "/admin",
+    tag: `booking-${reservationCode}`,
+    ackToken,
+    attempt,
+  });
+}
+
 // Fire-and-log, same as the email notification: a push failure should never
 // fail a booking that already charged the card.
 export async function notifyAdminPush(reservation) {
@@ -69,17 +96,101 @@ export async function notifyAdminPush(reservation) {
     return;
   }
 
-  const payload = JSON.stringify({
-    title: `New booking ${reservation.reservationCode}`,
-    body: `${reservation.site.name} · ${reservation.checkIn} → ${reservation.checkOut} · ${reservation.guest.name}`,
-    url: "/admin",
-    // One notification per booking. Re-sending the same code replaces the earlier one instead of
-    // stacking a duplicate; two different bookings stay two separate alerts.
-    tag: `booking-${reservation.reservationCode}`,
-  });
+  const body = `${reservation.site.name} · ${reservation.checkIn} → ${reservation.checkOut} · ${reservation.guest.name}`;
+  const ackToken = nanoid();
 
-  const result = await sendToAll(payload);
+  /* The row goes in before the send, not after. If the process dies mid-send the alert is still
+     recorded as pending and the retry job picks it up a minute later; the other order loses it. */
+  await pool.query(
+    `INSERT INTO booking_alerts (reservation_code, ack_token, body, attempts, last_sent_at)
+     VALUES ($1, $2, $3, 1, now())`,
+    [reservation.reservationCode, ackToken, body]
+  );
+
+  const result = await sendToAll(
+    alertPayload({ reservationCode: reservation.reservationCode, body, ackToken, attempt: 1 })
+  );
   if (result.total === 0) console.log("[push] No devices subscribed - nothing sent");
+}
+
+/* One pass of the retry loop. Idempotent by construction: it selects only rows that are
+   unacknowledged and overdue and stamps last_sent_at as it goes, so a second run straight after
+   the first sends nothing. All the state is in the table, so this survives a restart mid-loop. */
+export async function sendDueAlertReminders() {
+  if (!ensureConfigured()) return;
+
+  /* The cutoff is computed here rather than as `now() - ($2 * INTERVAL '1 millisecond')` in SQL.
+     Postgres has to infer a type for a bare parameter inside interval arithmetic, and that is the
+     kind of thing that resolves fine until the day it doesn't; a timestamp parameter has exactly
+     one interpretation. Clock skew is not a concern -- the app and the database are the same box. */
+  const dueBefore = new Date(Date.now() - REMINDER_INTERVAL_MS);
+
+  const { rows } = await pool.query(
+    `SELECT id, reservation_code, ack_token, body, attempts
+       FROM booking_alerts
+      WHERE acknowledged_at IS NULL
+        AND attempts < $1
+        AND last_sent_at < $2
+      ORDER BY last_sent_at`,
+    [MAX_ATTEMPTS, dueBefore]
+  );
+
+  for (const row of rows) {
+    const attempt = row.attempts + 1;
+    /* Stamped before the send for the same reason the insert is: a send that throws must not leave
+       the row looking due forever and re-fire on every tick. */
+    await pool.query("UPDATE booking_alerts SET attempts = $1, last_sent_at = now() WHERE id = $2", [
+      attempt,
+      row.id,
+    ]);
+    await sendToAll(
+      alertPayload({ reservationCode: row.reservation_code, body: row.body, ackToken: row.ack_token, attempt })
+    );
+
+    if (attempt >= MAX_ATTEMPTS) {
+      console.error(
+        `[push] Booking ${row.reservation_code} went unacknowledged through ${MAX_ATTEMPTS} alerts - giving up. ` +
+          "Confirm by some other route that the office knows about it."
+      );
+    }
+  }
+}
+
+/* An already-acknowledged token is deliberately not an error. Two phones can both tap "Got it" on
+   the same alert, and the loser of that race should be a quiet no-op rather than a failure the
+   device treats as worth retrying. */
+export async function acknowledgeAlert(token, via) {
+  const { rows } = await pool.query(
+    `UPDATE booking_alerts
+        SET acknowledged_at = now(), acknowledged_via = $2
+      WHERE ack_token = $1 AND acknowledged_at IS NULL
+      RETURNING reservation_code`,
+    [token, via]
+  );
+  return rows[0]?.reservation_code ?? null;
+}
+
+// Drives the admin readout, so a still-shouting alert is visible on the page as well -- the
+// notification itself may already have been swiped away by the time anyone goes looking.
+export async function pendingBookingAlerts() {
+  const { rows } = await pool.query(
+    `SELECT reservation_code, body, attempts, created_at, ack_token
+       FROM booking_alerts
+      WHERE acknowledged_at IS NULL
+      ORDER BY created_at DESC`
+  );
+  return rows;
+}
+
+/* Same shape as startReviewRequestJob(): a bare timer, one container, unref()'d so it never holds
+   the process open at shutdown. Ticks every minute for one-minute granularity on a five-minute
+   interval; the overdue check lives in the query, not the timer. Delayed at boot because a deploy
+   restarts the process and a crash-loop should not become a burst of repeat alerts. */
+export function startBookingAlertJob() {
+  const run = () =>
+    sendDueAlertReminders().catch((err) => console.error("[push] reminder job failed:", err.message));
+  setTimeout(run, 60 * 1000).unref();
+  setInterval(run, 60 * 1000).unref();
 }
 
 /* Prove push works without waiting for a real booking to test it, mirroring sendTestEmail().

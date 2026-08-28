@@ -27,7 +27,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      data: { url: data.url || "/admin" },
+      data: { url: data.url || "/admin", ackToken: data.ackToken },
       icon: "/icon-192.png",
       badge: "/badge-96.png",
       tag: data.tag || "wagonwheel-booking",
@@ -36,20 +36,51 @@ self.addEventListener("push", (event) => {
       silent: false,
       vibrate: [200, 100, 200, 100, 400],
       timestamp: Date.now(),
+      /* The button that stops the repeats. Without it the only way to acknowledge is to open the
+         admin, which is a lot to ask of someone glancing at a lock screen -- and an alert that is
+         awkward to acknowledge gets swiped instead, which looks identical to being acknowledged
+         but leaves the office no better informed. Ignored by browsers that don't support actions,
+         where tapping the notification body does the same job. */
+      actions: data.ackToken ? [{ action: "ack", title: "Got it" }] : [],
     })
   );
 });
 
+/* Offline, or the server is down. The alert stays pending and the next reminder arrives on
+   schedule, which is the right way to fail: a repeat is cheap, an alert silently marked as seen
+   when nobody saw it is the whole problem this feature exists to prevent. */
+function acknowledge(ackToken, via) {
+  if (!ackToken) return Promise.resolve();
+  return fetch("/api/alerts/ack", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: ackToken, via }),
+  }).catch(() => {});
+}
+
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = event.notification.data?.url || "/admin";
+  const { url = "/admin", ackToken } = event.notification.data ?? {};
+
+  /* Both paths acknowledge. Tapping the body is every bit as good a signal that a person has seen
+     the booking as tapping "Got it" -- the only difference is whether they also wanted the admin
+     opened. Acknowledging on one but not the other would mean the more engaged response is the
+     one that keeps buzzing at you. */
+  if (event.action === "ack") {
+    event.waitUntil(acknowledge(ackToken, "notification-action"));
+    return;
+  }
+
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
-      for (const client of clients) {
-        if (client.url.includes(url) && "focus" in client) return client.focus();
-      }
-      if (self.clients.openWindow) return self.clients.openWindow(url);
-    })
+    Promise.all([
+      acknowledge(ackToken, "notification-open"),
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+        for (const client of clients) {
+          if (client.url.includes(url) && "focus" in client) return client.focus();
+        }
+        if (self.clients.openWindow) return self.clients.openWindow(url);
+      }),
+    ])
   );
 });
 

@@ -5,7 +5,7 @@ import { quote, cancellationQuote, isPriceable } from "../lib/pricing.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
 import { applySchema, applySeed, applyContentSeed, sitesCount } from "../lib/dbBootstrap.js";
 import { mailConfigStatus, sendTestEmail, sendSampleGuestEmail } from "../lib/email.js";
-import { sendTestPush, subscriptionCount } from "../lib/push.js";
+import { sendTestPush, subscriptionCount, pendingBookingAlerts, MAX_ATTEMPTS } from "../lib/push.js";
 import { refundPayment } from "../lib/square.js";
 import { shrinkImage } from "../lib/imageResize.js";
 import { readLayout, writeLayout, FEATURE_KINDS } from "../lib/parkLayout.js";
@@ -1189,6 +1189,21 @@ router.get("/push/status", async (req, res, next) => {
       configured: Boolean(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY),
       devices: await subscriptionCount(),
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* Bookings whose alert is still repeating. The notification can be swiped away, so the page has to
+   be able to answer "is anything still shouting at us?" independently -- and it is the only place
+   that shows an alert which has already exhausted its attempts and given up.
+   ack_token goes out with it so the panel can acknowledge through the same unauthenticated,
+   token-guarded route the service worker uses, rather than growing a second way to do it. The page
+   is behind Basic Auth and already displays guest names and phone numbers; a token that dismisses
+   one alert is not the sensitive thing on it. */
+router.get("/push/alerts", async (req, res, next) => {
+  try {
+    res.json({ alerts: await pendingBookingAlerts(), maxAttempts: MAX_ATTEMPTS });
   } catch (err) {
     next(err);
   }

@@ -69,6 +69,12 @@
   .push-status{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--parchment-dim); margin-bottom:12px;}
   .push-status.on{color:var(--cedar-light);}
   .ios-hint{font-size:12px; color:var(--parchment-dim); margin-top:10px; padding:10px 12px; background:rgba(135,89,15,0.09); border:1px solid rgba(135,89,15,0.35); border-radius:var(--radius);}
+  /* Deliberately the loudest thing in the panel -- it only ever appears when a booking is sitting
+     unacknowledged, which is the one state this section exists to make impossible to walk past. */
+  .push-alert{margin:0 0 12px; padding:12px 14px; border-radius:var(--radius); background:rgba(166,42,42,0.10); border:1px solid var(--rust-bright); border-left-width:4px;}
+  .push-alert strong{display:block; font-size:13px; color:var(--rust-bright);}
+  .push-alert .push-alert-body{margin:4px 0 2px; font-size:13px;}
+  .push-alert .sub{margin:0 0 10px;}
   .row-actions{display:flex; gap:8px; flex-wrap:wrap;}
   .row-actions button{font-size:10.5px; padding:6px 10px;}
   #booking-panel{display:none;}
@@ -506,6 +512,7 @@
   <details class="sync-feeds" data-section="push">
     <summary><h2>Push notifications</h2></summary>
     <div class="sub">Get notified on this device the moment a guest books through the site — on top of, not instead of, the admin email.</div>
+    <div id="push-alerts"></div>
     <div class="push-status" id="push-status">Checking…</div>
     <div class="push-status" id="push-devices"></div>
     <div class="push-status" id="install-status"></div>
