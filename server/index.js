@@ -23,7 +23,6 @@ import {
 } from "./middleware/adminAuth.js";
 import { makeRateLimit } from "./middleware/rateLimit.js";
 import { makeAssetVersioner } from "./lib/assetVersion.js";
-import { styleGalleryCors } from "./middleware/styleGalleryCors.js";
 import { applySchema, applySeed, applyContentSeed, sitesCount } from "./lib/dbBootstrap.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -56,11 +55,6 @@ app.get("/api/config", (req, res) => {
     squareEnvironment: process.env.SQUARE_ENVIRONMENT === "production" ? "production" : "sandbox",
   });
 });
-
-// Registered ahead of adminAuth so a CORS preflight OPTIONS request (sent without credentials,
-// per browser spec) doesn't get rejected by Basic Auth before it ever reaches adminRouter.
-app.use("/api/style-gallery-approvals", styleGalleryCors);
-app.use("/api/admin/style-gallery-approvals", styleGalleryCors);
 
 app.use("/api", sitesRouter);
 app.use("/api/reservations", reservationsRouter);

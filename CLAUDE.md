@@ -9,8 +9,9 @@ to know that aren't just "read the code."
 
 This branch (`claude/rv-booking-project-6pigax`) is the **real, live product** — a Node/Express +
 PostgreSQL + Square booking app for Bandera Wagon Wheel RV Park. It is the chosen direction over
-an earlier static-site + third-party-widget alternative (see the `static-site` branch, which is
-now a design-reference hub only — not a competing implementation, don't merge the two).
+an earlier static-site + third-party-widget alternative. That alternative was only ever a demo
+direction for the client; its `static-site` branch and GitHub Pages demo hub were **retired
+2026-08-29**. Don't look for them, and don't rebuild a second implementation.
 
 **Live URL:** https://banderawagonwheelrv.com/ (also served at https://wwrvb.sastx.net/)
 **Admin:** https://banderawagonwheelrv.com/admin (session-cookie login — see "Admin access" below)
@@ -188,8 +189,8 @@ pick it up with no other change. If the public form is ever regenerated, generat
 ## Theming — the light palette is the stylesheet's default
 
 `public/css/style.css` `:root` **is** the light theme ("Light Rustic"), taken from the style
-gallery's **v2** page on the `static-site` branch (`v2/css/style.css`) — read out of the file, not
-eyeballed. Before 2026-08-12 the stylesheet was still the *dark* palette and the light values
+gallery's **v2** page (`v2/css/style.css`) on the now-retired `static-site` branch — read out of the
+file, not eyeballed. That branch is gone, so the stylesheet is the only copy of these values now. Before 2026-08-12 the stylesheet was still the *dark* palette and the light values
 arrived only at runtime, via `content.js` fetching `/api/live-style` and injecting a `<style>` tag
 after first paint. Two consequences, both fixed by moving the palette into the stylesheet:
 
@@ -318,8 +319,9 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
 - Color themes live in the `styles` table (`css_vars` JSONB, a curated subset of the base
   stylesheet's CSS custom properties — bg, panel bg, gold ×2, rust, parchment text — plus an
   optional `logo_url`). **The `/admin` → Styles panel that edited this table was removed
-  (2026-07-29)** — style-gallery review moved to the static-site demo hub's approval checklist
-  instead (see "Cross-branch API surface" below), so this admin panel was redundant. The table,
+  (2026-07-29)** — style-gallery review had moved to the static-site demo hub's approval checklist
+  instead, so this admin panel was redundant. That hub was retired 2026-08-29 and its approval
+  API removed, but the panel was not restored: the live look is settled. The table,
   its `server/routes/admin.js` CRUD routes, and the public `GET /api/live-style` (read by
   `public/js/content.js` on every page load) are all still there and still work — there's just no
   UI to change which style is live anymore, so it stays pinned to whatever's `is_live` in the DB
@@ -338,28 +340,15 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   (anything not using `--bg` or `--bg-panel`), give its text fixed literal colors too** — don't let
   it inherit `--parchment`/`--gold`/`--gold-bright`, or it'll break the same way under a future
   light style.
-- **Cross-branch API surface:** the `static-site` branch's demo hub (GitHub Pages,
-  `solidusbm.github.io`) calls this app's API directly for the style-gallery approval checklist
-  (`GET /api/style-gallery-approvals` public, `PATCH/POST /api/admin/style-gallery-approvals/*`
-  Basic Auth) — the only place this app is called cross-origin. CORS for just those two path
-  prefixes is handled by `server/middleware/styleGalleryCors.js`, mounted in `server/index.js`
-  *before* the `adminAuth`-protected `/api/admin` mount specifically so CORS preflight `OPTIONS`
-  requests (sent without credentials, per spec) don't get bounced by Basic Auth before ever
-  reaching the route. If you add more cross-origin endpoints, follow the same
-  registration-order pattern — don't just slap `adminAuth` in front and assume CORS still works.
-  The `style_gallery_approvals` table (see `db/schema.sql`) is a plain approval/dismiss +
-  free-text-note checklist for the 36-page static style gallery — unrelated to the `styles`
-  table's real switchable color presets. `GET /api/style-gallery-approvals` returns
-  `{slug: {approved, dismissed, note}}` (shape has changed twice — started as a flat boolean map,
-  then gained `note`, then `dismissed`; don't trust old examples). `approved` and `dismissed` are
-  mutually exclusive — a slug is a favorite (`approved`), explicitly archived (`dismissed`), or
-  neither (still under review, the default, shown in the demo hub's "Needs review" bucket, not
-  hidden away). Setting one true always clears the other, enforced in the PATCH handler
-  (`server/routes/admin.js`), not a DB constraint. **Un-approving something must never set
-  `dismissed`** — that was a deliberate fix (2026-07-29): the two used to be conflated, so
-  toggling approval off silently archived a style the user might still be considering.
-  `PATCH /api/admin/style-gallery-approvals/:slug` accepts `approved`, `dismissed`, and/or `note`
-  independently via `COALESCE` in the upsert — a note-only save doesn't touch the other two.
+- **No cross-origin API surface.** Until 2026-08-29 the `static-site` demo hub on GitHub Pages
+  called this app for a style-gallery approval checklist, which needed a narrowly-scoped CORS
+  middleware mounted ahead of `adminAuth`. Hub, endpoints (`/api/style-gallery-approvals`,
+  `/api/admin/style-gallery-approvals/*`), `server/middleware/styleGalleryCors.js`, and the
+  `style_gallery_approvals` table definition were all removed with the branch. **Nothing calls this
+  app cross-origin now, and no CORS middleware remains.** If you ever add a cross-origin endpoint,
+  mount its CORS handler *before* the `adminAuth`-protected `/api/admin` mount — preflight
+  `OPTIONS` is sent without credentials, so auth-first ordering bounces it before it reaches the
+  route. That ordering trap is the one thing worth keeping from the old setup.
 
 ## Rate limiting, and why req.ip is a trap here
 
@@ -743,9 +732,11 @@ What's still open:
   YET MEASURED") — remove that caption once real figures land. Closing it needs a few paced
   distances at the park or a measurement off the printed sheet at its stated 1" = 100'.
 
-These are tracked as open items on the `static-site` branch's `/todo/` action list
-(https://solidusbm.github.io/wagonwheel/todo/) — check there for the current launch checklist
-before assuming something is or isn't done.
+These were tracked on the `static-site` branch's `/todo/` action list
+(https://solidusbm.github.io/wagonwheel/todo/), retired with that branch on 2026-08-29. The page
+is archived at `wagonwheel-static-archive/todo/index.html` on the VPS but is **no longer
+maintained and is already stale** (it still lists domain registration as outstanding, which was
+done 2026-08-11). Treat this CLAUDE.md as the source of truth; the checklist needs a new home.
 
 ## Testing UI changes
 

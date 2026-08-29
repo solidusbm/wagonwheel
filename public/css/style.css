@@ -4,8 +4,10 @@
    rendering dark for ~141ms before flipping to light, and it left /admin dark permanently, since
    the admin page doesn't load content.js at all. The chosen theme belongs in the stylesheet.
 
-   Values are lifted from the style gallery's v2 ("Light Rustic") -- the page this direction was
-   picked from -- read out of static-site/v2/css/style.css rather than eyeballed. Two deliberate
+   Values were lifted from the style gallery's v2 ("Light Rustic") -- the page this direction was
+   picked from -- read out of that gallery's v2/css/style.css rather than eyeballed. That gallery
+   lived on the `static-site` branch, which was retired 2026-08-29; these values are now the only
+   copy, so there is nothing left to re-sync against. Two deliberate
    departures from it, both of which must survive any future re-sync:
      --parchment-dim  v2 has #7a6650, which measures 4.16:1 on the panels and fails WCAG AA for
                       body text. #6b5844 is the corrected value (5.15:1), set 2026-08-11.

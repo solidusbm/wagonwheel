@@ -951,65 +951,6 @@ router.delete("/styles/:id", async (req, res, next) => {
   }
 });
 
-/* ---------- style gallery approval checklist (static-site branch's 36-page gallery) ---------- */
-
-const STYLE_GALLERY_SLUG_RE = /^v(1[0-2]|[1-9])[bc]?$/;
-
-const STYLE_GALLERY_NOTE_MAX_LENGTH = 2000;
-
-router.patch("/style-gallery-approvals/:slug", async (req, res, next) => {
-  const { slug } = req.params;
-  const { approved, dismissed, note } = req.body ?? {};
-  if (!STYLE_GALLERY_SLUG_RE.test(slug)) {
-    return res.status(400).json({ error: "Invalid style gallery slug" });
-  }
-  if (approved === undefined && dismissed === undefined && note === undefined) {
-    return res.status(400).json({ error: "approved, dismissed, and/or note is required" });
-  }
-  if (approved !== undefined && typeof approved !== "boolean") {
-    return res.status(400).json({ error: "approved must be a boolean" });
-  }
-  if (dismissed !== undefined && typeof dismissed !== "boolean") {
-    return res.status(400).json({ error: "dismissed must be a boolean" });
-  }
-  if (note !== undefined && (typeof note !== "string" || note.length > STYLE_GALLERY_NOTE_MAX_LENGTH)) {
-    return res.status(400).json({ error: `note must be a string up to ${STYLE_GALLERY_NOTE_MAX_LENGTH} characters` });
-  }
-
-  // approved/dismissed are mutually exclusive -- setting one true forces the other false,
-  // overriding whatever the client sent (or didn't send) for it.
-  let nextApproved = approved;
-  let nextDismissed = dismissed;
-  if (approved === true) nextDismissed = false;
-  if (dismissed === true) nextApproved = false;
-
-  try {
-    const { rows } = await pool.query(
-      `INSERT INTO style_gallery_approvals (slug, approved, dismissed, note, updated_at)
-       VALUES ($1, COALESCE($2, false), COALESCE($3, false), COALESCE($4, ''), now())
-       ON CONFLICT (slug) DO UPDATE SET
-         approved = COALESCE($2, style_gallery_approvals.approved),
-         dismissed = COALESCE($3, style_gallery_approvals.dismissed),
-         note = COALESCE($4, style_gallery_approvals.note),
-         updated_at = now()
-       RETURNING slug, approved, dismissed, note`,
-      [slug, nextApproved ?? null, nextDismissed ?? null, note ?? null]
-    );
-    res.json(rows[0]);
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.post("/style-gallery-approvals/reset", async (req, res, next) => {
-  try {
-    await pool.query("DELETE FROM style_gallery_approvals");
-    res.json({ ok: true });
-  } catch (err) {
-    next(err);
-  }
-});
-
 /* ---------- email ----------
    Booking alerts are the only mail the app sends, and they only fire on a completed,
    paid reservation -- so without this, the only way to find out whether SMTP is configured
