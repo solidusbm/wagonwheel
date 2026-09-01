@@ -8,6 +8,7 @@ import { mailConfigStatus, sendTestEmail, sendSampleGuestEmail } from "../lib/em
 import {
   sendTestPush,
   startAlertDrill,
+  notifyOfficeBookingPush,
   subscriptionCount,
   pendingBookingAlerts,
   MAX_ATTEMPTS,
@@ -258,7 +259,16 @@ router.post("/reservations", async (req, res, next) => {
     );
 
     const { rows } = await client.query(`${SELECT_RESERVATION} WHERE r.reservation_code = $1`, [reservationCode]);
-    res.status(201).json(mapReservation(rows[0]));
+    const reservation = mapReservation(rows[0]);
+    res.status(201).json(reservation);
+
+    /* After the response on purpose, same principle as the guest flow's allSettled: the booking
+       exists whether or not any phone hears about it. checkIn/checkOut are the validated request
+       strings rather than the row's values, because pg hands DATE columns back as Date objects
+       and a lock screen does not want "Mon Sep 01 2026 00:00:00 GMT+0000". */
+    notifyOfficeBookingPush({ ...reservation, checkIn, checkOut }).catch((err) =>
+      console.error("[push] Office-booking push failed", err)
+    );
   } catch (err) {
     if (err.code === "23P01") {
       return res.status(409).json({ error: "That site is already booked for those dates" });

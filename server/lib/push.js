@@ -114,6 +114,30 @@ export async function notifyAdminPush(reservation) {
   if (result.total === 0) console.log("[push] No devices subscribed - nothing sent");
 }
 
+/* The one-shot for bookings the office typed in itself -- deliberately NOT the repeat-until-
+   acknowledged chain. That machinery exists to guarantee a human saw the booking, and for a
+   manual entry a human typed it: the guarantee is satisfied by construction. This exists to keep
+   the OTHER phones in the loop -- the owner hearing about a staff phone-in and vice versa -- so
+   it is one notification, with nothing to acknowledge and nothing that repeats.
+   "Office booking" in the title is load-bearing: a website booking is evidence the site earns its
+   keep and a phone-in is not, and the two must not read alike on a lock screen. */
+export async function notifyOfficeBookingPush(reservation) {
+  if (!ensureConfigured()) {
+    console.log("[push] VAPID keys not set - skipping office-booking push");
+    return;
+  }
+
+  const payload = JSON.stringify({
+    title: `Office booking ${reservation.reservationCode}`,
+    body: `${reservation.site.name} · ${reservation.checkIn} → ${reservation.checkOut} · ${reservation.guest.name}`,
+    url: "/admin",
+    tag: `booking-${reservation.reservationCode}`,
+  });
+
+  const result = await sendToAll(payload);
+  if (result.total === 0) console.log("[push] No devices subscribed - nothing sent");
+}
+
 /* One pass of the retry loop. Idempotent by construction: it selects only rows that are
    unacknowledged and overdue and stamps last_sent_at as it goes, so a second run straight after
    the first sends nothing. All the state is in the table, so this survives a restart mid-loop. */

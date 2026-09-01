@@ -436,10 +436,13 @@ indistinguishable from being handled.
 `body` is stored on the row rather than rebuilt from the reservation on each retry: a retry should
 re-send *the alert that was raised*, even if the booking was edited or cancelled in between.
 
-**Office-created bookings (`POST /api/admin/reservations`) send nothing — no email, no push, no
-alert row — and that is deliberate**, not a missed call site: they exist for phone-ins and walk-ins,
-and alerting the office about a booking the office just typed in is noise. Only the paying guest
-flow in `routes/reservations.js` notifies. Don't "fix" the admin path to match.
+**Office-created bookings (`POST /api/admin/reservations`) send a one-shot "Office booking" push
+and nothing else — no email, no alert row, no repeats. The asymmetry is deliberate** (user's choice,
+2026-09-01): the repeat-until-acknowledged chain exists to guarantee a human saw the booking, and
+for a manual entry a human typed it, so the guarantee holds by construction — the push is to keep
+the *other* phones in the loop. The distinct title is load-bearing too: a website booking is
+evidence the site earns its keep, a phone-in is not, and they must not read alike on a lock screen.
+Don't "upgrade" the admin path to the full chain unprompted.
 
 Two test buttons in the panel, doing different jobs: **"Send a test notification"** proves
 transport (one push, no alert row, so no repeats and no Got it). **"Run a full alert drill"**
