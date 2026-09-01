@@ -5,7 +5,13 @@ import { quote, cancellationQuote, isPriceable } from "../lib/pricing.js";
 import { generateReservationCode } from "../lib/reservationCode.js";
 import { applySchema, applySeed, applyContentSeed, sitesCount } from "../lib/dbBootstrap.js";
 import { mailConfigStatus, sendTestEmail, sendSampleGuestEmail } from "../lib/email.js";
-import { sendTestPush, subscriptionCount, pendingBookingAlerts, MAX_ATTEMPTS } from "../lib/push.js";
+import {
+  sendTestPush,
+  startAlertDrill,
+  subscriptionCount,
+  pendingBookingAlerts,
+  MAX_ATTEMPTS,
+} from "../lib/push.js";
 import { refundPayment } from "../lib/square.js";
 import { shrinkImage } from "../lib/imageResize.js";
 import { readLayout, writeLayout, FEATURE_KINDS } from "../lib/parkLayout.js";
@@ -1216,6 +1222,18 @@ router.post("/push/test", async (req, res) => {
   } catch (err) {
     // Same shape as /email/test -- the underlying reason is the useful part, not a bare 500.
     console.error("[push] Test send failed", err);
+    res.status(400).json({ ok: false, error: err.message });
+  }
+});
+
+// The test above proves transport; this proves the machinery -- repeats, panel, Got it, and the
+// phone-call rung when it's configured. See startAlertDrill() for why they're separate buttons.
+router.post("/push/drill", async (req, res) => {
+  try {
+    const result = await startAlertDrill();
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    console.error("[push] Alert drill failed", err);
     res.status(400).json({ ok: false, error: err.message });
   }
 });

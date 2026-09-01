@@ -4,6 +4,8 @@ const devicesEl = document.getElementById("push-devices");
 const toggleBtn = document.getElementById("push-toggle-btn");
 const testBtn = document.getElementById("push-test-btn");
 const testStatus = document.getElementById("push-test-status");
+const drillBtn = document.getElementById("push-drill-btn");
+const drillStatus = document.getElementById("push-drill-status");
 const iosHint = document.getElementById("ios-hint");
 const iosInstalledHint = document.getElementById("ios-installed-hint");
 const androidHint = document.getElementById("android-hint");
@@ -211,6 +213,38 @@ testBtn.addEventListener("click", async () => {
   } finally {
     testBtn.disabled = false;
     await refreshDeviceCount();
+  }
+});
+
+/* Different job to the test button, and the wording keeps that distinction: the test proves a phone
+   can receive anything at all; the drill proves the alert MACHINERY -- it repeats, it shows in the
+   panel below, it stops when acknowledged, and it places the escalation call if that's configured.
+   The one thing it can't rehearse is the real booking insert, which costs real money now that
+   Square only runs in production. */
+drillBtn.addEventListener("click", async () => {
+  drillBtn.disabled = true;
+  drillStatus.textContent = "Starting a drill…";
+  try {
+    const res = await fetch("/api/admin/push/drill", { method: "POST" });
+    const data = await res.json();
+    if (!data.ok) {
+      drillStatus.textContent = "Failed: " + data.error;
+    } else {
+      const parts = [`Drill sent to ${data.sent} of ${data.total} device${data.total === 1 ? "" : "s"}.`];
+      if (data.expired) parts.push(`${data.expired} had expired and were removed.`);
+      if (data.errors?.length) parts.push("Errors: " + data.errors.join("; "));
+      parts.push(
+        "Now IGNORE the notification — the point is the repeat, due in about 5 minutes saying “Still unacknowledged”. Tap “Got it” on that one (or Acknowledge below) and it should stop."
+      );
+      drillStatus.textContent = parts.join(" ");
+    }
+  } catch (err) {
+    drillStatus.textContent = "Failed: " + err.message;
+  } finally {
+    drillBtn.disabled = false;
+    // The drill's row is pending from the moment it's created -- show it immediately so the panel
+    // and the phone visibly agree about what's shouting.
+    await refreshAlerts();
   }
 });
 

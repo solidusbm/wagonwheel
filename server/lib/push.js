@@ -168,6 +168,45 @@ export async function sendDueAlertReminders() {
   }
 }
 
+/* The full lifecycle, not just transport: inserts a real booking_alerts row, so the drill repeats
+   every five minutes, shows in the pending panel, escalates to the phone call at the usual attempt
+   when SignalWire is configured, and stops the moment anyone acknowledges it -- exactly what a
+   missed real booking does. After a drill, the only untested piece left is the booking insert
+   itself, which Square's production-only setup makes expensive to rehearse.
+
+   Any older drill still shouting is acknowledged first. Two drills repeating over each other teach
+   people to swipe the notification away, which is the exact reflex this system exists to avoid. */
+export async function startAlertDrill() {
+  if (!ensureConfigured()) {
+    throw new Error("VAPID keys are not set on the server — push notifications are switched off.");
+  }
+
+  const total = await subscriptionCount();
+  if (total === 0) {
+    throw new Error(
+      "No devices are signed up yet. Press “Enable on this device” on each phone that should get alerts."
+    );
+  }
+
+  await pool.query(
+    `UPDATE booking_alerts SET acknowledged_at = now(), acknowledged_via = 'superseded-by-new-drill'
+      WHERE reservation_code LIKE 'TEST-DRILL%' AND acknowledged_at IS NULL`
+  );
+
+  const reservationCode = `TEST-DRILL-${nanoid().replace(/[^a-zA-Z0-9]/g, "").slice(0, 4).toUpperCase()}`;
+  const body =
+    "This is a drill, not a booking. Ignore it once — a repeat should arrive in about five minutes. Tap “Got it” to end it.";
+  const ackToken = nanoid();
+
+  await pool.query(
+    `INSERT INTO booking_alerts (reservation_code, ack_token, body, attempts, last_sent_at)
+     VALUES ($1, $2, $3, 1, now())`,
+    [reservationCode, ackToken, body]
+  );
+
+  return sendToAll(alertPayload({ reservationCode, body, ackToken, attempt: 1 }));
+}
+
 /* An already-acknowledged token is deliberately not an error. Two phones can both tap "Got it" on
    the same alert, and the loser of that race should be a quiet no-op rather than a failure the
    device treats as worth retrying. */

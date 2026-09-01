@@ -436,6 +436,18 @@ indistinguishable from being handled.
 `body` is stored on the row rather than rebuilt from the reservation on each retry: a retry should
 re-send *the alert that was raised*, even if the booking was edited or cancelled in between.
 
+**Office-created bookings (`POST /api/admin/reservations`) send nothing — no email, no push, no
+alert row — and that is deliberate**, not a missed call site: they exist for phone-ins and walk-ins,
+and alerting the office about a booking the office just typed in is noise. Only the paying guest
+flow in `routes/reservations.js` notifies. Don't "fix" the admin path to match.
+
+Two test buttons in the panel, doing different jobs: **"Send a test notification"** proves
+transport (one push, no alert row, so no repeats and no Got it). **"Run a full alert drill"**
+(`POST /api/admin/push/drill` → `startAlertDrill()`) inserts a real `TEST-DRILL-*` alert row and
+exercises the machinery — repeats, panel, acknowledgment, and the phone call once SignalWire is
+configured. A new drill auto-acknowledges any older one still shouting. After a drill, the only
+thing left untested is the booking insert itself, which costs real money (production Square).
+
 ### `/api/alerts/*` is deliberately unauthenticated
 
 Two callers, neither of which can present Basic Auth: the **service worker** (its `fetch` does not
