@@ -1,6 +1,7 @@
 {
   "name": "Wagon Wheel RV Park — Admin",
   "short_name": "WW Admin",
+  "id": "/admin/",
   "start_url": "/admin/",
   "scope": "/admin/",
   "display": "standalone",
