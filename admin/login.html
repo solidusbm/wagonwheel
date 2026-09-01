@@ -7,6 +7,15 @@
 <!-- Both public assets. This page is served ahead of the auth check, so anything it needs must be
      reachable without a session or the login screen itself renders unstyled. -->
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<!-- The same manifest the admin itself links, and it must be here too: Chrome judges
+     installability per PAGE, and after the move to cookie login this is the page a signed-out
+     phone actually lands on. Without the link, that phone is looking at "a site with no manifest"
+     and gets no install option anywhere -- ⋮ menu included. /admin/login sits inside the
+     manifest's /admin/ scope, so installing from here is legitimate and launches /admin/. -->
+<link rel="manifest" href="/admin/manifest.json" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#f6ecd8" />
 <link rel="stylesheet" href="/css/fonts.css" />
 <link rel="stylesheet" href="/css/style.css" />
 <meta name="robots" content="noindex, nofollow" />
