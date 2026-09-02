@@ -20,12 +20,14 @@ const png = (size, input = svg) =>
    only the alpha channel and paints it white (a coloured badge shows up as a grey blob), and the
    maskable icon below, which has to survive being cropped to a circle. */
 const wheelOnly = (stroke) => Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <g stroke="${stroke}" stroke-width="7" fill="none" stroke-linecap="round">
-    <circle cx="32" cy="32" r="21"/>
+  <g stroke="${stroke}" stroke-width="5" fill="none" stroke-linecap="round">
+    <circle cx="32" cy="32" r="21" stroke-width="6"/>
     <line x1="32" y1="11" x2="32" y2="53"/>
     <line x1="11" y1="32" x2="53" y2="32"/>
-    <line x1="17.1" y1="17.1" x2="46.9" y2="46.9"/>
-    <line x1="46.9" y1="17.1" x2="17.1" y2="46.9"/>
+    <line x1="13.8" y1="21.5" x2="50.2" y2="42.5"/>
+    <line x1="21.5" y1="13.8" x2="42.5" y2="50.2"/>
+    <line x1="42.5" y1="13.8" x2="21.5" y2="50.2"/>
+    <line x1="50.2" y1="21.5" x2="13.8" y2="42.5"/>
   </g>
   <circle cx="32" cy="32" r="8" fill="${stroke}"/>
 </svg>`);
