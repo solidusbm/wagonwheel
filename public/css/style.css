@@ -346,7 +346,7 @@ details.form-section > summary .opt{font-family:'Zilla Slab',serif; text-transfo
 .btn-primary::before{content:""; position:absolute; inset:0; z-index:-1; background:var(--rust); clip-path:polygon(9px 0, calc(100% - 9px) 0, 100% 50%, calc(100% - 9px) 100%, 9px 100%, 0 50%);}
 .btn-primary:hover::before{background:var(--rust-bright);}
 .btn-primary:disabled{opacity:0.5; cursor:not-allowed;}
-.btn-ghost{background:var(--bg-panel); color:var(--parchment-dim); border:1px solid var(--line);}
+.btn-ghost{background:var(--bg); color:var(--parchment-dim); border:1px solid var(--line);}
 .btn-ghost:hover{color:var(--parchment); border-color:var(--parchment-dim);}
 .btn:disabled{opacity:0.4; cursor:not-allowed;}
 .btn-row{display:flex; gap:14px; margin-top:8px; flex-wrap:wrap;}
