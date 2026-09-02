@@ -9,19 +9,48 @@
 </head>
 <body>
 
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="wheel12" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="7"/>
+      <circle cx="50" cy="50" r="11" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="5">
+        <line x1="50" y1="10" x2="50" y2="90"/><line x1="10" y1="50" x2="90" y2="50"/>
+        <line x1="18.7" y1="30" x2="81.3" y2="70"/><line x1="30" y1="18.7" x2="70" y2="81.3"/>
+        <line x1="70" y1="18.7" x2="30" y2="81.3"/><line x1="81.3" y1="30" x2="18.7" y2="70"/>
+      </g>
+    </symbol>
+    <!-- The letterhead caravan, traced from the park's own scan: teardrop wagon, trotting horse,
+         spiky mane and tail. The hero draws its own animated copy; this one is for chrome. -->
+    <symbol id="caravan" viewBox="0 0 250 100">
+      <path d="M14,74 Q4,74 4,56 Q4,26 40,18 Q76,10 94,30 Q102,40 102,60 Q102,74 90,74 L70,74 A14,14 0 0 0 42,74 Z" fill="currentColor"/>
+      <circle cx="56" cy="74" r="11" fill="none" stroke="currentColor" stroke-width="3"/>
+      <circle cx="56" cy="74" r="3.5" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="1.5"><line x1="56" y1="66" x2="56" y2="82"/><line x1="48" y1="74" x2="64" y2="74"/><line x1="50.5" y1="68.5" x2="61.5" y2="79.5"/><line x1="61.5" y1="68.5" x2="50.5" y2="79.5"/></g>
+      <circle cx="72" cy="40" r="7" fill="var(--cutout, #f6ecd8)"/>
+      <rect x="34" y="34" width="18" height="12" rx="2" fill="var(--cutout, #f6ecd8)"/>
+      <path d="M102,58 L143,56" stroke="currentColor" stroke-width="3" fill="none"/>
+      <path d="M148,52 L144,62 L133,74 L128,86 L132,87 L139,75 L151,62 L154,54 Z" fill="currentColor"/>
+      <path d="M152,54 L151,72 L149,86 L154,86 L157,72 L159,55 Z" fill="currentColor"/>
+      <path d="M179,52 C180,62 179,67 174,72 L171,78 L175,80 L181,72 C186,66 187,58 187,52 Z" fill="currentColor"/>
+      <path d="M189,49 L201,67 L211,85 L215,84 L206,63 L196,47 Z" fill="currentColor"/>
+      <path d="M242,24 C236,17 231,12 226,8 L227,1 L222,7 L218,1 L216,8 C208,14 201,25 196,33 C188,36 180,37 172,36 C162,35 155,34 150,35 C146,36 144,39 144,43 L133,39 L139,46 L127,49 L136,53 L128,61 L137,57 C140,56 142,53 143,49 C146,53 147,58 150,60 C158,62 170,60 180,58 C186,57 190,55 195,51 C198,47 201,44 203,41 L218,27 C226,26 235,25 242,24 Z" fill="currentColor"/>
+      <path d="M213,9 L206,4 L206,11 L200,9 L201,16 L194,15 L196,22 L190,22 L193,31 C198,24 205,16 213,9 Z" fill="currentColor"/>
+    </symbol>
+  </defs>
+</svg>
+
 <nav class="nav">
   <a class="brand" href="/">
-    <svg class="brand-wheel" viewBox="0 0 100 100" aria-hidden="true">
-      <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="5"/>
-      <circle cx="50" cy="50" r="10" fill="currentColor"/>
-      <g stroke="currentColor" stroke-width="5">
-        <line x1="50" y1="4" x2="50" y2="96"/>
-        <line x1="4" y1="50" x2="96" y2="50"/>
-        <line x1="16.6" y1="16.6" x2="83.4" y2="83.4"/>
-        <line x1="83.4" y1="16.6" x2="16.6" y2="83.4"/>
-      </g>
-    </svg>
-    <span>Wagon Wheel RV</span>
+    <svg class="brand-caravan" viewBox="0 0 250 100" aria-hidden="true"><use href="#caravan"/></svg>
+    <span class="brand-rule"></span>
+    <span class="brand-lockup">
+      <span class="word">
+        <span class="town">Bandera</span>
+        <span class="wagonwheel">WAGON <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#wheel12"/></svg> WHEEL</span>
+      </span>
+      <span class="rv">RV PARK</span>
+    </span>
   </a>
   <div class="links">
     <a href="#about">About</a>
@@ -35,22 +64,12 @@
 </nav>
 
 <div class="hero">
-  <svg class="hero-art" viewBox="0 0 1200 520" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
-    <!-- Colours come from the --hero-* tokens, never literal hex. They were hardcoded to the dark
-         palette's values, so this artwork stayed night-time when the site went light. -->
-    <!-- Below 820px this SVG is absolutely-positioned and cropped to cover (see .hero-art in
-         style.css), centered on x=600 -- at a phone width that shows roughly x 420-780 of this
-         1200-wide viewBox and nothing outside it. The sun (was cx=980) and half the cacti used to
-         sit entirely outside that window and simply never appeared on a phone; both are positioned
-         with that visible band in mind now, not just the desktop-width composition. -->
+  <svg class="hero-art" viewBox="0 0 1440 620" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+    <!-- Colours come from the --hero-* tokens (plus --leather/--cedar), never literal hex -- the
+         rule in CLAUDE.md. The sun is drawn as a rolling wagon wheel: hub, twelve spokes, rim,
+         with engraved ray rings outside it. -->
     <defs>
       <symbol id="hero-cactus" viewBox="-20 -58 40 58" overflow="visible">
-        <!-- A small prickly-pear cluster: a base pad plus three smaller pads at angles off it. The
-             stroke is a ground tone, not a true outline colour -- it's there so overlapping pads
-             read as separate paddles instead of blurring into one round blob.
-             overflow="visible" matters here: the top pad's ellipse pokes a few units past this
-             viewBox's own top edge, and <symbol> clips to its viewBox by default (that's what
-             "the tops of the cactus look cut off" was -- not a rendering glitch, an actual clip). -->
         <g stroke="var(--hero-ground-3)" stroke-width="1.2" stroke-linejoin="round">
           <ellipse cx="0" cy="-11" rx="11" ry="15"/>
           <ellipse cx="-13" cy="-32" rx="8" ry="13" transform="rotate(-28 -13 -32)"/>
@@ -58,41 +77,143 @@
           <ellipse cx="-2" cy="-52" rx="6" ry="10" transform="rotate(-8 -2 -52)"/>
         </g>
       </symbol>
+      <symbol id="hero-oak" viewBox="0 0 100 80">
+        <path d="M46,78 L48,58 Q40,56 38,50 L44,52 Q46,44 50,42 Q54,44 56,52 L62,50 Q60,56 52,58 L54,78 Z" fill="currentColor"/>
+        <ellipse cx="30" cy="36" rx="24" ry="16" fill="currentColor"/>
+        <ellipse cx="62" cy="30" rx="28" ry="18" fill="currentColor"/>
+        <ellipse cx="46" cy="20" rx="22" ry="14" fill="currentColor"/>
+        <ellipse cx="76" cy="42" rx="16" ry="10" fill="currentColor"/>
+      </symbol>
+      <symbol id="hero-windmill" viewBox="0 0 60 100">
+        <g stroke="currentColor" stroke-width="2.5" fill="none">
+          <line x1="22" y1="98" x2="30" y2="28"/><line x1="38" y1="98" x2="30" y2="28"/>
+          <line x1="24.5" y1="76" x2="35.5" y2="76"/><line x1="26.5" y1="56" x2="33.5" y2="56"/>
+          <line x1="24.5" y1="76" x2="33.5" y2="56"/><line x1="35.5" y1="76" x2="26.5" y2="56"/>
+        </g>
+        <g fill="currentColor">
+          <path d="M30,26 L30,6 L34,10 Z"/><path d="M30,26 L47,16 L47,22 Z"/><path d="M30,26 L50,32 L46,36 Z"/>
+          <path d="M30,26 L40,43 L34,43 Z"/><path d="M30,26 L13,36 L13,30 Z"/><path d="M30,26 L10,20 L14,16 Z"/>
+          <path d="M30,26 L20,9 L26,9 Z"/>
+        </g>
+        <circle cx="30" cy="26" r="3.5" fill="currentColor"/>
+        <path d="M30,26 L44,24 L44,30 Z" fill="currentColor" opacity="0.7"/>
+      </symbol>
+      <pattern id="hero-hatch" width="7" height="7" patternTransform="rotate(35)" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="0" x2="0" y2="7" stroke="var(--hero-ground-3)" stroke-width="0.8" opacity="0.35"/>
+      </pattern>
+      <pattern id="hero-hatch2" width="5" height="5" patternTransform="rotate(-25)" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="0" x2="0" y2="5" stroke="var(--hero-ground-3)" stroke-width="0.7" opacity="0.25"/>
+      </pattern>
     </defs>
-    <rect width="1200" height="520" fill="var(--hero-sky)"/>
-    <circle cx="820" cy="120" r="150" fill="var(--hero-sun)" opacity="0.55"/>
-    <g stroke="var(--hero-sun-ring)" stroke-width="4" opacity="0.4">
-      <circle cx="820" cy="120" r="150" fill="none"/>
-      <line x1="820" y1="-30" x2="820" y2="270"/>
-      <line x1="670" y1="120" x2="970" y2="120"/>
-      <line x1="714" y1="14" x2="926" y2="226"/>
-      <line x1="714" y1="226" x2="926" y2="14"/>
+    <rect width="1440" height="620" fill="var(--hero-sky)"/>
+    <g transform="translate(1050,150)">
+      <circle r="130" fill="var(--hero-sun)" opacity="0.5"/>
+      <circle r="130" fill="none" stroke="var(--hero-sun-ring)" stroke-width="3" opacity="0.5"/>
+      <circle r="148" fill="none" stroke="var(--hero-sun-ring)" stroke-width="1.2" opacity="0.4"/>
+      <circle r="166" fill="none" stroke="var(--hero-sun-ring)" stroke-width="0.8" opacity="0.3"/>
+      <circle r="105" fill="none" stroke="var(--hero-sun-ring)" stroke-width="1" opacity="0.45"/>
+      <circle r="18" fill="var(--hero-sun-ring)" opacity="0.45"/>
+      <circle r="26" fill="none" stroke="var(--hero-sun-ring)" stroke-width="2.5" opacity="0.5"/>
+      <g stroke="var(--hero-sun-ring)" stroke-width="5" opacity="0.45" stroke-linecap="round">
+        <line x1="26.0" y1="0.0" x2="103.0" y2="0.0"/>
+        <line x1="22.5" y1="13.0" x2="89.2" y2="51.5"/>
+        <line x1="13.0" y1="22.5" x2="51.5" y2="89.2"/>
+        <line x1="0.0" y1="26.0" x2="0.0" y2="103.0"/>
+        <line x1="-13.0" y1="22.5" x2="-51.5" y2="89.2"/>
+        <line x1="-22.5" y1="13.0" x2="-89.2" y2="51.5"/>
+        <line x1="-26.0" y1="0.0" x2="-103.0" y2="0.0"/>
+        <line x1="-22.5" y1="-13.0" x2="-89.2" y2="-51.5"/>
+        <line x1="-13.0" y1="-22.5" x2="-51.5" y2="-89.2"/>
+        <line x1="-0.0" y1="-26.0" x2="-0.0" y2="-103.0"/>
+        <line x1="13.0" y1="-22.5" x2="51.5" y2="-89.2"/>
+        <line x1="22.5" y1="-13.0" x2="89.2" y2="-51.5"/>
+      </g>
+      <g stroke="var(--hero-sun-ring)" stroke-width="2" opacity="0.45">
+        <line y1="-178" y2="-138"/><line y1="178" y2="138"/><line x1="-178" x2="-138"/><line x1="178" x2="138"/>
+        <line x1="-126" y1="-126" x2="-98" y2="-98"/><line x1="126" y1="-126" x2="98" y2="-98"/>
+        <line x1="-126" y1="126" x2="-98" y2="98"/><line x1="126" y1="126" x2="98" y2="98"/>
+      </g>
     </g>
-    <polygon points="0,520 0,300 200,240 400,310 620,220 820,300 1000,250 1200,320 1200,520" fill="var(--hero-ground-1)"/>
-    <polygon points="0,520 0,370 250,330 500,390 750,320 1000,380 1200,350 1200,520" fill="var(--hero-ground-2)"/>
-    <polygon points="0,520 0,430 300,410 600,440 900,410 1200,440 1200,520" fill="var(--hero-ground-3)"/>
+    <g stroke="var(--hero-ground-3)" stroke-width="2" fill="none" opacity="0.6">
+      <path d="M330,120 q8,-8 16,0 q8,-8 16,0"/>
+      <path d="M395,145 q6,-6 12,0 q6,-6 12,0"/>
+      <path d="M290,170 q5,-5 10,0 q5,-5 10,0"/>
+    </g>
+    <polygon points="0,620 0,330 180,285 360,335 560,265 760,330 950,285 1160,345 1310,300 1440,350 1440,620" fill="var(--hero-ground-1)"/>
+    <polygon points="0,620 0,330 180,285 360,335 560,265 760,330 950,285 1160,345 1310,300 1440,350 1440,620" fill="url(#hero-hatch)"/>
+    <g color="var(--hero-ground-3)"><svg x="238" y="225" width="54" height="92" viewBox="0 0 60 100"><use href="#hero-windmill"/></svg></g>
+    <polygon points="0,620 0,415 260,375 520,430 780,365 1040,425 1250,390 1440,420 1440,620" fill="var(--hero-ground-2)"/>
+    <polygon points="0,620 0,415 260,375 520,430 780,365 1040,425 1250,390 1440,420 1440,620" fill="url(#hero-hatch2)"/>
+    <g color="var(--cedar)" opacity="0.85">
+      <svg x="80" y="330" width="96" height="78" viewBox="0 0 100 80"><use href="#hero-oak"/></svg>
+      <svg x="1230" y="340" width="84" height="68" viewBox="0 0 100 80"><use href="#hero-oak"/></svg>
+      <svg x="1330" y="356" width="66" height="54" viewBox="0 0 100 80"><use href="#hero-oak"/></svg>
+    </g>
+    <polygon points="0,620 0,505 340,485 700,520 1060,488 1440,515 1440,620" fill="var(--hero-ground-3)"/>
     <g fill="var(--hero-cacti)">
-      <use href="#hero-cactus" x="130" y="348" width="40" height="58"/>
-      <use href="#hero-cactus" x="253" y="371.7" width="34" height="49.3"/>
-      <use href="#hero-cactus" x="504" y="369.6" width="32" height="46.4"/>
-      <use href="#hero-cactus" x="602" y="386.3" width="26" height="37.7"/>
-      <use href="#hero-cactus" x="681" y="352.9" width="38" height="55.1"/>
-      <use href="#hero-cactus" x="815" y="376.5" width="30" height="43.5"/>
-      <use href="#hero-cactus" x="960" y="353" width="40" height="58"/>
-      <use href="#hero-cactus" x="1084" y="379.6" width="32" height="46.4"/>
+      <use href="#hero-cactus" x="120" y="442" width="40" height="58"/>
+      <use href="#hero-cactus" x="454" y="460" width="32" height="46"/>
+      <use href="#hero-cactus" x="608" y="480" width="25" height="36"/>
+      <use href="#hero-cactus" x="941" y="443" width="38" height="55"/>
+      <use href="#hero-cactus" x="1106" y="463" width="28" height="41"/>
+      <use href="#hero-cactus" x="1283" y="463" width="34" height="49"/>
     </g>
-    <path d="M0,470 Q150,450 300,472 T600,468 T900,474 T1200,466 L1200,520 L0,520 Z" fill="var(--hero-water)" opacity="0.55"/>
+    <!-- the letterhead caravan, trotting across the park -->
+    <g class="caravan-x"><g class="caravan-bob"><g style="color: var(--leather);" opacity="0.92" transform="translate(0,400) scale(0.94)">
+      <path d="M14,74 Q4,74 4,56 Q4,26 40,18 Q76,10 94,30 Q102,40 102,60 Q102,74 90,74 L70,74 A14,14 0 0 0 42,74 Z" fill="currentColor"/>
+      <circle cx="56" cy="74" r="11" fill="none" stroke="currentColor" stroke-width="3"/>
+      <circle cx="56" cy="74" r="3.5" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="1.5"><line x1="56" y1="66" x2="56" y2="82"/><line x1="48" y1="74" x2="64" y2="74"/><line x1="50.5" y1="68.5" x2="61.5" y2="79.5"/><line x1="61.5" y1="68.5" x2="50.5" y2="79.5"/></g>
+      <circle cx="72" cy="40" r="7" fill="var(--hero-sky)"/>
+      <rect x="34" y="34" width="18" height="12" rx="2" fill="var(--hero-sky)"/>
+      <path d="M102,58 L143,56" stroke="currentColor" stroke-width="3" fill="none"/>
+      <path class="leg-a" d="M148,52 L144,62 L133,74 L128,86 L132,87 L139,75 L151,62 L154,54 Z" fill="currentColor"/>
+      <path class="leg-b" d="M152,54 L151,72 L149,86 L154,86 L157,72 L159,55 Z" fill="currentColor"/>
+      <path class="leg-b" d="M179,52 C180,62 179,67 174,72 L171,78 L175,80 L181,72 C186,66 187,58 187,52 Z" fill="currentColor"/>
+      <path class="leg-a" d="M189,49 L201,67 L211,85 L215,84 L206,63 L196,47 Z" fill="currentColor"/>
+      <path d="M242,24 C236,17 231,12 226,8 L227,1 L222,7 L218,1 L216,8 C208,14 201,25 196,33 C188,36 180,37 172,36 C162,35 155,34 150,35 C146,36 144,39 144,43 L133,39 L139,46 L127,49 L136,53 L128,61 L137,57 C140,56 142,53 143,49 C146,53 147,58 150,60 C158,62 170,60 180,58 C186,57 190,55 195,51 C198,47 201,44 203,41 L218,27 C226,26 235,25 242,24 Z" fill="currentColor"/>
+      <path d="M213,9 L206,4 L206,11 L200,9 L201,16 L194,15 L196,22 L190,22 L193,31 C198,24 205,16 213,9 Z" fill="currentColor"/>
+    </g></g></g>
+    <path d="M0,565 Q180,548 360,568 T720,562 T1080,570 T1440,560 L1440,620 L0,620 Z" fill="var(--hero-water)" opacity="0.55"/>
+    <g stroke="var(--hero-water-deep)" stroke-width="1.5" fill="none" opacity="0.5">
+      <path d="M120,584 q20,-4 40,0"/><path d="M420,592 q24,-4 48,0"/><path d="M780,586 q20,-4 40,0"/><path d="M1150,592 q24,-4 48,0"/>
+    </g>
+    <g stroke="var(--cedar)" stroke-width="1.5" opacity="0.6">
+      <path d="M90,528 l3,-9 M96,528 l0,-11 M102,528 l-3,-9" fill="none"/>
+      <path d="M700,540 l3,-9 M706,540 l0,-11 M712,540 l-3,-9" fill="none"/>
+      <path d="M1330,534 l3,-9 M1336,534 l0,-11 M1342,534 l-3,-9" fill="none"/>
+    </g>
   </svg>
   <div class="hero-text">
     <div class="eyebrow">325 Polly Peak Dr · Bandera, TX 78003</div>
-    <h1>Bandera Wagon Wheel RV Park</h1>
+    <h1 class="hero-board">
+      <span class="town">Bandera</span>
+      <span class="wagonwheel">WAGON <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#wheel12"/></svg> WHEEL</span>
+      <span class="rv">RV PARK</span>
+    </h1>
     <div class="hero-badge">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.5a11 11 0 0 1 14 0M8 16a6.5 6.5 0 0 1 8 0M12 19.5h.01"/></svg>
       <span data-content-key="hero_badge">New high-speed WiFi, park-wide</span>
     </div>
     <p data-content-key="hero_subtitle">A rustic, family-run stop seven minutes from downtown Bandera — the Cowboy Capital of the World.</p>
-    <a href="#booking" class="btn btn-primary">Check availability</a>
+    <div class="btn-row" style="justify-content:center;">
+      <a href="#booking" class="btn btn-primary">Check availability</a>
+      <a href="/monthly-stays.html" class="btn btn-ghost">Monthly stays</a>
+    </div>
   </div>
+</div>
+
+<!-- Fact strip. Every claim here is stated elsewhere on this page or on /hours. -->
+<div class="marquee">
+  <span>Full hookups</span>
+  <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#wheel12"/></svg>
+  <span>30/50 amp at every site</span>
+  <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#wheel12"/></svg>
+  <span>Pets part of the family</span>
+  <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#wheel12"/></svg>
+  <span>Outside the 100-year floodplain</span>
+  <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#wheel12"/></svg>
+  <span>Reservations open 24/7</span>
 </div>
 
 <div class="wrap">
@@ -117,12 +238,15 @@
 
   <section id="gallery" class="section-pad">
     <div class="section-divider">
-      <svg viewBox="0 0 100 100" aria-hidden="true">
-        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="6"/>
-        <circle cx="50" cy="50" r="9" fill="currentColor"/>
-        <g stroke="currentColor" stroke-width="6">
-          <line x1="50" y1="4" x2="50" y2="96"/><line x1="4" y1="50" x2="96" y2="50"/>
-          <line x1="16.6" y1="16.6" x2="83.4" y2="83.4"/><line x1="83.4" y1="16.6" x2="16.6" y2="83.4"/>
+      <svg viewBox="0 0 100 52" aria-hidden="true">
+        <path d="M4,50 A46,46 0 0 1 96,50" fill="none" stroke="currentColor" stroke-width="6"/>
+        <path d="M12,50 A38,38 0 0 1 88,50" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M40,50 A10,10 0 0 1 60,50 Z" fill="currentColor"/>
+        <g stroke="currentColor" stroke-width="4">
+          <line x1="12" y1="50" x2="42" y2="50"/><line x1="88" y1="50" x2="58" y2="50"/>
+          <line x1="17.1" y1="31" x2="43" y2="46"/><line x1="82.9" y1="31" x2="57" y2="46"/>
+          <line x1="31" y1="17.1" x2="46" y2="43"/><line x1="69" y1="17.1" x2="54" y2="43"/>
+          <line x1="50" y1="12" x2="50" y2="44"/>
         </g>
       </svg>
     </div>
@@ -136,12 +260,15 @@
 
   <section id="amenities" class="section-pad">
     <div class="section-divider">
-      <svg viewBox="0 0 100 100" aria-hidden="true">
-        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="6"/>
-        <circle cx="50" cy="50" r="9" fill="currentColor"/>
-        <g stroke="currentColor" stroke-width="6">
-          <line x1="50" y1="4" x2="50" y2="96"/><line x1="4" y1="50" x2="96" y2="50"/>
-          <line x1="16.6" y1="16.6" x2="83.4" y2="83.4"/><line x1="83.4" y1="16.6" x2="16.6" y2="83.4"/>
+      <svg viewBox="0 0 100 52" aria-hidden="true">
+        <path d="M4,50 A46,46 0 0 1 96,50" fill="none" stroke="currentColor" stroke-width="6"/>
+        <path d="M12,50 A38,38 0 0 1 88,50" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M40,50 A10,10 0 0 1 60,50 Z" fill="currentColor"/>
+        <g stroke="currentColor" stroke-width="4">
+          <line x1="12" y1="50" x2="42" y2="50"/><line x1="88" y1="50" x2="58" y2="50"/>
+          <line x1="17.1" y1="31" x2="43" y2="46"/><line x1="82.9" y1="31" x2="57" y2="46"/>
+          <line x1="31" y1="17.1" x2="46" y2="43"/><line x1="69" y1="17.1" x2="54" y2="43"/>
+          <line x1="50" y1="12" x2="50" y2="44"/>
         </g>
       </svg>
     </div>
@@ -154,12 +281,15 @@
 
   <section id="nearby" class="section-pad">
     <div class="section-divider">
-      <svg viewBox="0 0 100 100" aria-hidden="true">
-        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="6"/>
-        <circle cx="50" cy="50" r="9" fill="currentColor"/>
-        <g stroke="currentColor" stroke-width="6">
-          <line x1="50" y1="4" x2="50" y2="96"/><line x1="4" y1="50" x2="96" y2="50"/>
-          <line x1="16.6" y1="16.6" x2="83.4" y2="83.4"/><line x1="83.4" y1="16.6" x2="16.6" y2="83.4"/>
+      <svg viewBox="0 0 100 52" aria-hidden="true">
+        <path d="M4,50 A46,46 0 0 1 96,50" fill="none" stroke="currentColor" stroke-width="6"/>
+        <path d="M12,50 A38,38 0 0 1 88,50" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M40,50 A10,10 0 0 1 60,50 Z" fill="currentColor"/>
+        <g stroke="currentColor" stroke-width="4">
+          <line x1="12" y1="50" x2="42" y2="50"/><line x1="88" y1="50" x2="58" y2="50"/>
+          <line x1="17.1" y1="31" x2="43" y2="46"/><line x1="82.9" y1="31" x2="57" y2="46"/>
+          <line x1="31" y1="17.1" x2="46" y2="43"/><line x1="69" y1="17.1" x2="54" y2="43"/>
+          <line x1="50" y1="12" x2="50" y2="44"/>
         </g>
       </svg>
     </div>
@@ -167,30 +297,80 @@
       <div class="eyebrow">Nearby</div>
       <h2>Worth the short drive</h2>
     </div>
-    <div class="nearby-list">
-      <div class="nearby-item"><div class="t">Medina River</div><div class="d">Tubing, kayaking, and riverside walks close to the park.</div></div>
-      <div class="nearby-item"><div class="t">Downtown Bandera</div><div class="d">Shops, cowboy bars, and honky-tonks in the Cowboy Capital of the World.</div></div>
-      <div class="nearby-item"><div class="t">Bandera Brewery</div><div class="d">Local taproom right on State Hwy 16, a few minutes from the park.</div></div>
-      <div class="nearby-item"><div class="t">The Shindig</div><div class="d">Live music and dance hall on the way into town.</div></div>
-      <div class="nearby-item"><div class="t">Frontier Times Museum</div><div class="d">Local history and frontier-era artifacts in town.</div></div>
-      <div class="nearby-item"><div class="t">Bandera Natural History Museum</div><div class="d">Hill Country wildlife and natural history exhibits.</div></div>
+    <div class="nearby-grid">
+      <!-- Stylized illustration of the six numbered stops -- it says "not to scale" on its face.
+           Hwy 16 and the Medina River are real; distances and angles are decorative. -->
+      <div class="trail-map">
+        <svg viewBox="0 0 500 430" aria-hidden="true">
+          <path d="M-10,105 Q80,130 160,100 Q260,65 340,95 Q430,128 510,100" fill="none" stroke="var(--hero-water)" stroke-width="16" opacity="0.55"/>
+          <path d="M-10,105 Q80,130 160,100 Q260,65 340,95 Q430,128 510,100" fill="none" stroke="var(--hero-water-deep)" stroke-width="1.5" opacity="0.5" stroke-dasharray="1 6"/>
+          <text x="52" y="94" font-family="Zilla Slab, serif" font-style="italic" font-size="13" fill="var(--hero-water-deep)" transform="rotate(8 52 94)">Medina River</text>
+          <path d="M96,352 Q150,290 230,255 Q320,215 352,150" fill="none" stroke="var(--rust)" stroke-width="3" stroke-dasharray="9 7" stroke-linecap="round"/>
+          <text x="176" y="308" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="2" fill="var(--rust)" transform="rotate(-27 176 308)">STATE HWY 16</text>
+          <g color="var(--cedar-light)" opacity="0.7">
+            <svg x="30" y="180" width="52" height="42" viewBox="0 0 100 80"><use href="#hero-oak"/></svg>
+            <svg x="400" y="300" width="58" height="46" viewBox="0 0 100 80"><use href="#hero-oak"/></svg>
+            <svg x="330" y="360" width="44" height="36" viewBox="0 0 100 80"><use href="#hero-oak"/></svg>
+          </g>
+          <g transform="translate(96,352)">
+            <circle r="26" fill="var(--bg-panel)" stroke="var(--gold)" stroke-width="2"/>
+            <g color="var(--gold)"><use href="#wheel12" x="-15" y="-15" width="30" height="30"/></g>
+          </g>
+          <text x="96" y="404" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="600" letter-spacing="1.5" fill="var(--parchment)">THE PARK</text>
+          <g font-family="JetBrains Mono, monospace" font-size="11" font-weight="600">
+            <g transform="translate(300,80)"><circle r="13" fill="var(--rust)"/><text y="4" text-anchor="middle" fill="var(--btn-text)">2</text></g>
+            <g transform="translate(352,150)"><circle r="13" fill="var(--rust)"/><text y="4" text-anchor="middle" fill="var(--btn-text)">1</text></g>
+            <g transform="translate(258,190)"><circle r="13" fill="var(--rust)"/><text y="4" text-anchor="middle" fill="var(--btn-text)">3</text></g>
+            <g transform="translate(408,196)"><circle r="13" fill="var(--rust)"/><text y="4" text-anchor="middle" fill="var(--btn-text)">4</text></g>
+            <g transform="translate(420,120)"><circle r="13" fill="var(--rust)"/><text y="4" text-anchor="middle" fill="var(--btn-text)">5</text></g>
+            <g transform="translate(352,52)"><circle r="13" fill="var(--rust)"/><text y="4" text-anchor="middle" fill="var(--btn-text)">6</text></g>
+          </g>
+          <text x="368" y="172" font-family="Rye, serif" font-size="14" fill="var(--parchment)">Bandera</text>
+          <g transform="translate(52,44)" color="var(--parchment-dim)">
+            <circle r="17" fill="none" stroke="currentColor" stroke-width="1"/>
+            <path d="M0,-24 L4,-4 L0,0 L-4,-4 Z" fill="currentColor"/>
+            <path d="M0,24 L4,4 L0,0 L-4,4 Z" fill="none" stroke="currentColor" stroke-width="1"/>
+            <path d="M-24,0 L-4,-4 L0,0 L-4,4 Z" fill="none" stroke="currentColor" stroke-width="1"/>
+            <path d="M24,0 L4,-4 L0,0 L4,4 Z" fill="none" stroke="currentColor" stroke-width="1"/>
+            <text y="-30" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" font-weight="600" fill="currentColor">N</text>
+          </g>
+          <g transform="translate(376,398)" color="var(--parchment-dim)">
+            <line x1="0" y1="0" x2="70" y2="0" stroke="currentColor" stroke-width="1"/>
+            <line x1="0" y1="-4" x2="0" y2="4" stroke="currentColor" stroke-width="1"/>
+            <line x1="70" y1="-4" x2="70" y2="4" stroke="currentColor" stroke-width="1"/>
+            <text x="35" y="16" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="1" fill="currentColor">7 MIN DRIVE</text>
+          </g>
+        </svg>
+        <div class="map-note">Hand-drawn &middot; not to scale</div>
+      </div>
+      <div class="nearby-list">
+        <div class="nearby-item"><div class="n">1</div><div><div class="t">Downtown Bandera</div><div class="d">Shops, cowboy bars, and honky-tonks in the Cowboy Capital of the World.</div></div></div>
+        <div class="nearby-item"><div class="n">2</div><div><div class="t">Medina River</div><div class="d">Tubing, kayaking, and riverside walks close to the park.</div></div></div>
+        <div class="nearby-item"><div class="n">3</div><div><div class="t">Bandera Brewery</div><div class="d">Local taproom right on State Hwy 16, a few minutes from the park.</div></div></div>
+        <div class="nearby-item"><div class="n">4</div><div><div class="t">The Shindig</div><div class="d">Live music and dance hall on the way into town.</div></div></div>
+        <div class="nearby-item"><div class="n">5</div><div><div class="t">Frontier Times Museum</div><div class="d">Local history and frontier-era artifacts in town.</div></div></div>
+        <div class="nearby-item"><div class="n">6</div><div><div class="t">Bandera Natural History Museum</div><div class="d">Hill Country wildlife and natural history exhibits.</div></div></div>
+      </div>
     </div>
   </section>
 
   <section id="booking" class="booking-shell section-pad">
     <div class="section-divider">
-      <svg viewBox="0 0 100 100" aria-hidden="true">
-        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="6"/>
-        <circle cx="50" cy="50" r="9" fill="currentColor"/>
-        <g stroke="currentColor" stroke-width="6">
-          <line x1="50" y1="4" x2="50" y2="96"/><line x1="4" y1="50" x2="96" y2="50"/>
-          <line x1="16.6" y1="16.6" x2="83.4" y2="83.4"/><line x1="83.4" y1="16.6" x2="16.6" y2="83.4"/>
+      <svg viewBox="0 0 100 52" aria-hidden="true">
+        <path d="M4,50 A46,46 0 0 1 96,50" fill="none" stroke="currentColor" stroke-width="6"/>
+        <path d="M12,50 A38,38 0 0 1 88,50" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M40,50 A10,10 0 0 1 60,50 Z" fill="currentColor"/>
+        <g stroke="currentColor" stroke-width="4">
+          <line x1="12" y1="50" x2="42" y2="50"/><line x1="88" y1="50" x2="58" y2="50"/>
+          <line x1="17.1" y1="31" x2="43" y2="46"/><line x1="82.9" y1="31" x2="57" y2="46"/>
+          <line x1="31" y1="17.1" x2="46" y2="43"/><line x1="69" y1="17.1" x2="54" y2="43"/>
+          <line x1="50" y1="12" x2="50" y2="44"/>
         </g>
       </svg>
     </div>
     <div class="section-head">
       <div class="eyebrow">Reservations</div>
-      <h2>Book your site</h2>
+      <h2>The Guest Register</h2>
     </div>
     <div class="trail" id="trail"></div>
 
@@ -445,10 +625,20 @@
 </div>
 
 <footer id="contact">
-  <strong>Bandera Wagon Wheel RV Park</strong> · 325 Polly Peak Dr, Bandera, TX 78003<br>
-  (830) 850-0805 · banderawagonwheelrv@gmail.com<br>
-  Reservations open 24/7 online · <a href="/monthly-stays.html">Monthly stays</a> · <a href="/hours.html">Office hours &amp; policies</a> · <a href="/privacy.html">Privacy</a>
+  <div class="footer-caravan-row"><svg viewBox="0 0 250 100" aria-hidden="true"><use href="#caravan"/></svg></div>
+  <div class="footer-lockup">
+    <span class="word">
+      <span class="town">Bandera</span>
+      <span class="wagonwheel">WAGON <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#wheel12"/></svg> WHEEL</span>
+    </span>
+    <span class="rv">RV PARK</span>
+  </div>
+  325 Polly Peak Dr, Bandera, TX 78003<br>
+  (830) 850-0805 &middot; banderawagonwheelrv@gmail.com<br>
+  Reservations open 24/7 online &middot; <a href="/monthly-stays.html">Monthly stays</a> &middot; <a href="/hours.html">Office hours &amp; policies</a> &middot; <a href="/privacy.html">Privacy</a>
 </footer>
+
+<div class="page-grain" aria-hidden="true"></div>
 
 <script src="/js/content.js"></script>
 <script src="/js/gallery-scroll.js"></script>
