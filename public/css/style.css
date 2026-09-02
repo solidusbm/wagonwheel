@@ -145,15 +145,13 @@ a{color:var(--gold);}
 /* The H1 is the park's road-sign board, recreated. It sits on the illustration (whose --hero-*
    tokens never follow an admin style preset), so its colours are pinned literals like the rest of
    the hero text. */
-.hero-board{margin:0 0 18px; font-weight:400; background:#2b1d10; border:2px solid #c98a2b; outline:1px solid #2b1d10; outline-offset:3px; padding:0; text-align:center; box-shadow:3px 4px 0 rgba(60,42,26,0.28); overflow:hidden;}
-.hero-board .town{display:block; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.5em; text-indent:0.5em; text-transform:uppercase; color:#d8c39d; padding:17px 36px 0;}
-.hero-board .wagonwheel{display:flex; align-items:center; justify-content:center; gap:12px; margin-top:8px; font-family:'Rye',serif; font-size:34px; color:#f6ecd8; padding:0 36px;}
-.hero-board .wagonwheel svg{width:30px; height:30px; color:#c98a2b; margin-top:2px;}
-.hero-board .rv{display:block; background:#8c3a2b; border-top:2px solid #c98a2b; margin:11px 0 0; padding:8px 28px 11px; font-family:'Rye',serif; font-size:52px; color:#f7ecd8; letter-spacing:0.06em; line-height:1;}
+.hero-board{margin:0 0 18px; font-weight:400; background:#f6ecd8; border:3px solid #3c2a1a; outline:1px solid #3c2a1a; outline-offset:3px; padding:20px 36px 22px; text-align:center; box-shadow:3px 4px 0 rgba(60,42,26,0.22);}
+.hero-board .town{display:block; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.5em; text-indent:0.5em; text-transform:uppercase; color:#3c2a1a;}
+.hero-board .wagonwheel{display:flex; align-items:center; justify-content:center; gap:12px; margin-top:8px; font-family:'Rye',serif; font-size:34px; color:#3c2a1a;}
+.hero-board .wagonwheel svg{width:30px; height:30px; color:#3c2a1a; margin-top:2px;}
+.hero-board .rv{display:block; border-top:2px solid #8c3a2b; margin:10px 6px 0; padding-top:6px; font-family:'Rye',serif; font-size:52px; color:#8c3a2b; letter-spacing:0.06em; line-height:1; text-shadow:0 1px 0 #fff8ec;}
 @media(max-width:480px){
-  .hero-board .town{padding:13px 22px 0;}
-  .hero-board .wagonwheel{padding:0 22px;}
-  .hero-board .rv{padding:6px 18px 9px;}
+  .hero-board{padding:14px 22px 16px;}
   .hero-board .wagonwheel{font-size:24px; gap:8px;}
   .hero-board .wagonwheel svg{width:21px; height:21px;}
   .hero-board .rv{font-size:36px;}
