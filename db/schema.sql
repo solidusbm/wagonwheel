@@ -1,0 +1,281 @@
+-- Wagon Wheel RV Park booking schema
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
+CREATE TABLE IF NOT EXISTS sites (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL,
+  area TEXT NOT NULL,
+  amp_service TEXT NOT NULL,
+  pull_through BOOLEAN NOT NULL DEFAULT false,
+  max_rig_length INTEGER,
+  pet_friendly BOOLEAN NOT NULL DEFAULT true,
+  -- All three rate columns are nullable, and NULL means "N/A -- this site isn't sold by that
+  -- term" (see /admin -> Sites). Site 1 is rented by the month only, so its nightly and weekly
+  -- rates are NULL; quote() in pricing.js bills a stay with whatever terms the site does sell.
+  -- At least one of the three must be set -- see the sites_has_a_rate constraint below.
+  price_per_night_cents INTEGER,
+  price_per_week_cents INTEGER,
+  active BOOLEAN NOT NULL DEFAULT true,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  notes TEXT,
+  -- A site with a long-term resident who isn't going through the reservation system --
+  -- distinct from `active`, which controls whether the site is shown at all. A permanently
+  -- occupied site still shows on the map/site list (as unavailable), it just can never be
+  -- booked, regardless of dates.
+  permanently_occupied BOOLEAN NOT NULL DEFAULT false
+);
+
+-- CREATE TABLE IF NOT EXISTS above is a no-op against an already-provisioned database, so
+-- these backfill any columns added after that table was first created (safe to re-run).
+ALTER TABLE sites ADD COLUMN IF NOT EXISTS price_per_week_cents INTEGER;
+ALTER TABLE sites ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE sites ADD COLUMN IF NOT EXISTS permanently_occupied BOOLEAN NOT NULL DEFAULT false;
+-- Monthly rate. The park caps any stay at this figure PER MONTH: a month-long stay never
+-- costs more than one month, two months never more than two, and so on. Placeholder $350 set
+-- 2026-08-11 at the user's direction pending the real per-site figures.
+ALTER TABLE sites ADD COLUMN IF NOT EXISTS price_per_month_cents INTEGER;
+-- price_per_night_cents was NOT NULL until N/A rates arrived. No-op once already dropped.
+ALTER TABLE sites ALTER COLUMN price_per_night_cents DROP NOT NULL;
+
+-- There used to be an unconditional `UPDATE sites SET price_per_month_cents = 35000 WHERE
+-- price_per_month_cents IS NULL` here, to give the column a value when it was first added. That
+-- became a trap the moment NULL started meaning "N/A": this file runs on EVERY boot, so a rate
+-- the office deliberately cleared in /admin would silently come back as $350 on the next deploy.
+-- The $350 placeholder now lives in db/seed.sql, which only runs on an empty database.
+
+-- A site nobody can price is inventory that fails at checkout instead of at save time. The API
+-- rejects it with a readable message (server/routes/admin.js); this is the backstop that keeps a
+-- future code path from creating one quietly. ADD CONSTRAINT has no IF NOT EXISTS, hence the block.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'sites_has_a_rate') THEN
+    ALTER TABLE sites ADD CONSTRAINT sites_has_a_rate CHECK (
+      price_per_night_cents IS NOT NULL
+      OR price_per_week_cents IS NOT NULL
+      OR price_per_month_cents IS NOT NULL
+    );
+  END IF;
+END $$;
+
+-- Unified, admin-managed amenity catalog. Each amenity independently controls where it
+-- shows: show_on_homepage puts it in the homepage's "What every site includes" grid;
+-- show_per_site makes it available to toggle on individual sites (via site_amenities) --
+-- e.g. "Wired Ethernet" (per-site only), "Dog park" (homepage only), or both.
+CREATE TABLE IF NOT EXISTS amenities (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  active BOOLEAN NOT NULL DEFAULT true,
+  show_on_homepage BOOLEAN NOT NULL DEFAULT false,
+  show_per_site BOOLEAN NOT NULL DEFAULT true
+);
+ALTER TABLE amenities ADD COLUMN IF NOT EXISTS show_on_homepage BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE amenities ADD COLUMN IF NOT EXISTS show_per_site BOOLEAN NOT NULL DEFAULT true;
+
+CREATE TABLE IF NOT EXISTS site_amenities (
+  site_id INTEGER NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+  amenity_id INTEGER NOT NULL REFERENCES amenities(id) ON DELETE CASCADE,
+  PRIMARY KEY (site_id, amenity_id)
+);
+
+-- One-time migration: the homepage grid used to be a separate park_amenities table.
+-- Fold any existing rows into the unified amenities catalog above, then retire it.
+-- Safe to re-run -- a no-op once park_amenities no longer exists.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'park_amenities') THEN
+    INSERT INTO amenities (name, sort_order, active, show_on_homepage, show_per_site)
+    SELECT name, sort_order, active, true, false FROM park_amenities
+    ON CONFLICT (name) DO UPDATE SET show_on_homepage = true;
+    DROP TABLE park_amenities;
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS reservations (
+  id SERIAL PRIMARY KEY,
+  site_id INTEGER NOT NULL REFERENCES sites(id),
+  reservation_code TEXT NOT NULL UNIQUE,
+  guest_name TEXT NOT NULL,
+  guest_email TEXT NOT NULL,
+  guest_phone TEXT,
+  num_guests INTEGER NOT NULL DEFAULT 1,
+  notes TEXT,
+  -- Extended intake for long (monthly) stays: DOB, driver's license, spouse/co-applicant,
+  -- additional occupants, vehicle & RV details, and pet info -- mirrors the park's paper
+  -- "Application for Monthly RV Guests" minus the prior-residence and background-check
+  -- sections, which the park struck from that form. Null for ordinary nightly/weekly bookings.
+  application_details JSONB,
+  check_in DATE NOT NULL,
+  check_out DATE NOT NULL,
+  stay_range DATERANGE GENERATED ALWAYS AS (daterange(check_in, check_out, '[)')) STORED,
+  subtotal_cents INTEGER NOT NULL,
+  booking_fee_cents INTEGER NOT NULL,
+  total_cents INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled')),
+  square_payment_id TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (check_out > check_in),
+  -- Prevents two overlapping pending/confirmed reservations on the same site
+  -- at the database level, so a race between two simultaneous bookings can't
+  -- double-book a site regardless of what the application code does.
+  EXCLUDE USING gist (site_id WITH =, stay_range WITH &&) WHERE (status IN ('pending', 'confirmed'))
+);
+
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS application_details JSONB;
+
+/* These four sat further up the file, above the CREATE TABLE they depend on. Against the live
+   database that worked -- the table was already there -- but provisioning a BRAND NEW one would
+   have failed at "relation reservations does not exist", and since applySchema() sends the whole
+   file as a single implicit transaction, the failure would have taken the entire bootstrap with
+   it. Backfill ALTERs have to sit below the table they alter. */
+-- Refund bookkeeping. monthly_rate_applied is captured at booking time because it decides which
+-- cancellation fee applies -- a later rate change must not alter what a guest was told.
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS monthly_rate_applied BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS square_refund_id TEXT;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS refunded_cents INTEGER;
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS cancellation_fee_cents INTEGER;
+
+CREATE INDEX IF NOT EXISTS idx_reservations_site ON reservations(site_id);
+CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);
+
+-- One row per admin device/browser subscribed to push notifications (a park
+-- manager checking bookings from a Windows desktop, an Android phone, and an
+-- iPhone all gets three rows). Invalid/expired subscriptions are pruned when
+-- a push send comes back 404/410 from the browser's push service.
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id SERIAL PRIMARY KEY,
+  endpoint TEXT NOT NULL UNIQUE,
+  p256dh TEXT NOT NULL,
+  auth TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Admin-uploaded photos, stored directly in Postgres (BYTEA) rather than on local disk --
+-- Render's free web-service filesystem is ephemeral and wiped on every deploy/restart, so
+-- anything written to disk at runtime wouldn't survive. show_on_homepage controls whether a
+-- photo appears in the homepage gallery; every active photo (homepage or not) shows on the
+-- full /gallery.html page. Kept deliberately size-capped at upload time (server/routes/
+-- photos.js) to avoid ballooning the database's 1GB free-tier storage limit.
+CREATE TABLE IF NOT EXISTS photos (
+  id SERIAL PRIMARY KEY,
+  caption TEXT,
+  mime_type TEXT NOT NULL,
+  data BYTEA NOT NULL,
+  show_on_homepage BOOLEAN NOT NULL DEFAULT false,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Editable text content. Every key referenced by public/js/content.js gets a row here; the
+-- frontend fetches this map on load and fills in any element with a matching data-content-key
+-- attribute. `label` and `section` are just for grouping/labeling in the admin UI -- the `key`
+-- is the only thing the frontend actually looks up.
+/* Which photos show on which site's card in the booking flow.
+ *
+ * A join table rather than a site_id column on photos, because one photo legitimately covers more
+ * than one site -- the row-level shots from the 2026-08-11 walk show two or three pads at once,
+ * and a photo of the view is the view from several of them. sort_order decides which one leads
+ * when a site has several. */
+CREATE TABLE IF NOT EXISTS site_photos (
+  site_id INTEGER NOT NULL REFERENCES sites(id) ON DELETE CASCADE,
+  photo_id INTEGER NOT NULL REFERENCES photos(id) ON DELETE CASCADE,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (site_id, photo_id)
+);
+CREATE INDEX IF NOT EXISTS idx_site_photos_site ON site_photos(site_id);
+
+CREATE TABLE IF NOT EXISTS content_blocks (
+  key TEXT PRIMARY KEY,
+  section TEXT NOT NULL,
+  label TEXT NOT NULL,
+  value TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Named color-theme presets, switchable from /admin without a code change or redeploy. Only
+-- fields present in css_vars are overridden -- anything omitted falls back to the base
+-- stylesheet's defaults, so a style can tweak just a couple of colors or override the whole
+-- palette. approved is a curation flag (sort/dismiss candidates); is_live controls which single
+-- style (if any) is actually applied on the public site -- enforced as at-most-one-true by the
+-- application layer (server/routes/admin.js), not a DB constraint.
+CREATE TABLE IF NOT EXISTS styles (
+  id SERIAL PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  description TEXT,
+  css_vars JSONB NOT NULL DEFAULT '{}'::jsonb,
+  logo_url TEXT,
+  approved BOOLEAN NOT NULL DEFAULT false,
+  is_live BOOLEAN NOT NULL DEFAULT false,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- General key/value settings for the /admin panels -- the Search & sharing section (per-page meta
+-- description, the photo the share card is cut from, the indexing switch) and the review-request
+-- follow-up. Key/value rather than a column per setting because the set grows.
+--
+-- Introduced as `seo_settings` and renamed once it stopped being only about search. The rename is
+-- guarded so it runs at most once: schema.sql executes on EVERY boot, and a bare ALTER ... RENAME
+-- would fail the whole bootstrap on the second one.
+--
+-- An ABSENT ROW MEANS "use the built-in default" -- the descriptions in PAGES in server/lib/seo.js,
+-- the leading homepage photo, indexing on, review requests off. That is what makes "reset to
+-- default" a DELETE rather than a second column recording whether the value was ever set, and it
+-- means a page added to PAGES later starts with its code-written description rather than a blank.
+--
+-- No data defaults seeded here: schema.sql runs on every boot, so an INSERT of default text would
+-- resurrect itself the next time the office cleared a field. See the note above db/seed.sql.
+DO $$
+BEGIN
+  IF to_regclass('public.seo_settings') IS NOT NULL AND to_regclass('public.app_settings') IS NULL THEN
+    ALTER TABLE seo_settings RENAME TO app_settings;
+  END IF;
+END $$;
+
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- When the park's review-request follow-up was sent for a booking. NULL means never, which is what
+-- makes the job idempotent: it can run every hour, and crash and restart, without a guest ever
+-- getting the same message twice. On the reservation rather than in a side table because there is
+-- exactly one of these per booking and it is a fact about the booking.
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS review_request_sent_at TIMESTAMPTZ;
+
+-- An unacknowledged booking alert. The push for a new booking repeats until a person confirms they
+-- have actually seen it, and this row is that state: acknowledged_at IS NULL means still shouting.
+--
+-- A side table rather than a column on reservations, because the alert has its own lifecycle
+-- (attempts, a token, an eventual giving-up) that is not a fact about the booking -- a reservation
+-- whose alert nobody ever acknowledged is still a perfectly good reservation.
+--
+-- body is stored rather than rebuilt from the reservation on each retry. A retry is a re-send of
+-- the alert that was raised, so it should say what that one said even if the booking is edited or
+-- cancelled in between; it also keeps the retry loop off the reservations/sites join entirely.
+CREATE TABLE IF NOT EXISTS booking_alerts (
+  id SERIAL PRIMARY KEY,
+  reservation_code TEXT NOT NULL,
+  -- The credential for acknowledging without being logged in. It only ever travels inside a push
+  -- payload, which the browser's push service delivers to already-subscribed devices and nowhere
+  -- else, so a device that can read it is a device the office signed up.
+  ack_token TEXT NOT NULL UNIQUE,
+  body TEXT NOT NULL,
+  attempts INT NOT NULL DEFAULT 0,
+  last_sent_at TIMESTAMPTZ,
+  acknowledged_at TIMESTAMPTZ,
+  acknowledged_via TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- The retry job's only query: still-unacknowledged alerts, oldest send first. Partial, because
+-- acknowledged rows are the overwhelming majority over time and are never scanned again.
+CREATE INDEX IF NOT EXISTS booking_alerts_pending_idx
+  ON booking_alerts (last_sent_at) WHERE acknowledged_at IS NULL;
+
+-- When the escalation phone call for this alert was placed. NULL means never, which is what keeps
+-- the call to exactly one per booking: the retry job checks this rather than counting attempts, so
+-- a restart mid-escalation cannot dial the office a second time.
+ALTER TABLE booking_alerts ADD COLUMN IF NOT EXISTS call_placed_at TIMESTAMPTZ;

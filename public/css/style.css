@@ -1,0 +1,507 @@
+/* THE LIGHT PALETTE IS THE DEFAULT. It used to be the dark one, with the light values arriving
+   only as a runtime override: content.js fetched /api/live-style and injected a <style> tag after
+   the page had already painted. Measured on the live site 2026-08-12, that left every page
+   rendering dark for ~141ms before flipping to light, and it left /admin dark permanently, since
+   the admin page doesn't load content.js at all. The chosen theme belongs in the stylesheet.
+
+   Values were lifted from the style gallery's v2 ("Light Rustic") -- the page this direction was
+   picked from -- read out of that gallery's v2/css/style.css rather than eyeballed. That gallery
+   lived on the `static-site` branch, which was retired 2026-08-29; these values are now the only
+   copy, so there is nothing left to re-sync against. Two deliberate
+   departures from it, both of which must survive any future re-sync:
+     --parchment-dim  v2 has #7a6650, which measures 4.16:1 on the panels and fails WCAG AA for
+                      body text. #6b5844 is the corrected value (5.15:1), set 2026-08-11.
+     --taken          not in the gallery at all; it's this app's "site already booked" fill.
+   The live styles row carries the same values, so it now overrides these with themselves. */
+:root{
+  --bg:#f6ecd8;
+  --bg-panel:#fffaf0;
+  --bg-panel-2:#efdfc0;
+  --line:#d8c39d;
+  /* The gallery's own golds are #a9721f / #c98a2b. Measured on these surfaces, both fail WCAG AA
+     wherever they carry small text: #a9721f is 3.50:1 on --bg (needs 4.5) and #c98a2b is 2.23:1
+     on --bg-panel-2. So the scale is shifted one step darker, and the SEMANTICS invert with it --
+     on a dark theme "bright" means more contrast, on a light one it means less. --gold is now the
+     text-safe end (4.61-5.82:1 on every surface) and --gold-bright is for decoration and text at
+     24px or larger only. Check with a contrast measurement before using --gold-bright on copy. */
+  --gold:#87590f;
+  --gold-bright:#a9721f;
+  --rust:#8c3a2b;
+  --rust-bright:#a8462f;
+  --cedar:#55643f;
+  --cedar-light:#74895a;
+  --parchment:#3c2a1a;
+  --parchment-dim:#6b5844;
+  --taken:#c9bca4;
+  --ink:#2b1d10;
+  /* Text sitting on a solid accent fill (rust buttons, the nav CTA). Rust stays dark in every
+     palette, so this must NOT follow --parchment -- under a light style --parchment inverts to
+     near-black and every primary button drops to about 1.8:1. */
+  --btn-text:#f7ecd8;
+  --radius:3px;
+
+  /* Hero illustration -- a warm DAYTIME sky, straight from gallery v2. These tokens existed in
+     the gallery from the start; the app never copied them, and hardcoded v1's night-time hexes
+     into the SVG instead. That's why the artwork stayed dark when everything around it went
+     light. Any new illustration must use these, never literal hex. */
+  --hero-sky:#f3d9a8;
+  --hero-sun:#e8a23a;
+  --hero-sun-ring:#c9761d;
+  --hero-ground-1:#c9a876;
+  --hero-ground-2:#b08e5c;
+  --hero-ground-3:#8f7248;
+  --hero-cacti:#6b7a4a;
+  --hero-water:#7fa8c9;
+  --hero-water-deep:#5f89ab;
+  /* The letterhead caravan silhouette (hero + nav + footer). Not part of any admin style set. */
+  --leather:#5c3b1e;
+}
+*{box-sizing:border-box;}
+/* The browser hides [hidden] with a user-agent rule, and ANY author rule that sets display beats
+   it -- .btn below sets display:inline-block, so `<button class="btn" hidden>` rendered perfectly
+   visible. That is not cosmetic: /admin hides buttons it means to be unavailable, and they were
+   all live. The install button showed on phones Chrome had never offered an install for and did
+   nothing when tapped, and "Enable on this device" showed on an iPhone in Safari, where tapping
+   it reaches a Notification API that isn't there. Needs !important precisely because it has to
+   outrank every author display rule, present and future. */
+[hidden]{display:none !important;}
+html{scroll-behavior:smooth;}
+html,body{margin:0;padding:0;background:var(--bg);}
+body{font-family:'Zilla Slab', Georgia, serif; color:var(--parchment); min-height:100vh; overflow-x:hidden;}
+h1,h2,h3{font-family:'Rye', serif; font-weight:400; color:var(--parchment); letter-spacing:0.01em;}
+a{color:var(--gold);}
+
+/* ---------- nav ---------- */
+/* The nav's translucent background is tinted to --bg rather than left theme-driven, because
+   backdrop-filter needs a literal. It was a dark rgba() with cream text pinned on top; both
+   flipped with the palette. If you change --bg, change this rgba to match or the bar will float
+   as a differently-coloured band over the page. */
+.nav{
+  position:sticky; top:0; z-index:20; background:rgba(246,236,216,0.9); backdrop-filter:blur(6px);
+  border-bottom:1px solid rgba(60,42,26,0.12);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:9px 28px 8px;
+}
+/* The brand is the caravan lockup: wagon-and-horse walking a rule, BANDERA over WAGON (wheel)
+   WHEEL, RV PARK beside. The nav's background is a literal rgba, so every colour here is pinned
+   literal, not themed -- same rule as the hero text. */
+.nav .brand{display:flex; flex-direction:column; align-items:flex-start; text-decoration:none;}
+.brand-caravan{width:72px; height:auto; color:var(--leather); margin:0 0 -2px 2px; --cutout:#fffaf0;}
+.brand-rule{width:100%; border-top:1.5px solid #3c2a1a; box-shadow:0 2.5px 0 -1.5px #87590f;}
+.brand-lockup{display:flex; align-items:flex-end; gap:8px; margin-top:3px;}
+.brand-lockup .town{font-family:'JetBrains Mono',monospace; font-size:8px; letter-spacing:0.42em; text-indent:0.42em; text-transform:uppercase; color:#6b5844; margin-bottom:1px; text-align:center;}
+.brand-lockup .word{display:flex; flex-direction:column; align-items:center;}
+.brand-lockup .wagonwheel{display:flex; align-items:center; gap:6px; font-family:'Rye',serif; font-size:14px; color:#3c2a1a;}
+.brand-lockup .wagonwheel svg{width:13px; height:13px; color:#87590f;}
+.brand-lockup .rv{font-family:'Rye',serif; font-size:14px; color:#8c3a2b;}
+.nav .brand-logo-img{object-fit:contain; border-radius:3px;}
+.nav .links{display:flex; gap:22px; font-family:'JetBrains Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.06em;}
+.nav .links a{color:var(--parchment-dim); text-decoration:none;}
+.nav .links a:hover{color:var(--gold);}
+.nav .cta{
+  position:relative; z-index:0; font-family:'JetBrains Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.06em;
+  background:transparent; color:var(--btn-text); padding:9px 18px; text-decoration:none;
+}
+.nav .cta::before{content:""; position:absolute; inset:0; z-index:-1; background:var(--rust); clip-path:polygon(7px 0, calc(100% - 7px) 0, 100% 50%, calc(100% - 7px) 100%, 7px 100%, 0 50%);}
+.nav .cta:hover::before{background:var(--rust-bright);}
+@media(max-width:720px){ .nav .links{display:none;} }
+
+.wrap{max-width:960px; margin:0 auto; padding:0 24px 80px; position:relative; z-index:1;}
+
+/* ---------- hero ---------- */
+.hero{position:relative; overflow:hidden; border-bottom:1px solid var(--line);}
+.hero-art{width:100%; height:auto; display:block;}
+/* .hero-art's viewBox is ~2.3:1, so at phone/tablet widths its natural (width:100%;height:auto)
+   height becomes too short to fit the vertically-centered .hero-text -- it overflows upward,
+   behind the sticky nav. Below 820px, decouple the hero's height from the art's aspect ratio: give
+   .hero an explicit min-height and let the art absolutely-fill it, relying on its
+   preserveAspectRatio="xMidYMid slice" to crop-to-cover like a background image would. */
+/* The wide composition puts the sun, windmill, oaks and most cacti outside the slice a phone's
+   crop-to-cover shows (roughly x 545-895 of the 1440 viewBox at 390px wide). The .hero-sm
+   elements are a second arrangement of the same props inside that band; the desktop sun swaps
+   out below 820px so mid widths never show two suns. */
+.hero-sm{display:none;}
+@media(max-width:820px){
+  .hero{min-height:640px;}
+  .hero-art{position:absolute; inset:0; width:100%; height:100%;}
+  .hero-sm{display:initial;}
+  .hero-lg{display:none;}
+}
+@media(max-width:480px){
+  .hero{min-height:690px;}
+}
+.hero-text{
+  position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:0 24px;
+}
+/* Hero text sits on .hero-art, a warm daytime sky, so it is DARK text with WHITE shadows -- the
+   exact reverse of the old night-time treatment. Values match gallery v2.
+   This block used to carry the opposite instruction: hero text was pinned to cream literals
+   because the art was a hardcoded dark SVG that no palette could reach. That is no longer true --
+   the art follows --hero-* now -- so the text follows the palette like everything else. The trap
+   the old note warned about is still worth knowing in general: text over a surface whose colour
+   can't follow the theme must not use --parchment, or it inverts and disappears. */
+.hero-text .eyebrow{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.24em; text-transform:uppercase; color:var(--gold); margin-bottom:12px;}
+/* The H1 is the park's road-sign board, recreated. It sits on the illustration (whose --hero-*
+   tokens never follow an admin style preset), so its colours are pinned literals like the rest of
+   the hero text. */
+.hero-board{margin:0 0 18px; font-weight:400; background:#f6ecd8; border:3px solid #3c2a1a; outline:1px solid #3c2a1a; outline-offset:3px; padding:20px 36px 22px; text-align:center; box-shadow:3px 4px 0 rgba(60,42,26,0.22);}
+.hero-board .town{display:block; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.5em; text-indent:0.5em; text-transform:uppercase; color:#3c2a1a;}
+.hero-board .wagonwheel{display:flex; align-items:center; justify-content:center; gap:12px; margin-top:8px; font-family:'Rye',serif; font-size:34px; color:#3c2a1a;}
+.hero-board .wagonwheel svg{width:30px; height:30px; color:#3c2a1a; margin-top:2px;}
+.hero-board .rv{display:block; border-top:2px solid #8c3a2b; margin:10px 6px 0; padding-top:6px; font-family:'Rye',serif; font-size:52px; color:#8c3a2b; letter-spacing:0.06em; line-height:1; text-shadow:0 1px 0 #fff8ec;}
+@media(max-width:480px){
+  .hero-board{padding:14px 22px 16px;}
+  .hero-board .wagonwheel{font-size:24px; gap:8px;}
+  .hero-board .wagonwheel svg{width:21px; height:21px;}
+  .hero-board .rv{font-size:36px;}
+}
+.hero-text p{font-size:16px; font-style:italic; color:var(--parchment); max-width:520px; margin:0 0 26px; text-shadow:0 1px 10px rgba(255,255,255,0.5);}
+.hero-badge{
+  display:inline-flex; align-items:center; gap:8px; margin-bottom:18px;
+  background:rgba(255,250,240,0.55); border:1px solid var(--cedar-light);
+  color:var(--parchment); font-family:'JetBrains Mono',monospace; font-size:12px;
+  text-transform:uppercase; letter-spacing:0.08em; padding:8px 16px; border-radius:20px;
+}
+.hero-badge svg{width:15px; height:15px; color:var(--cedar);}
+
+/* ---------- section shells ---------- */
+.section-pad{padding:64px 0 8px;}
+/* A small rustic divider above a section heading -- dashed lines flanking the park's own wagon-wheel
+   mark (the same SVG as the nav brand, not a generic ornament) rather than a plain hairline. Marks
+   the start of Gallery/Amenities/Nearby/Reservations, not About -- About already reads as the start
+   of the page, right under the hero, so it doesn't need one. */
+.section-divider{display:flex; align-items:center; gap:14px; max-width:260px; margin:0 auto 22px;}
+.section-divider::before, .section-divider::after{content:""; flex:1; height:0; border-top:1px solid var(--line); box-shadow:0 3px 0 -2px var(--line);}
+.section-divider svg{width:38px; height:20px; color:var(--gold); flex:0 0 auto;}
+.section-head{max-width:640px; margin:0 auto 32px; text-align:center;}
+.section-head .eyebrow{font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;}
+/* h1 and h2 styled identically here on purpose. The heading that names a page is an <h1> -- it was
+   an <h2> on every page but the homepage, which left four pages with no <h1> at all -- and the same
+   slot is still an <h2> on the homepage, where the <h1> is the hero. One rule, no visual change. */
+.section-head h1,.section-head h2{font-size:32px; margin:0 0 10px;}
+.section-head p{color:var(--parchment-dim); font-size:15px; font-style:italic; margin:0;}
+#about .eyebrow{font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:8px;}
+#about h2{font-size:30px; margin:0 0 16px;}
+
+/* ---------- about ---------- */
+.about-grid{display:grid; grid-template-columns:1.1fr 0.9fr; gap:36px; align-items:center; padding-bottom:56px;}
+@media(max-width:760px){.about-grid{grid-template-columns:1fr;}}
+.about-grid p{line-height:1.7; font-size:15.5px; color:var(--parchment);}
+/* Letterpress drop cap on the opening paragraph. ::first-letter, so the admin-editable copy can
+   change and the cap follows whatever letter comes first. */
+.about-grid p:first-of-type::first-letter{font-family:'Rye',serif; font-size:52px; float:left; line-height:0.8; padding:6px 8px 0 0; color:var(--rust);}
+.stat-list{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+/* Double-line frame: a solid gold outer edge plus an inset dashed line, rather than the near-invisible
+   rgba border this used to carry. Same treatment on .amenity and .panel below -- one card language
+   for the whole site, not just this section. */
+.stat{position:relative; background:var(--bg-panel); border:1px solid var(--gold); outline:1px dashed var(--line); outline-offset:-6px; border-radius:var(--radius); padding:20px 18px 16px; box-shadow:2px 3px 0 rgba(60,42,26,0.12);}
+/* Punched side notches + a slight scatter: letterpress tickets, not flat cards. */
+.stat::before, .stat::after{content:""; position:absolute; top:50%; width:12px; height:12px; border-radius:50%; background:var(--bg); transform:translateY(-50%);}
+.stat::before{left:-7px; border-right:1px solid var(--gold);}
+.stat::after{right:-7px; border-left:1px solid var(--gold);}
+.stat-list .stat:nth-child(1){transform:rotate(-1.2deg);}
+.stat-list .stat:nth-child(2){transform:rotate(0.8deg);}
+.stat-list .stat:nth-child(3){transform:rotate(0.9deg);}
+.stat-list .stat:nth-child(4){transform:rotate(-0.7deg);}
+.stat .n{font-family:'JetBrains Mono',monospace; font-size:26px; color:var(--gold-bright);}
+.stat .l{font-size:12px; color:var(--parchment-dim); text-transform:uppercase; letter-spacing:0.06em; font-family:'JetBrains Mono',monospace;}
+
+/* ---------- gallery ---------- */
+/* Base state is a swipeable strip -- scroll-snap does the carousel work with no JS and no
+   auto-motion. This is also the fallback: if JS doesn't run, or the visitor has asked for reduced
+   motion, this is what stays. js/gallery-scroll.js enhances it into a self-scrolling banner by
+   wrapping the figures in .gallery-track and adding .gallery-auto -- see the rules below. */
+.gallery{display:flex; overflow-x:auto; scroll-snap-type:x proximity; gap:18px; padding-bottom:16px; -webkit-overflow-scrolling:touch;}
+/* Corner brackets instead of a full frame -- opposite corners only (top-left, bottom-right), like
+   the photo mounts in an old album. overflow can't stay hidden here (it would clip the brackets,
+   which sit partly outside the image's own box), so the image itself gets the radius instead. */
+.gallery figure{flex:0 0 260px; scroll-snap-align:start; margin:0; background:var(--bg-panel); border-radius:var(--radius); position:relative; padding:10px; box-shadow:3px 5px 14px rgba(60,42,26,0.18);}
+.gallery figure:nth-child(4n+1){transform:rotate(-1.6deg);}
+.gallery figure:nth-child(4n+2){transform:rotate(1.2deg) translateY(6px);}
+.gallery figure:nth-child(4n+3){transform:rotate(-0.8deg) translateY(3px);}
+.gallery figure:nth-child(4n+4){transform:rotate(1.7deg) translateY(8px);}
+.gallery figure::before, .gallery figure::after{content:""; position:absolute; width:20px; height:20px; pointer-events:none;}
+.gallery figure::before{top:5px; left:5px; border-top:2px solid var(--gold); border-left:2px solid var(--gold);}
+.gallery figure::after{bottom:5px; right:5px; border-bottom:2px solid var(--gold); border-right:2px solid var(--gold);}
+.gallery svg{display:block; width:100%; height:auto;}
+/* <picture> is inline by default -- left as-is it adds a baseline strip under each tile. */
+.gallery picture{display:block;}
+.gallery img{display:block; width:100%; height:216px; object-fit:cover; border-radius:2px;}
+.gallery figcaption{padding:12px 6px 0; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--parchment-dim); display:flex; justify-content:space-between; gap:8px;}
+.gallery figcaption b{color:var(--parchment); font-family:'Zilla Slab',serif; font-size:13px; font-weight:600;}
+.gallery-more{text-align:center; margin:0 0 44px;}
+
+/* Auto-scrolling banner mode. gallery-scroll.js doubles the figures into one continuous track and
+   adds these two classes -- the animation plays the first half, then the (identical) second half
+   picks up exactly where it left off, so the loop point is invisible. Never applied when the
+   visitor prefers reduced motion; the script checks that before touching the DOM at all. */
+.gallery.gallery-auto{overflow:hidden; scroll-snap-type:none; cursor:default;}
+.gallery-track{display:flex; gap:18px; width:max-content; animation-name:gallery-scroll; animation-timing-function:linear; animation-iteration-count:infinite; will-change:transform;}
+@keyframes gallery-scroll{to{transform:translateX(-50%);}}
+
+/* ---------- amenities ---------- */
+.amenities-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; padding-bottom:56px;}
+.amenity{background:var(--bg-panel); border:1px solid var(--gold); outline:1px dashed var(--line); outline-offset:-6px; border-radius:var(--radius); padding:20px; text-align:center;}
+.amenity svg{width:28px; height:28px; padding:13px; box-sizing:content-box; border-radius:50%; border:2px solid var(--gold-bright); box-shadow:inset 0 0 0 4px var(--bg-panel), inset 0 0 0 5px var(--line); color:var(--gold-bright); margin-bottom:10px;}
+.amenity .t{font-size:14.5px; font-weight:600;}
+/* Below 560px, minmax(200px,1fr) only ever fits one column, so all 13 tiles stack -- a long scroll
+   for what's static reference info, not something to read top to bottom. Forced to 2 columns with
+   smaller icons/padding/text so each tile still has room to breathe at half the width. */
+@media(max-width:560px){
+  .amenities-grid{grid-template-columns:1fr 1fr; gap:10px;}
+  /* Icon beside the text instead of stacked above it -- one line tall instead of two, so the
+     2-column grid above takes noticeably less vertical space, not just narrower columns. */
+  .amenity{padding:12px 10px; display:flex; align-items:center; gap:10px; text-align:left;}
+  .amenity svg{width:18px; height:18px; padding:7px; margin-bottom:0; flex:0 0 auto;}
+  .amenity .t{font-size:12px;}
+}
+
+/* ---------- nearby ---------- */
+/* Nearby: a stylized hand-drawn trail map beside a numbered list. The map declares itself "not
+   to scale" on its face -- it is an illustration of the six list entries, not a survey. */
+.nearby-grid{display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:start; padding-bottom:56px;}
+@media(max-width:760px){.nearby-grid{grid-template-columns:1fr; gap:24px;}}
+.trail-map{position:relative; border:2px solid var(--parchment); outline:1px solid var(--line); outline-offset:4px; background:var(--bg);}
+.trail-map svg{display:block; width:100%;}
+.trail-map .map-note{padding:5px 12px 8px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--parchment-dim); border-top:1px dashed var(--line);}
+.nearby-list{display:flex; flex-direction:column;}
+.nearby-item{display:flex; gap:16px; padding:15px 6px; border-bottom:1px dashed var(--line); align-items:baseline;}
+.nearby-item:last-child{border-bottom:none;}
+.nearby-item .n{flex:0 0 26px; width:26px; height:26px; border-radius:50%; background:var(--rust); color:var(--btn-text); font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; align-self:center;}
+.nearby-item .t{font-size:15.5px; font-weight:600; margin-bottom:2px; color:var(--parchment);}
+.nearby-item .d{font-size:13px; color:var(--parchment-dim); line-height:1.5;}
+@media(max-width:560px){
+  .nearby-item{padding:11px 2px;}
+  .nearby-item .t{font-size:14px;}
+  .nearby-item .d{font-size:12px;}
+}
+
+/* ---------- booking section ---------- */
+.booking-shell{padding-top:56px; border-top:1px solid rgba(232,220,196,0.14);}
+
+/* ---------- trail step indicator ---------- */
+.trail{display:flex; align-items:flex-start; justify-content:center; gap:34px; margin:0 0 36px; flex-wrap:wrap;}
+.trail .marker{display:flex; flex-direction:column; align-items:center; gap:6px; color:var(--parchment-dim); font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; min-width:76px; text-align:center; position:relative;}
+.trail .marker.active{color:var(--gold); font-weight:600;}
+/* The step dots are little wagon wheels now. Encoded SVG backgrounds so app.js's markup and the
+   marker classes stay exactly as they are. */
+.trail .dot{width:24px; height:24px; border:0; border-radius:0; background:center/contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='43' fill='none' stroke='%23d8c39d' stroke-width='9'/%3E%3Ccircle cx='50' cy='50' r='12' fill='%23d8c39d'/%3E%3Cg stroke='%23d8c39d' stroke-width='6'%3E%3Cline x1='50' y1='11' x2='50' y2='89'/%3E%3Cline x1='11' y1='50' x2='89' y2='50'/%3E%3Cline x1='22.4' y1='22.4' x2='77.6' y2='77.6'/%3E%3Cline x1='77.6' y1='22.4' x2='22.4' y2='77.6'/%3E%3C/g%3E%3C/svg%3E");}
+.trail .marker.active .dot{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='43' fill='none' stroke='%2387590f' stroke-width='9'/%3E%3Ccircle cx='50' cy='50' r='12' fill='%2387590f'/%3E%3Cg stroke='%2387590f' stroke-width='6'%3E%3Cline x1='50' y1='11' x2='50' y2='89'/%3E%3Cline x1='11' y1='50' x2='89' y2='50'/%3E%3Cline x1='22.4' y1='22.4' x2='77.6' y2='77.6'/%3E%3Cline x1='77.6' y1='22.4' x2='22.4' y2='77.6'/%3E%3C/g%3E%3C/svg%3E");}
+.trail .marker.done .dot{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='43' fill='none' stroke='%2355643f' stroke-width='9'/%3E%3Ccircle cx='50' cy='50' r='12' fill='%2355643f'/%3E%3Cg stroke='%2355643f' stroke-width='6'%3E%3Cline x1='50' y1='11' x2='50' y2='89'/%3E%3Cline x1='11' y1='50' x2='89' y2='50'/%3E%3Cline x1='22.4' y1='22.4' x2='77.6' y2='77.6'/%3E%3Cline x1='77.6' y1='22.4' x2='22.4' y2='77.6'/%3E%3C/g%3E%3C/svg%3E");}
+.trail .marker.active{color:var(--gold);}
+.trail .line{position:absolute; left:100%; top:11px; height:0; width:34px; border-top:2px dashed var(--line); background:none; margin:0;}
+
+/* ---------- panels ---------- */
+.panel{background:var(--bg-panel); border:1px solid var(--gold); outline:1px dashed var(--line); outline-offset:-6px; border-radius:var(--radius); padding:32px; margin-bottom:24px;}
+/* 32px each side is right on a desktop and expensive on a phone: nested inside .wrap and a
+   <details>, it left the site editor's photo grid 181px wide out of a 390px screen -- one column,
+   for a form the office uses standing in the park. */
+@media(max-width:620px){
+  .panel{padding:20px 16px;}
+}
+.panel h2{font-size:27px; margin:0 0 10px; padding-bottom:8px; border-bottom:2px solid var(--parchment);}
+.panel .sub{color:var(--parchment-dim); font-size:14px; margin-bottom:24px; font-style:italic;}
+
+label{display:block; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--gold); margin-bottom:6px;}
+input, select, textarea{width:100%; background:var(--bg); border:1px solid var(--line); border-bottom:2px solid var(--gold); color:var(--parchment); padding:12px 14px; border-radius:var(--radius); font-family:'Zilla Slab', serif; font-size:15px; margin-bottom:18px;}
+input:focus, select:focus, textarea:focus{outline:none; border-color:var(--gold-bright); border-bottom-color:var(--gold-bright);}
+.field{display:flex; flex-direction:column;}
+.grid-2{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+.grid-3{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+.grid-4{display:grid; grid-template-columns:repeat(4,1fr); gap:20px;}
+@media(max-width:560px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;}}
+@media(min-width:561px) and (max-width:760px){.grid-3,.grid-4{grid-template-columns:1fr 1fr;}}
+
+fieldset{border:1px solid rgba(232,220,196,0.14); border-radius:var(--radius); padding:18px 18px 4px; margin:0 0 22px; min-width:0;}
+legend{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--gold); padding:0 8px;}
+
+/* The guest application's optional sections -- spouse, occupants, vehicles, RV, pets -- come to
+   about forty fields between them. Left expanded, they buried the card entry and the Pay button
+   under a wall of inputs on a phone, and the form read as far more work than it is. They start
+   closed and open on tap. Nothing collected has changed: the inputs stay in the DOM whether the
+   section is open or shut, so a section filled in and then closed still submits normally. */
+details.form-section{border:1px solid var(--line); border-radius:var(--radius); margin:0 0 14px; min-width:0;}
+details.form-section > summary{list-style:none; cursor:pointer; display:flex; align-items:center; gap:9px; padding:13px 16px; font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--gold);}
+details.form-section > summary::-webkit-details-marker{display:none;}
+details.form-section > summary::before{content:"\25B8"; font-size:12px; line-height:1; transition:transform 0.15s;}
+details.form-section[open] > summary::before{transform:rotate(90deg);}
+/* Pushed to the right on a roomy screen, dropped onto its own line on a phone rather than
+   squeezing the section name down to a couple of words per line. */
+details.form-section > summary .opt{font-family:'Zilla Slab',serif; text-transform:none; letter-spacing:0; font-size:12.5px; font-style:italic; color:var(--parchment-dim); margin-left:auto;}
+@media(max-width:560px){
+  details.form-section > summary{flex-wrap:wrap;}
+  details.form-section > summary .opt{margin-left:21px; width:100%;}
+}
+.form-section-body{padding:16px 16px 0; border-top:1px solid var(--line);}
+.pet-block{padding-bottom:6px; margin-bottom:12px; border-bottom:1px dashed rgba(232,220,196,0.12);}
+.pet-block:last-child{border-bottom:none; margin-bottom:0;}
+.occupant-row{display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:14px; align-items:start;}
+@media(max-width:560px){.occupant-row{grid-template-columns:1fr;}}
+.occupant-row .btn-ghost{padding:12px 14px; margin-top:1px;}
+
+.btn{display:inline-block; position:relative; z-index:0; text-decoration:none; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.08em; font-size:13px; font-weight:600; padding:14px 28px; border-radius:var(--radius); border:none; cursor:pointer;}
+.btn:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+.btn-primary{background:transparent; color:var(--btn-text); filter:drop-shadow(0 2px 0 rgba(60,42,26,0.3));}
+.btn-primary::before{content:""; position:absolute; inset:0; z-index:-1; background:var(--rust); clip-path:polygon(9px 0, calc(100% - 9px) 0, 100% 50%, calc(100% - 9px) 100%, 9px 100%, 0 50%);}
+.btn-primary:hover::before{background:var(--rust-bright);}
+.btn-primary:disabled{opacity:0.5; cursor:not-allowed;}
+.btn-ghost{background:var(--bg); color:var(--parchment-dim); border:1px solid var(--line);}
+.btn-ghost:hover{color:var(--parchment); border-color:var(--parchment-dim);}
+.btn:disabled{opacity:0.4; cursor:not-allowed;}
+.btn-row{display:flex; gap:14px; margin-top:8px; flex-wrap:wrap;}
+.error-msg{color:var(--rust-bright); font-family:'JetBrains Mono',monospace; font-size:12px; margin:-8px 0 16px;}
+
+/* ---------- site map ---------- */
+.map-wrap{position:relative; border:1px solid rgba(232,220,196,0.14); border-radius:var(--radius); background:var(--bg); margin-bottom:24px; overflow:hidden;}
+.map-wrap svg{display:block; width:100%; height:auto;}
+.site-pin{cursor:pointer;}
+.site-pin circle.base, .site-pin rect.base{fill:var(--cedar); stroke:var(--bg); stroke-width:3;}
+.site-pin.taken circle.base, .site-pin.taken rect.base{fill:var(--taken); cursor:not-allowed;}
+.site-pin.selected circle.base, .site-pin.selected rect.base{fill:var(--gold-bright);}
+.site-pin text{fill:var(--ink); font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:600; text-anchor:middle; pointer-events:none;}
+.site-pin:hover circle.base, .site-pin:hover rect.base{filter:brightness(1.15);}
+.map-legend{display:flex; gap:22px; padding:14px 20px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--parchment-dim); flex-wrap:wrap; border-top:1px solid rgba(232,220,196,0.1);}
+.map-legend span{display:flex; align-items:center; gap:6px;}
+.swatch{width:10px; height:10px; border-radius:50%; display:inline-block;}
+
+/* ---------- site cards ---------- */
+.site-area{margin-bottom:20px;}
+.site-area h3{font-size:17px; margin:0 0 12px;}
+
+/* The "not available" group folds away so a busy week doesn't push the bookable sites off screen.
+   It's a <details>, so the heading has to sit inside the <summary> and keep its own margin. */
+.site-unavailable{border-top:1px dashed var(--line); padding-top:16px;}
+.site-unavailable > summary{list-style:none; cursor:pointer; display:flex; align-items:center; gap:9px;}
+.site-unavailable > summary::-webkit-details-marker{display:none;}
+.site-unavailable > summary::before{content:"\25B8"; color:var(--gold); font-size:13px; line-height:1; transition:transform 0.15s;}
+.site-unavailable[open] > summary::before{transform:rotate(90deg);}
+.site-unavailable > summary h3{margin:0; font-size:15px; color:var(--parchment-dim);}
+.no-sites{background:var(--bg-panel-2); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; margin:0 0 20px; font-style:italic; color:var(--parchment);}
+
+/* Row/area moved onto the card when the list stopped being grouped by row. */
+.site-area-label{font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.07em; color:var(--parchment-dim); margin-top:-4px;}
+
+/* A fixed-ratio box, so cards don't reflow as lazy-loaded photos arrive. */
+.site-photo{display:block; width:100%; padding:0; margin:0 0 4px; border:0; border-radius:var(--radius);
+  overflow:hidden; background:var(--bg); cursor:zoom-in; aspect-ratio:4/3; line-height:0;}
+/* The <picture> wrapper must carry the size: .site-photo img is height:100%, which resolves
+   against its parent -- an inline picture has none, so the photo would collapse. */
+.site-photo picture{display:block; width:100%; height:100%;}
+.site-photo img{width:100%; height:100%; object-fit:cover; display:block;}
+.site-card.unavailable .site-photo{filter:grayscale(0.55);}
+/* Placeholder for a site nobody has photographed yet -- the park's wheel, faint, on the panel
+   tone. Keeps the row aligned without pretending there's a picture. */
+.site-photo-none{display:flex; align-items:center; justify-content:center; cursor:inherit; background:var(--bg-panel);}
+.site-photo-none svg{width:38%; height:38%; color:var(--line); opacity:0.85;}
+
+.lightbox{position:fixed; inset:0; z-index:60; background:rgba(28,20,13,0.82); display:flex;
+  align-items:center; justify-content:center; padding:24px; cursor:zoom-out;}
+.lightbox figure{margin:0; max-width:min(900px,92vw); max-height:88vh; display:flex; flex-direction:column; gap:10px;}
+.lightbox picture{display:block; max-width:100%;}
+.lightbox img{max-width:100%; max-height:80vh; object-fit:contain; border-radius:var(--radius); display:block;}
+/* On the dark overlay, not the page -- so this text is pinned, not themed. */
+.lightbox figcaption{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.06em;
+  text-transform:uppercase; color:#f7ecd8; text-align:center;}
+.lightbox-close{position:absolute; top:14px; right:18px; background:none; border:0; color:#f7ecd8;
+  font-size:34px; line-height:1; cursor:pointer; padding:4px 10px;}
+.site-grid, .site-cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:14px;}
+.site-card{background:var(--bg-panel-2); border:1px solid var(--line); border-radius:var(--radius); padding:16px; cursor:pointer; display:flex; flex-direction:column; gap:6px;}
+.site-card:hover{border-color:var(--gold);}
+.site-card.selected{border-color:var(--gold); background:rgba(201,138,43,0.09);}
+.site-card.unavailable{opacity:0.45; cursor:not-allowed;}
+/* Text on --bg-panel-2 must follow the theme. That token is NOT fixed-dark: a light style
+   flips it to a pale tan, and text pinned to #e8dcc4 becomes cream-on-cream. Only surfaces
+   with a literal rgba() background -- the nav bar and the hero -- are genuinely fixed, and
+   only those may pin their text colour. */
+.site-card h4{margin:0; font-size:15px; color:var(--parchment); font-family:'Zilla Slab',serif;}
+.site-price{font-family:'JetBrains Mono',monospace; font-size:18px; color:var(--parchment);}
+.site-notes{font-size:11.5px; color:var(--gold); font-style:italic; line-height:1.4;}
+.site-tags{display:flex; flex-wrap:wrap; gap:6px;}
+.tag{font-size:11px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.04em; color:var(--parchment-dim); background:var(--bg); border:1px solid rgba(232,220,196,0.14); border-radius:999px; padding:3px 10px;}
+.availability-flag{font-size:12px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.06em;}
+/* --cedar-light is 2.92:1 here; it's a decoration colour, not a text one. */
+.availability-flag.available{color:var(--cedar);}
+.availability-flag.unavailable{color:var(--rust-bright);}
+.booked-ranges{font-size:11.5px; color:var(--parchment-dim); line-height:1.5; padding-top:4px; border-top:1px dashed rgba(232,220,196,0.12);}
+.booked-ranges .l{font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.06em; color:var(--gold); font-size:10.5px; display:block; margin-bottom:2px;}
+
+/* ---------- booking / payment ---------- */
+.booking-grid{display:grid; grid-template-columns:1.3fr 1fr; gap:28px; align-items:start;}
+@media(max-width:760px){.booking-grid{grid-template-columns:1fr;}}
+.card-mock{background:var(--bg); border:1px solid rgba(232,220,196,0.2); border-radius:var(--radius); padding:10px 14px; margin-bottom:18px; min-height:44px;}
+.demo-note{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--parchment); background:rgba(201,138,43,0.1); border:1px solid rgba(201,138,43,0.3); padding:10px 14px; border-radius:var(--radius); margin:8px 0 0;}
+.confirm-note{font-size:13.5px; line-height:1.6; color:var(--parchment); background:rgba(85,100,63,0.12);
+  border:1px solid var(--cedar-light); padding:13px 16px; border-radius:var(--radius);
+  margin:18px auto 0; max-width:460px; text-align:left;}
+.pay-note{font-size:12px; color:var(--parchment-dim); margin:10px 0 0;}
+/* The cancellation fee for this booking, stated where the guest agrees to it. */
+.terms-line{font-size:12.5px; line-height:1.5; color:var(--parchment); background:var(--bg-panel-2);
+  border:1px solid var(--line); border-radius:var(--radius); padding:10px 13px; margin:0 0 14px;}
+.terms-line:empty{display:none;}
+/* Sits above the collapsed application sections. The point it makes -- optional, finishable at
+   check-in -- is why a guest doesn't bail at seeing forty fields. */
+.prefill-note{font-size:13px; line-height:1.6; color:var(--parchment); background:var(--bg-panel-2);
+  border-left:2px solid var(--cedar); border-radius:0 var(--radius) var(--radius) 0;
+  padding:12px 15px; margin:6px 0 16px;}
+/* Rate caveats -- currently "monthly excludes electric". Small, but it sits with the price it
+   qualifies rather than in a footnote nobody reads. */
+.rate-note{font-size:11px; line-height:1.45; color:var(--parchment-dim); margin-top:3px; font-style:italic;}
+.order-summary .summary-note{font-size:12.5px; line-height:1.5; color:var(--parchment); margin:12px 0 0; padding:10px 12px; background:rgba(201,138,43,0.1); border-left:2px solid var(--gold); border-radius:0 var(--radius) var(--radius) 0;}
+
+.order-summary{background:var(--bg-panel-2); border:1px solid var(--line); border-radius:var(--radius); padding:22px; position:sticky; top:88px;}
+
+.order-summary h3{margin:0 0 4px; font-size:19px; color:var(--parchment);}
+.order-summary p{margin:0 0 12px; color:var(--parchment-dim); font-size:13px;}
+.summary-row, .order-summary .line{display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px dashed var(--line); font-size:14px; color:var(--parchment);}
+/* The total was pinned to the dark palette's amber (#e0a83f), which lands at about 3.1:1 on the
+   light panel -- under AA for 18px text, on the single most important number in the flow. */
+.summary-row.total, .order-summary .line.total{font-family:'JetBrains Mono',monospace; font-size:18px; color:var(--rust); border-bottom:none; padding-top:14px; font-weight:600;}
+
+/* ---------- confirmation ---------- */
+.confirm-code{font-family:'JetBrains Mono',monospace; font-size:32px; letter-spacing:0.1em; color:var(--gold-bright); border:1px dashed var(--gold); display:inline-block; padding:10px 22px; border-radius:var(--radius); margin:12px 0 24px;}
+
+footer{text-align:center; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:#d8c39d; background:#2b1d10; padding:0 24px 36px; border-top:none; line-height:1.9;}
+footer a{color:#c98a2b;}
+footer strong{color:#f6ecd8;}
+.footer-caravan-row{display:flex; align-items:center; gap:16px; padding:0 36px; margin:0 0 2px;}
+.footer-caravan-row::before, .footer-caravan-row::after{content:""; flex:1; border-top:1px solid rgba(246,236,216,0.25);}
+.footer-caravan-row svg{width:120px; height:48px; color:#c98a2b; --cutout:#2b1d10; margin-top:30px;}
+.footer-lockup{display:flex; align-items:flex-end; gap:9px; justify-content:center; margin:6px 0 12px; line-height:1;}
+.footer-lockup .word{display:flex; flex-direction:column; align-items:center;}
+.footer-lockup .town{font-family:'JetBrains Mono',monospace; font-size:8.5px; letter-spacing:0.42em; text-indent:0.42em; text-transform:uppercase; color:#d8c39d; margin-bottom:4px;}
+.footer-lockup .wagonwheel{display:flex; align-items:center; gap:7px; font-family:'Rye',serif; font-size:17px; color:#f6ecd8;}
+.footer-lockup .wagonwheel svg{width:15px; height:15px; color:#c98a2b;}
+.footer-lockup .rv{font-family:'Rye',serif; font-size:17px; color:#c98a2b;}
+
+/* ---------- admin: monthly application details ---------- */
+.app-details{margin-top:8px; font-size:11.5px; color:var(--parchment-dim);}
+.app-details summary{cursor:pointer; color:var(--gold); font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em;}
+.app-row{padding:4px 0 4px 10px; line-height:1.5;}
+.app-row b{color:var(--parchment);}
+
+
+/* ==================== Engraved Frontier additions ==================== */
+
+/* Fact strip under the hero. Everything in it is stated elsewhere on the page. */
+.marquee{display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:10px 26px; padding:13px 20px; background:var(--bg-panel-2); border-bottom:1px solid var(--line); font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:var(--parchment-dim);}
+.marquee svg{width:12px; height:12px; color:var(--gold-bright); flex:0 0 auto;}
+
+/* The letterhead caravan trots across the hero. A negative delay starts it mid-crossing so it is
+   on screen at load; the leg pairs swing in diagonal phase (a trot) around their hip pivots, and
+   the whole rig gets a small gait bob. Reduced motion parks all of it at the resting transform. */
+.caravan-x{transform:translateX(430px); animation:caravan-cross 44s linear infinite; animation-delay:-17s;}
+@keyframes caravan-cross{from{transform:translateX(-280px);} to{transform:translateX(1520px);}}
+.caravan-bob{animation:caravan-bob 0.8s ease-in-out infinite alternate;}
+@keyframes caravan-bob{from{transform:translateY(0);} to{transform:translateY(-4px);}}
+.leg-a, .leg-b{transform-box:fill-box; transform-origin:50% 6%;}
+.leg-a{animation:leg-swing 0.8s ease-in-out infinite alternate;}
+.leg-b{animation:leg-swing 0.8s ease-in-out infinite alternate-reverse;}
+@keyframes leg-swing{from{transform:rotate(11deg);} to{transform:rotate(-11deg);}}
+@media (prefers-reduced-motion: reduce){
+  .caravan-x, .caravan-bob, .leg-a, .leg-b{animation:none;}
+}
+
+/* Paper grain over the guest pages (the div is only in their markup, so /admin never gets it).
+   Sits under the lightbox so photos stay clean. */
+.page-grain{position:fixed; inset:0; pointer-events:none; z-index:55; opacity:0.05; mix-blend-mode:multiply; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");}
