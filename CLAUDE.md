@@ -197,8 +197,15 @@ after first paint. Two consequences, both fixed by moving the palette into the s
 - every page painted dark for **~141ms** and then flipped (measured on the live site);
 - **`/admin` stayed dark permanently**, because it never loads `content.js`.
 
-The `styles` table row still exists and still overrides — it now sets the same values it already
-had. If you change the palette, change **both**, or the DB will quietly repaint the page.
+The `styles` table row still exists and still overrides. **It is a separate copy and it has
+drifted once already:** when the golds were darkened in the stylesheet on 2026-08-12 the row kept
+the gallery's raw `#a9721f`/`#c98a2b`, and because `content.js` lays the row over `:root` on every
+guest page, the darker golds never reached a guest. Every label, `<summary>`, site note and inline
+link on the booking steps sat at 3.13–3.95:1 for five weeks. Caught 2026-09-19 by a sweep of steps
+2–3 and corrected with a guarded one-shot `UPDATE` at the end of `db/schema.sql` (matches only the
+stale pair, no-op afterwards). **If you change the palette, change both** — and since there is no
+admin UI for the row, "both" means another guarded `UPDATE` there. A sweep that reports the
+stylesheet's colour is lying to you if it reads the file; measure the *computed* colour in a browser.
 
 **Rules that follow from this — don't undo them:**
 

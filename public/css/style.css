@@ -12,7 +12,11 @@
      --parchment-dim  v2 has #7a6650, which measures 4.16:1 on the panels and fails WCAG AA for
                       body text. #6b5844 is the corrected value (5.15:1), set 2026-08-11.
      --taken          not in the gallery at all; it's this app's "site already booked" fill.
-   The live styles row carries the same values, so it now overrides these with themselves. */
+   The live styles row is meant to carry the same values, so that it overrides these with
+   themselves -- but it is a separate copy, and it drifted: it kept the gallery's raw golds for
+   five weeks after the ones below were darkened, which silently undid the contrast fix on every
+   guest page (caught 2026-09-19 by a sweep of the booking steps; corrected by a one-shot UPDATE
+   at the end of db/schema.sql). If a value here changes, the row has to change with it. */
 :root{
   --bg:#f6ecd8;
   --bg-panel:#fffaf0;
@@ -293,7 +297,10 @@ a{color:var(--gold);}
 .trail .line{position:absolute; left:100%; top:11px; height:0; width:34px; border-top:2px dashed var(--line); background:none; margin:0;}
 
 /* ---------- panels ---------- */
-.panel{background:var(--bg-panel); border:1px solid var(--gold); outline:1px dashed var(--line); outline-offset:-6px; border-radius:var(--radius); padding:32px; margin-bottom:24px;}
+/* goToStep() scrolls the next panel to the top of the viewport, and the nav is sticky and 78px
+   tall, so without this margin every step change parked the panel's heading ("Pick a site",
+   "Guest details & payment") underneath the nav bar. */
+.panel{background:var(--bg-panel); border:1px solid var(--gold); outline:1px dashed var(--line); outline-offset:-6px; border-radius:var(--radius); padding:32px; margin-bottom:24px; scroll-margin-top:92px;}
 /* 32px each side is right on a desktop and expensive on a phone: nested inside .wrap and a
    <details>, it left the site editor's photo grid 181px wide out of a 390px screen -- one column,
    for a form the office uses standing in the park. */
@@ -422,7 +429,8 @@ details.form-section > summary .opt{font-family:'Zilla Slab',serif; text-transfo
 .availability-flag{font-size:12px; font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.06em;}
 /* --cedar-light is 2.92:1 here; it's a decoration colour, not a text one. */
 .availability-flag.available{color:var(--cedar);}
-.availability-flag.unavailable{color:var(--rust-bright);}
+/* --rust-bright is 4.46:1 on the card's --bg-panel-2 -- a hair under AA. --rust is 5.80:1. */
+.availability-flag.unavailable{color:var(--rust);}
 .booked-ranges{font-size:11.5px; color:var(--parchment-dim); line-height:1.5; padding-top:4px; border-top:1px dashed rgba(232,220,196,0.12);}
 .booked-ranges .l{font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.06em; color:var(--gold); font-size:10.5px; display:block; margin-bottom:2px;}
 

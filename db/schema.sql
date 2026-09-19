@@ -279,3 +279,16 @@ CREATE INDEX IF NOT EXISTS booking_alerts_pending_idx
 -- the call to exactly one per booking: the retry job checks this rather than counting attempts, so
 -- a restart mid-escalation cannot dial the office a second time.
 ALTER TABLE booking_alerts ADD COLUMN IF NOT EXISTS call_placed_at TIMESTAMPTZ;
+
+-- The live styles row still carried the style gallery's raw golds (#a9721f / #c98a2b) after the
+-- stylesheet shifted them one step darker for contrast on 2026-08-12. content.js re-applies that
+-- row over :root on every guest page, so the darker golds never actually reached a guest: every
+-- form label, section summary, site note and inline link on the booking steps measured 3.13-3.95:1
+-- against a 4.5:1 floor (found by a contrast sweep of steps 2-3, 2026-09-19). There is no admin UI
+-- for the styles table any more, so this is corrected here as a one-shot: it matches only the stale
+-- pair and is a no-op once they are gone. A correction, not a default -- it never touches a row
+-- that has already moved on, so it cannot resurrect anything the office later changes.
+UPDATE styles
+   SET css_vars = css_vars || '{"gold":"#87590f","gold-bright":"#a9721f"}'::jsonb
+ WHERE css_vars->>'gold' = '#a9721f'
+   AND css_vars->>'gold-bright' = '#c98a2b';
