@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="printables-piece" content="social-square">
+<title>Social square — Bandera Wagon Wheel RV Park</title>
+<style>
+/* Self-hosted, copied from public/fonts (public/css/fonts.css); relative so the piece works from disk and at /admin/. */
+@font-face { font-family: "Rye"; font-weight: 400; font-style: normal; src: url("assets/fonts/rye-400.0de1abd1.woff2") format("woff2"); }
+@font-face { font-family: "Zilla Slab"; font-weight: 400; font-style: normal; src: url("assets/fonts/zilla-slab-400.b53659a5.woff2") format("woff2"); }
+@font-face { font-family: "Zilla Slab"; font-weight: 400; font-style: italic; src: url("assets/fonts/zilla-slab-400-italic.0deaa241.woff2") format("woff2"); }
+@font-face { font-family: "Zilla Slab"; font-weight: 600; font-style: normal; src: url("assets/fonts/zilla-slab-600.22b28054.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 600; font-style: normal; src: url("assets/fonts/jetbrains-mono-600.4f27206c.woff2") format("woff2"); }
+</style>
+<style>
+/* Printables template: social square (prefix ss-). 1080 × 1080 CSS px, 1:1 with the
+   exported pixels at 100% browser zoom; 90 px safe margin. Not a print piece: no @page,
+   captured as an image. Seed: sastx-site/admin/brand/social-post.html.
+Brand values are hardcoded below on purpose: a print artifact must never depend on
+   the target site's stylesheet (generic class names leaked wagonwheel's site styles
+   into its brochure). Every rule in this file uses the piece prefix; the pr- rules are
+   the shared screen chrome and print hygiene. Geometry (trim size, pages, safe margin,
+   hint wording) is references/geometry.md; the numbers here restate it, the reasoning
+   does not. Double-brace markers are filled from brand-facts.yaml. */
+:root {
+  --brand-paper: #f6ecd8;
+  --brand-ink: #2b1d10;
+  --brand-accent: #8c3a2b;
+  --brand-accent-ink: #8c3a2b;
+  --brand-muted: #6b5844;
+  /* Reverse face. Defaults: paper = ink, ink = paper, accent stays, accent-ink = accent. When the accent
+     fails 3:1 on ink (a dark brand red, say), the facts file sets reverse-paper to the accent, reverse-ink
+     to white, reverse-accent to the secondary colour (graphics only) and reverse-accent-ink to white. */
+  --brand-reverse-paper: #8c3a2b;
+  --brand-reverse-ink: #f7ecd8;
+  --brand-reverse-accent: #f3d9a8;
+  --brand-reverse-accent-ink: #f3d9a8;
+  --font-display: "Rye", serif;
+  --font-body: "Zilla Slab", Georgia, serif;
+}
+/* A face carries the five roles; a reverse face swaps paper and ink and uses raw accent
+   for its small accent text. body.bw is the black-and-white switch: a mono role set,
+   never a grayscale filter, so small accent text keeps its contrast when photocopied. */
+.ss-face { --paper: var(--brand-paper); --ink: var(--brand-ink); --accent: var(--brand-accent);
+            --accent-ink: var(--brand-accent-ink); --muted: var(--brand-muted);
+            background: var(--paper); color: var(--ink); }
+.ss-face--reverse { --paper: var(--brand-reverse-paper); --ink: var(--brand-reverse-ink); --accent: var(--brand-reverse-accent);
+            --accent-ink: var(--brand-reverse-accent-ink);
+            --muted: color-mix(in srgb, var(--brand-reverse-ink) 65%, var(--brand-reverse-paper)); }
+body.bw .ss-face { --paper: #fff; --ink: #000; --accent: #000; --accent-ink: #000; --muted: #444; }
+body.bw .ss-face--reverse { --paper: #000; --ink: #fff; --accent: #fff; --accent-ink: #fff; --muted: #ccc; }
+body.bw .ss-photo img { filter: grayscale(1) contrast(1.08); }
+/* Logo: the site's caravan lockup (public/index.html:49-56, public/css/style.css:93-100) rebuilt inline from the
+   same symbol paths and font files, in currentColor so it follows the face and the black-and-white switch. */
+.ss-logo { display: inline-flex; flex-direction: column; align-items: flex-start; text-align: flex-start; color: var(--ink); line-height: 1; font-size: 40px; }
+.ss-logo .ss-caravan { width: 3.4em; height: auto; display: block; margin-bottom: -0.04em; }
+.ss-logo .ss-rule { display: block; width: 100%; border-top: 0.09em solid currentColor; box-shadow: 0 0.17em 0 -0.09em var(--accent-ink); margin: 0 0 0.42em; }
+.ss-logo .ss-town { font: 600 0.5em/1 "JetBrains Mono", monospace; letter-spacing: 0.42em; text-indent: 0.42em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.22em; }
+.ss-logo .ss-ww { display: flex; align-items: center; gap: 0.32em; font: 400 1em/1.1 var(--font-display); white-space: nowrap; }
+.ss-logo .ss-ww svg { width: 0.82em; height: 0.82em; color: var(--accent-ink); }
+.ss-logo .ss-rv { font: 400 1em/1.1 var(--font-display); color: var(--accent-ink); letter-spacing: 0.06em; margin-top: 0.16em; }
+/* QR: the SVG from scripts/qr.mjs is inlined verbatim (black on white on disk, so
+   qr.mjs verify reads the shipped bytes); these rules recolor it to the face. */
+.ss-qr svg { display: block; width: 100%; height: 100%; }
+.ss-qr svg path[fill] { fill: var(--paper); }
+.ss-qr svg path[stroke] { stroke: var(--ink); }
+/* Shared screen chrome and print hygiene (pr- prefix). */
+*, *::before, *::after { box-sizing: border-box; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+body { margin: 0; background: #6E6E68; font-family: var(--font-body); }
+body.bw { background: #ddd; }
+.pr-wrap { padding: 24px; }
+.pr-chrome h1 { color: #fff; font: 700 14px system-ui, sans-serif; margin: 0 0 6px; }
+.pr-chrome .hint { color: #ddd; font: 12px/1.5 system-ui, sans-serif; margin: 0 0 4px; max-width: 72ch; }
+.pr-chrome .hint b { color: #fff; }
+.pr-buttons { margin: 10px 0 20px; display: flex; gap: 8px; }
+.pr-buttons button { font: 600 12px system-ui, sans-serif; padding: 6px 12px; border: 1px solid #fff;
+                     border-radius: 3px; background: #fff; color: #222; cursor: pointer; }
+.pr-buttons button[data-print="bw"] { background: transparent; color: #fff; }
+.pr-label { color: #ccc; font: 700 11px system-ui, sans-serif; text-transform: uppercase; letter-spacing: .08em; margin: 0 0 4px; }
+.ph { outline: 1.5px dashed var(--accent); outline-offset: 1px; color: var(--accent); padding: 0 .15em; font-style: italic; }
+[data-invented] { background: rgba(255, 230, 0, .35); outline: 1px dotted #b8860b; }
+@media print {
+  body { background: #fff; }
+  .no-print { display: none !important; }
+  .pr-wrap { padding: 0; }
+  [data-invented] { background: none; outline: none; }
+}
+
+.ss-post { width: 1080px; height: 1080px; padding: 90px 96px; position: relative; overflow: hidden;
+           display: flex; flex-direction: column; box-shadow: 0 2px 14px rgba(0,0,0,.4); }
+.ss-logo { margin-bottom: -6px; }
+.ss-eyebrow { margin: 18px 0 0; font: 700 22px/1.2 var(--font-body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-ink); }
+.ss-heading { margin: 30px 0 0; font: 400 56px/1.05 var(--font-display); letter-spacing: -0.01em; max-width: 840px; }
+.ss-lede { margin: 22px 0 0; font: 25px/1.45 var(--font-body); max-width: 800px; color: var(--muted); }
+.ss-list { list-style: none; margin: 30px 0 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.ss-list li { font: 600 30px/1.25 var(--font-body); padding-left: 44px; position: relative; }
+.ss-list li::before { content: ""; position: absolute; left: 0; top: 0.35em; width: 20px; height: 20px; background: var(--accent); }
+.ss-footer { margin-top: auto; padding-top: 48px; border-top: 1px solid color-mix(in srgb, var(--ink) 16%, transparent);
+             display: flex; justify-content: space-between; align-items: center; font: 26px/1.3 var(--font-body); }
+.ss-site { color: var(--accent); font-weight: 700; letter-spacing: 0.02em; }   /* 26px: large text, 3:1 bar */
+.ss-muted { color: var(--muted); }
+.ss-review { margin: 36px 0 0; }
+.ss-review .ss-stars { margin: 0; font: 28px/1 var(--font-body); color: var(--accent); letter-spacing: 0.14em; }
+.ss-review blockquote { margin: 14px 0 0; font: 400 26px/1.35 var(--font-display); max-width: 860px; }
+.ss-review cite { display: block; margin-top: 10px; font: italic 22px/1.3 var(--font-body); color: var(--muted); }
+.ss-footer { flex-wrap: wrap; row-gap: 14px; }
+.ss-foot-line { flex-basis: 100%; font: 22px/1.3 var(--font-body); color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="pr-wrap">
+  <header class="no-print pr-chrome">
+    <h1>Social square — Bandera Wagon Wheel RV Park</h1>
+    <p class="hint">1080 × 1080 px, not a print piece, capture as an image: the OS screenshot tool, or the browser device toolbar's "capture screenshot" at 100% zoom, cropped to the square.</p>
+  </header>
+
+  <p class="no-print pr-label">Post</p>
+  <section class="ss-post ss-face ss-face--reverse">
+    <div class="ss-logo" role="img" aria-label="Bandera Wagon Wheel RV Park"><svg class="ss-caravan" viewBox="0 0 250 100" aria-hidden="true"><path d="M14,74 Q4,74 4,56 Q4,26 40,18 Q76,10 94,30 Q102,40 102,60 Q102,74 90,74 L70,74 A14,14 0 0 0 42,74 Z" fill="currentColor"/><circle cx="56" cy="74" r="11" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="56" cy="74" r="3.5" fill="currentColor"/><g stroke="currentColor" stroke-width="1.5"><line x1="56" y1="66" x2="56" y2="82"/><line x1="48" y1="74" x2="64" y2="74"/><line x1="50.5" y1="68.5" x2="61.5" y2="79.5"/><line x1="61.5" y1="68.5" x2="50.5" y2="79.5"/></g><circle cx="72" cy="40" r="7" fill="var(--paper)"/><rect x="34" y="34" width="18" height="12" rx="2" fill="var(--paper)"/><path d="M102,58 L143,56" stroke="currentColor" stroke-width="3" fill="none"/><path d="M148,52 L144,62 L133,74 L128,86 L132,87 L139,75 L151,62 L154,54 Z" fill="currentColor"/><path d="M152,54 L151,72 L149,86 L154,86 L157,72 L159,55 Z" fill="currentColor"/><path d="M179,52 C180,62 179,67 174,72 L171,78 L175,80 L181,72 C186,66 187,58 187,52 Z" fill="currentColor"/><path d="M189,49 L201,67 L211,85 L215,84 L206,63 L196,47 Z" fill="currentColor"/><path d="M242,24 C236,17 231,12 226,8 L227,1 L222,7 L218,1 L216,8 C208,14 201,25 196,33 C188,36 180,37 172,36 C162,35 155,34 150,35 C146,36 144,39 144,43 L133,39 L139,46 L127,49 L136,53 L128,61 L137,57 C140,56 142,53 143,49 C146,53 147,58 150,60 C158,62 170,60 180,58 C186,57 190,55 195,51 C198,47 201,44 203,41 L218,27 C226,26 235,25 242,24 Z" fill="currentColor"/><path d="M213,9 L206,4 L206,11 L200,9 L201,16 L194,15 L196,22 L190,22 L193,31 C198,24 205,16 213,9 Z" fill="currentColor"/></svg><span class="ss-rule"></span><span class="ss-town">Bandera</span><span class="ss-ww">WAGON <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="50" cy="50" r="11" fill="currentColor"/><g stroke="currentColor" stroke-width="5"><line x1="50" y1="10" x2="50" y2="90"/><line x1="10" y1="50" x2="90" y2="50"/><line x1="18.7" y1="30" x2="81.3" y2="70"/><line x1="30" y1="18.7" x2="70" y2="81.3"/><line x1="70" y1="18.7" x2="30" y2="81.3"/><line x1="81.3" y1="30" x2="18.7" y2="70"/></g></svg> WHEEL</span><span class="ss-rv">RV PARK</span></div>
+    <p class="ss-eyebrow">Full-hookup RV sites in Bandera, Texas Hill Country</p>
+    <h2 class="ss-heading">Hill Country, without the drive</h2>
+    <p class="ss-lede">A rustic, family-run stop seven minutes from downtown Bandera — the Cowboy Capital of the World.</p>
+    <ul class="ss-list">
+      <li>Full hookups, 30/50 amp at every site</li>
+      <li>New high-speed WiFi, park-wide</li>
+      <li>Pets part of the family</li>
+    </ul>
+    <div class="ss-footer">
+      <span class="ss-muted">(830) 850-0805</span>
+      <span class="ss-site">banderawagonwheelrv.com</span>
+      <span class="ss-foot-line">10% military discount — active or retired &middot; 325 Polly Peak Dr, Bandera, TX 78003</span>
+    </div>
+  </section>
+</div>
+<script>
+(function () {
+  var hint = document.querySelector(".pr-chrome .hint");
+  function line(t) { var p = document.createElement("p"); p.className = "hint"; p.textContent = t; hint.parentNode.insertBefore(p, hint.nextSibling); }
+  document.querySelectorAll("[data-print]").forEach(function (b) {
+    b.addEventListener("click", function () { if (b.dataset.print === "bw") document.body.classList.add("bw"); window.print(); });
+  });
+  window.addEventListener("afterprint", function () { document.body.classList.remove("bw"); });
+  var inv = document.querySelectorAll("[data-invented]").length;
+  if (inv) line(inv + " invented line" + (inv > 1 ? "s" : "") + ", see README.md.");
+  var miss = document.querySelectorAll("[data-missing]").length;
+  if (miss) line(miss + " missing fact" + (miss > 1 ? "s" : "") + " printed as dashed placeholders.");
+  /* Web font families from brand-facts.yaml (google or self-hosted), e.g. "Rye", "Zilla Slab".
+     document.fonts.check is false only for a declared face that did not load. */
+  var fams = ["Rye", "Zilla Slab", "JetBrains Mono"];
+  if (document.fonts) document.fonts.ready.then(function () {
+    fams.forEach(function (f) { if (!document.fonts.check('12px "' + f + '"')) line('Font "' + f + '" did not load; its fallback stack is printing.'); });
+  });
+})();
+</script>
+</body>
+</html>
