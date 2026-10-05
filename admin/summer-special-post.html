@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>End of Summer Special post — Wagon Wheel RV Park</title>
+<link rel="stylesheet" href="/css/fonts.css" />
+<link rel="stylesheet" href="/css/style.css" />
+<style>
+  /* A ready-to-copy social post, in the same style family as the other admin print docs but built
+     for pasting into Facebook/Google rather than printing -- mirrors the "Copy text" / "Open
+     Facebook" / "Open Google" pattern already used by /admin's own Social posts panel
+     (admin/js/social-panel.js), including its default composer links (server/lib/socialPosts.js)
+     as the fallback if the office hasn't customized them. */
+  body{background:#e7e2d6; padding:0; margin:0; color:#3c2a1a;}
+  .toolbar{max-width:7in; margin:20px auto 0; display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .toolbar .spacer{flex:1;}
+  .toolbar a, .toolbar button{font-family:'JetBrains Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer;}
+  .status{font-family:'JetBrains Mono',monospace; font-size:11px; color:#55643f; margin-left:4px;}
+
+  .sheet{
+    max-width:7in; margin:24px auto 60px; background:#fff; color:#3c2a1a;
+    padding:0.65in 0.7in; box-shadow:0 2px 18px rgba(0,0,0,0.18); border-radius:3px;
+    font-family:'Zilla Slab', Georgia, serif;
+  }
+
+  .brand-row{display:flex; align-items:center; gap:11px; margin-bottom:22px;}
+  .brand-row svg{width:26px; height:26px; color:#3c2a1a;}
+  .brand-row span{font-family:'Rye',serif; font-size:15px; color:#6b5844;}
+
+  .eyebrow{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:#87590f;}
+  h1{font-family:'Rye',serif; font-weight:400; font-size:30px; line-height:1.15; margin:8px 0 4px; color:#2b1d10;}
+  .offer-line{font-size:19px; font-weight:600; margin:0 0 4px;}
+  .cta-line{font-size:14.5px; margin:0 0 4px;}
+  .deadline{font-family:'JetBrains Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; color:#8c3a2b; margin:0 0 20px;}
+
+  .body-copy{font-size:14px; line-height:1.6; margin:0 0 20px;}
+
+  .amenity-list{list-style:none; margin:0 0 22px; padding:0; columns:2; column-gap:22px;}
+  .amenity-list li{font-size:13px; line-height:1.9; break-inside:avoid;}
+  .amenity-list li::before{content:"\2022"; color:#87590f; margin-right:8px;}
+
+  .links{font-family:'JetBrains Mono',monospace; font-size:12.5px; color:#87590f; line-height:1.8;}
+
+  .copy-box{margin-top:28px;}
+  .copy-box h2{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:#6b5844; font-weight:400; margin:0 0 8px;}
+  .copy-box textarea{
+    width:100%; min-height:340px; font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.6;
+    color:#3c2a1a; background:#f6ecd8; border:1px solid #d8c39d; border-radius:3px; padding:14px; resize:vertical;
+  }
+
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <a href="/admin" class="btn btn-ghost">&larr; Back to admin</a>
+  <span class="spacer"></span>
+  <button type="button" class="btn btn-primary" id="copy-btn">Copy text</button>
+  <a href="https://business.facebook.com/latest/composer" target="_blank" rel="noopener" class="btn btn-ghost">Open Facebook</a>
+  <a href="https://business.google.com/posts" target="_blank" rel="noopener" class="btn btn-ghost">Open Google</a>
+  <a href="/admin/summer-special-flyer.html" class="btn btn-ghost">Get printable flyer</a>
+  <span class="status" id="copy-status"></span>
+</div>
+
+<div class="sheet">
+  <div class="brand-row">
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="5"/>
+      <circle cx="50" cy="50" r="10" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="5">
+        <line x1="50" y1="4" x2="50" y2="96"/><line x1="4" y1="50" x2="96" y2="50"/>
+        <line x1="16.6" y1="16.6" x2="83.4" y2="83.4"/><line x1="83.4" y1="16.6" x2="16.6" y2="83.4"/>
+      </g>
+    </svg>
+    <span>Bandera Wagon Wheel RV Park</span>
+  </div>
+
+  <div class="eyebrow">Social post draft</div>
+  <h1>End Of Summer Special</h1>
+  <p class="offer-line">$50 Off Stays of 1 Month or More.</p>
+  <p class="cta-line">Just mention this post and tell us where you found us!</p>
+  <p class="deadline">Offer running to the end of October 2026!</p>
+
+  <p class="body-copy">Monthly RV sites in Bandera, $300 to $650 a month depending on the site.
+    Full hookups, 30 and 50 amp, park-wide WiFi, laundry and showers. Electric is metered
+    separately on monthly stays.</p>
+
+  <ul class="amenity-list">
+    <li>Water hookup</li>
+    <li>30/50 amp electric</li>
+    <li>Wastewater hookup</li>
+    <li>Pet friendly</li>
+    <li>Management on-site</li>
+    <li>Trash service</li>
+    <li>New high-speed WiFi</li>
+    <li>Laundry on site</li>
+    <li>Keyless entry</li>
+    <li>Showers</li>
+    <li>Dog park &mdash; large &amp; small</li>
+    <li>10% military discount &mdash; active or retired</li>
+    <li>Wired Ethernet</li>
+  </ul>
+
+  <div class="links">
+    banderawagonwheelrv.com/monthly-stays.html<br>
+    banderawagonwheelrv.com<br>
+    (830) 850-0805
+  </div>
+
+  <div class="copy-box">
+    <h2>Plain text (for pasting)</h2>
+    <textarea id="post-text" readonly>End Of Summer Special
+$50-Off Stays of 1 Month or More.
+Just mention this post and tell us where you found us!
+Offer Running to the End of October 2026!
+
+Monthly RV sites in Bandera, $300 to $650 a month depending on the site. Full hookups, 30 and 50 amp, park-wide WiFi, laundry and showers. Electric is metered separately on monthly stays.
+
+&bull; Water hookup
+&bull; 30/50 amp electric
+&bull; Wastewater hookup
+&bull; Pet friendly
+&bull; Management on-site
+&bull; Trash service
+&bull; New high-speed WiFi
+&bull; Laundry on site
+&bull; Keyless entry
+&bull; Showers
+&bull; Dog park &mdash; large &amp; small
+&bull; 10% military discount &mdash; active or retired
+&bull; Wired Ethernet
+
+banderawagonwheelrv.com/monthly-stays.html
+banderawagonwheelrv.com
+(830) 850-0805</textarea>
+  </div>
+</div>
+
+<script>
+  const status = document.getElementById("copy-status");
+  document.getElementById("copy-btn").addEventListener("click", async () => {
+    const text = document.getElementById("post-text").value;
+    try {
+      await navigator.clipboard.writeText(text);
+      status.textContent = "Copied. Paste it into the post.";
+    } catch {
+      status.textContent = "Press Ctrl+C to copy.";
+    }
+    setTimeout(() => (status.textContent = ""), 4000);
+  });
+</script>
+</body>
+</html>

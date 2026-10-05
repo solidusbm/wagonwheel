@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>What we built, and why — Wagon Wheel RV Park</title>
+<link rel="stylesheet" href="/css/fonts.css" />
+<link rel="stylesheet" href="/css/style.css" />
+<style>
+  /* Same "sheet of paper" pattern as admin/application.html: ink on white, sized for letter, a
+     toolbar that disappears in print. This one is prose rather than a form, so it's several pages
+     long in print rather than one -- that's fine, it paginates naturally. */
+  body{background:#e7e2d6; padding:0; margin:0;}
+  .sheet{
+    max-width:8.27in; margin:24px auto 60px; background:#fff; color:#2b1d10;
+    padding:0.75in 0.85in; box-shadow:0 2px 18px rgba(0,0,0,0.18);
+    font-family:'Zilla Slab',Georgia,serif; font-size:14px; line-height:1.62;
+  }
+  .toolbar{max-width:8.27in; margin:20px auto 0; display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .toolbar .spacer{flex:1;}
+  .toolbar a, .toolbar button{font-family:'JetBrains Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer;}
+
+  .sheet h1{font-family:'Rye',serif; font-size:26px; margin:0 0 4px; color:#2b1d10; letter-spacing:0;}
+  .park-line{font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; color:#6b5844; margin:0 0 22px;}
+  .lede{font-size:15px; margin:0 0 28px; padding-bottom:20px; border-bottom:2px solid #2b1d10;}
+
+  section{margin:0 0 26px; break-inside:avoid;}
+  section h2{font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:0.1em; text-transform:uppercase;
+             color:#2b1d10; margin:0 0 10px; padding-bottom:6px; border-bottom:1px solid #b9ac93;}
+  section p{margin:0 0 10px;}
+  section ul{margin:0 0 10px; padding-left:20px;}
+  section li{margin:0 0 7px;}
+  .why{color:#6b5844; font-style:italic;}
+
+  .closing{margin-top:32px; padding-top:20px; border-top:2px solid #2b1d10;}
+  .closing h2{font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:0.1em; text-transform:uppercase; margin:0 0 10px;}
+  .closing p{margin:0 0 10px;}
+  .asof{font-family:'JetBrains Mono',monospace; font-size:11px; color:#6b5844; text-transform:uppercase; letter-spacing:0.06em;}
+
+  @media print{
+    body{background:#fff;}
+    .toolbar{display:none;}
+    .sheet{box-shadow:none; margin:0; max-width:none; padding:0.4in 0.5in; font-size:12.5px;}
+    section{break-inside:avoid;}
+    @page{size:letter portrait; margin:0.4in;}
+  }
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <a href="/admin" class="btn btn-ghost">&larr; Back to admin</a>
+  <span class="spacer"></span>
+  <button type="button" class="btn btn-primary" id="print-btn">Print</button>
+</div>
+<div class="sheet">
+  <h1>What We Built, and Why</h1>
+  <p class="park-line">Bandera Wagon Wheel RV Park &mdash; booking &amp; website engagement</p>
+  <p class="lede">This is a plain-language account of the work behind
+    <strong>banderawagonwheelrv.com</strong> &mdash; not a template site with your name on it, but a
+    real booking system, payment system, and back office built specifically for how this park
+    actually operates. It's organized by what each piece does for the park, not by the order it
+    was built in.</p>
+
+  <section>
+    <h2>The core booking system</h2>
+    <p>Guests see real availability, not a calendar that has to be checked by hand. Behind that,
+      the database itself &mdash; not just the website's code &mdash; is set up so that two guests
+      physically cannot book the same site for overlapping dates. Even if something in the app were
+      ever buggy, the database rejects the conflicting booking outright. That's a stronger guarantee
+      than "the app checks first," which is how double-bookings usually happen at other systems.</p>
+    <p>Pricing is handled by one pricing engine that bills correctly no matter how a site is sold.
+      Some sites rent nightly, some weekly, some only by the month (Site 1, for example, has no
+      nightly or weekly rate at all &mdash; it's month-only). A stay is billed using whatever terms
+      that site actually offers, rounding up to the smallest one available. On top of that, every
+      stay is capped at the monthly rate: once a stay is long enough to cost more than a month's
+      rent, it's billed the monthly rate for that month plus the ordinary rate for whatever's left
+      over &mdash; never more. <span class="why">That matters because your sites aren't priced
+      identically: nightly, weekly, and monthly rates vary site to site, from $300 a month up to
+      $650 for Site 2, which carries extra amenities. Without the cap, a longer stay could end up
+      costing far more than simply renting the site by the month.</span></p>
+  </section>
+
+  <section>
+    <h2>Real Square payment integration</h2>
+    <p>Payments run through Square in production &mdash; not a test mode, not a placeholder. Real
+      cards are charged and the money lands in your Square account. Refunds work two ways: the
+      office can refund and cancel a booking directly from the admin panel, and a guest can cancel
+      their own booking from a link in their confirmation email, which refunds them automatically
+      according to the park's cancellation policy.</p>
+    <p>Card numbers themselves never touch this server. The card entry box on the booking page is
+      rendered by Square itself, inside an isolated frame that only Square can read. <span
+      class="why">That's a deliberate choice for handling payment card data responsibly &mdash; it
+      keeps the site out of the business of storing or transmitting card numbers at all.</span></p>
+  </section>
+
+  <section>
+    <h2>The guest application system</h2>
+    <p>The online booking form doubles as the park's paper intake application &mdash; the same
+      fields the park has always collected on paper (occupants, vehicles, pets, RV information, and
+      so on) are built into the online form. Nothing beyond name and contact details is required to
+      book online; the rest is <span class="why">"pre-filling, not paperwork"</span> &mdash; a guest
+      who wants to save time at check-in can fill it in ahead of arrival, and the office finishes
+      whatever's left when they arrive.</p>
+    <p>Every reservation also has a printable version of its application, built to work as an actual
+      paper form: every field prints whether or not the guest filled it in, with blanks shown as
+      lines to write on. A guest who filled out nothing online still gets a complete blank form
+      handed to them at check-in, exactly like the park's original paper process.</p>
+  </section>
+
+  <section>
+    <h2>Findability</h2>
+    <p>A handful of pieces work together to help people actually find the park online:</p>
+    <ul>
+      <li><strong>Search engine optimization</strong> &mdash; a written description for each page,
+        a sitemap, and structured data that tells Google directly what the park's rates and
+        amenities are, plus verification set up with Google Search Console so the park can see how
+        it's performing in search.</li>
+      <li><strong>Social sharing previews</strong> &mdash; when a link to the site is posted on
+        Facebook or texted to someone, it shows a real title, description, and photo instead of a
+        blank box.</li>
+      <li><strong>Automatic review requests</strong> &mdash; a short email goes out to a guest a day
+        or two after they check out, asking for a Google review. It only starts once the office
+        turns it on and saves a review link, and it goes to every guest with no filtering for happy
+        ones &mdash; screening reviewers is against Google's own rules and can get a listing
+        penalized.</li>
+      <li><strong>Social post drafts</strong> &mdash; a tool that writes ready-to-post copy for
+        Facebook and Google straight from the park's real data: which sites are actually free this
+        weekend, the real rates.</li>
+    </ul>
+    <p class="why">The review requests and social drafts are both built to require a person before
+      anything goes out publicly &mdash; nothing posts or sends itself. An automatic "3 sites open
+      this weekend" post can be wrong a minute after it's published, and a person reading it first
+      is the safeguard against that.</p>
+  </section>
+
+  <section>
+    <h2>Trust and safety</h2>
+    <ul>
+      <li><strong>Fraud protection</strong> &mdash; the booking and cancellation pages limit how
+        many attempts can come from one visitor in a short window, aimed specifically at "card
+        testing" (someone using a booking form to check whether stolen card numbers work).</li>
+      <li><strong>Email authentication</strong> &mdash; SPF and DMARC records are published for the
+        domain, so mail servers everywhere know that nothing but the park's real sender is allowed
+        to send email claiming to be from banderawagonwheelrv.com.</li>
+      <li><strong>A privacy page</strong> written to describe only what the site actually does,
+        checked against the real code rather than assumed &mdash; no cookies of its own, no
+        advertising trackers, and card details that never reach the server at all.</li>
+      <li><strong>Secure cancellation links</strong> &mdash; the link in a guest's confirmation
+        email is cryptographically signed, so a reservation code alone (which is short and
+        guessable) is never enough on its own to cancel someone's booking or move money.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Real park data, not placeholders</h2>
+    <p>The site map was rebuilt from the park's actual county-filed engineering plan, corrected
+      against a copy the park marked up by hand &mdash; that correction fixed the block's
+      orientation, the road layout, and where Sites 1 and 2 sit relative to the rest. It also caught
+      a real mismatch: the engineering drawing numbers each row in one direction, but the physical
+      markers in the park read the opposite way. The map now matches what a guest standing in the
+      park actually sees, not what the drawing says &mdash; a genuinely easy thing to get wrong and
+      send guests to the wrong pad over.</p>
+    <p>Every rate, amenity, and rig length shown to guests was entered by the park itself, not
+      guessed at, and the photos throughout the site are real photos of the park, not stock
+      imagery.</p>
+  </section>
+
+  <section>
+    <h2>Design and accessibility</h2>
+    <p>The site uses a light, warm color palette chosen for the park, built directly into the
+      stylesheet rather than swapped in after the page loads. Every text color against every
+      background was measured for contrast, not just eyeballed &mdash; a check that caught several
+      genuinely hard-to-read spots (including the order total on the booking page) that looked fine
+      at a glance but failed a real contrast calculation.</p>
+    <p>The site and admin panel both work properly on a phone: admin tables that would otherwise run
+      off the edge of the screen turn into stacked cards below tablet width, and the homepage's
+      layout was fixed so its artwork and text don't overlap on a smaller screen.</p>
+  </section>
+
+  <section>
+    <h2>Operational tooling for the park</h2>
+    <p>Beyond the guest-facing site, the office has a full admin panel for running things day to
+      day: managing reservations, editing site details and rates, uploading and ordering photos,
+      editing homepage text, and moving pads on the park map, all without needing a developer or a
+      deploy. It also includes:</p>
+    <ul>
+      <li>Sync feeds for RoverPass and Hipcamp, so a booking made directly on the park's own site
+        blocks that site on those platforms too.</li>
+      <li>Push notifications straight to a phone the moment a guest books, on top of the existing
+        email alert.</li>
+      <li>A drag-and-drop editor for the park map itself, so the office can move a pad or relabel a
+        building without asking anyone to touch code.</li>
+    </ul>
+  </section>
+
+  <div class="closing">
+    <h2>Where things stand</h2>
+    <p>Development on a site like this is iterative, not a single finish line &mdash; this document
+      reflects what's built <span class="asof" id="asof-date"></span>. A short list of things still
+      genuinely open, none of them urgent:</p>
+    <ul>
+      <li>The park map's pad and road sizes are drawn to a uniform placeholder size rather than
+        measured exactly &mdash; positions come from the filed plan, but a few paced-off distances
+        at the park (or a careful read of the plan's printed scale) would let the map show true
+        sizes instead.</li>
+      <li>Two settings that live in the park's own Cloudflare account, not in this site's code, were
+        just decided: email addresses will stop being obfuscated from crawlers on the page, so
+        contact links work normally again without needing JavaScript &mdash; that still needs
+        someone with access to the park's Cloudflare account to flip the switch. Cloudflare's
+        built-in visitor analytics will stay on; it's cookieless and already disclosed on the
+        privacy page.</li>
+    </ul>
+  </div>
+</div>
+<script>
+  document.getElementById("print-btn").addEventListener("click", () => window.print());
+  document.getElementById("asof-date").textContent = new Date().toLocaleDateString("en-US", {
+    year: "numeric", month: "long", day: "numeric"
+  });
+</script>
+</body>
+</html>

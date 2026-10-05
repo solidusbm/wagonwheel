@@ -1,0 +1,203 @@
+# Brand facts for Bandera Wagon Wheel RV Park, extracted 2026-09-25 by the printables skill.
+# Schema and policy: ~/.claude/skills/printables/references/brand-facts.md
+# Correct anything here by hand; a re-run never overwrites a value you changed.
+reviewed: 2026-09-25            # gate passed: all five pieces, monthly $300–$350 (hours page), rust accent
+sources:
+  repo: ~/projects/wagonwheel
+  site: https://banderawagonwheelrv.com/
+  fetched: [/, /hours.html, /monthly-stays.html, /gallery.html, /api/sites, /api/content, /api/photos]
+
+business:
+  name:       {value: "Bandera Wagon Wheel RV Park", source: "public/index.html:6 <title>; JSON-LD name", status: extracted}
+  descriptor: {value: "Full-hookup RV sites in Bandera, Texas Hill Country", source: "live home meta description, first sentence", status: extracted}
+  city:       {value: "Bandera, TX", source: "public/index.html:218 hero eyebrow; footer", status: extracted}
+  legal_name: {value: null, status: missing}
+  licence:    {value: null, status: missing}
+
+contact:                         # live site wins on conflict; blocking class
+  phone:   {value: "(830) 850-0805", href: "tel:+18308500805", source: "live home footer; JSON-LD telephone +1-830-850-0805", status: extracted}
+  email:   {value: "banderawagonwheelrv@gmail.com", source: "live home footer; JSON-LD email", status: extracted}
+  address: {value: "325 Polly Peak Dr, Bandera, TX 78003", source: "live home footer; JSON-LD PostalAddress", status: extracted}
+  hours:
+    value: "Office hours: Monday–Friday 8–5, Saturday 9–3, Sunday 1–5. Check-in 3:00pm, check-out 1:00pm."
+    source: "live /hours.html 'Office hours' and 'Check-in & check-out'; JSON-LD openingHoursSpecification"
+    status: extracted
+    lines:
+      - {value: "8–5 Monday–Friday", status: extracted}
+      - {value: "9–3 Saturday", status: extracted}
+      - {value: "1–5 Sunday", status: extracted}
+    checkin:  {value: "3:00pm Check-in", status: extracted}
+    checkout: {value: "1:00pm Check-out", status: extracted}
+    note: {value: "Reservations can be made online 24/7 — these are the hours the office itself is staffed.", source: "live /hours.html intro (content_blocks hours_intro)", status: extracted}
+    office: {value: "The office is located inside the entrance gate, to your right.", source: "live /hours.html", status: extracted}
+  service_area: {value: "Seven minutes from downtown Bandera — the Cowboy Capital of the World", source: "hero subtitle (content_blocks hero_subtitle), trimmed to the place clause", status: extracted}
+  website: {value: "banderawagonwheelrv.com", source: "live site; also served at wwrvb.sastx.net (CLAUDE.md)", status: extracted}
+  socials: {value: null, status: missing}   # no social links anywhere on the site or in the repo
+urls:
+  primary: {value: "https://banderawagonwheelrv.com/", source: "JSON-LD url", status: extracted}   # QR target
+  booking: {value: "https://banderawagonwheelrv.com/#booking", source: "JSON-LD potentialAction", status: extracted}
+  monthly: {value: "https://banderawagonwheelrv.com/monthly-stays.html", status: extracted}
+
+colors:
+  # public/css/style.css :root is the light "Light Rustic" theme and the only copy of these values
+  # (repo CLAUDE.md, Theming). The golds are the repo's darkened pair; the live styles row still lays
+  # the gallery golds (#a9721f/#c98a2b) over guest pages until commit 424cfcd is pushed. Repo wins.
+  palette:
+    bg:            {value: "#f6ecd8", source: "public/css/style.css:21", status: extracted}
+    bg-panel:      {value: "#fffaf0", source: "public/css/style.css:22", status: extracted}
+    bg-panel-2:    {value: "#efdfc0", source: "public/css/style.css:23", status: extracted}
+    line:          {value: "#d8c39d", source: "public/css/style.css:24", status: extracted}
+    gold:          {value: "#87590f", source: "public/css/style.css:31 (text-safe gold)", status: extracted}
+    gold-bright:   {value: "#a9721f", source: "public/css/style.css:32 (decoration, 24px+ only)", status: extracted}
+    rust:          {value: "#8c3a2b", source: "public/css/style.css:33; favicon.svg ground; RV PARK in the lockup; primary buttons", status: extracted}
+    rust-bright:   {value: "#a8462f", source: "public/css/style.css:34", status: extracted}
+    cedar:         {value: "#55643f", source: "public/css/style.css:35", status: extracted}
+    cedar-light:   {value: "#74895a", source: "public/css/style.css:36", status: extracted}
+    parchment:     {value: "#3c2a1a", source: "public/css/style.css:37 (body text)", status: extracted}
+    parchment-dim: {value: "#6b5844", source: "public/css/style.css:38 (secondary text)", status: extracted}
+    ink:           {value: "#2b1d10", source: "public/css/style.css:40", status: extracted}
+    btn-text:      {value: "#f7ecd8", source: "public/css/style.css:44 (text on rust fills)", status: extracted}
+    hero-sky:      {value: "#f3d9a8", source: "public/css/style.css:51", status: extracted}
+    hero-sun:      {value: "#e8a23a", source: "public/css/style.css:52", status: extracted}
+    theme-color:   {value: "#f6ecd8", source: "public/index.html:10 meta theme-color", status: extracted}
+  roles:
+    paper:      {palette: bg,            value: "#f6ecd8", status: inferred}
+    ink:        {palette: ink,           value: "#2b1d10", status: inferred, contrast: 13.93}
+    # Rust is the mark's colour: the favicon ground, RV PARK in every lockup, the Book-now CTA and
+    # primary buttons, the office building itself. Gold is the site's eyebrow/link colour and is
+    # recorded as the secondary. Flip these two at review if the park prefers gold pieces.
+    accent:     {palette: rust,          value: "#8c3a2b", status: inferred, contrast: 6.50}
+    accent-ink: {palette: rust,          value: "#8c3a2b", status: inferred, contrast: 6.50}   # rust itself passes 4.5:1 on paper
+    muted:      {palette: parchment-dim, value: "#6b5844", status: inferred, contrast: 5.77}
+    secondary:  {palette: gold,          value: "#87590f", status: inferred, contrast: 5.17}
+    # Reverse face. Rust on ink measures 2.14:1 (fails the 3:1 bar), so per the skill rule the reverse
+    # face uses the accent as its paper: rust panels with the site's own btn-text cream, exactly the
+    # favicon and the primary buttons. Graphics and small accent text on rust take hero-sky, the
+    # palette's warm sand, at 5.55:1 (gold-bright on rust is 1.86:1 and is never used there).
+    reverse-paper:      {palette: rust,     value: "#8c3a2b", status: inferred}
+    reverse-ink:        {palette: btn-text, value: "#f7ecd8", status: inferred, contrast: 6.51}
+    reverse-accent:     {palette: hero-sky, value: "#f3d9a8", status: inferred, contrast: 5.55}
+    reverse-accent-ink: {palette: hero-sky, value: "#f3d9a8", status: inferred, contrast: 5.55}
+    measured: "node scripts/contrast.mjs 2026-09-25: ink/paper 13.93, rust/paper 6.50, gold/paper 5.17, gold-bright/paper 3.50, parchment-dim/paper 5.77, rust/ink 2.14, gold-bright/ink 3.98, btn-text/rust 6.51, hero-sky/rust 5.55, gold-bright/rust 1.86"
+
+fonts:
+  # Self-hosted in public/fonts (public/css/fonts.css, generated by tools/fetch-fonts.mjs). Copies the
+  # pieces link live in admin/assets/fonts so a piece works from disk and at /admin/ alike.
+  - family: "Rye"
+    role: display
+    kind: self-hosted
+    source: "public/css/fonts.css:22; public/fonts/rye-400.0de1abd1.woff2"
+    path: "assets/fonts/rye-400.0de1abd1.woff2"
+    weights: [400]
+    fallback: "serif"
+    status: extracted
+  - family: "Zilla Slab"
+    role: body
+    kind: self-hosted
+    source: "public/css/fonts.css:31-64; public/css/style.css:74 body"
+    path: "assets/fonts/zilla-slab-400.b53659a5.woff2"
+    weights: [400, 400 italic, 600]
+    fallback: "Georgia, serif"
+    status: extracted
+  - family: "JetBrains Mono"
+    role: label                  # eyebrows, the BANDERA line of the lockup, nav links
+    kind: self-hosted
+    source: "public/css/fonts.css:13; public/css/style.css:96 .brand-lockup .town"
+    path: "assets/fonts/jetbrains-mono-600.4f27206c.woff2"
+    weights: [600]
+    fallback: "monospace"
+    status: extracted
+
+logo:                            # blocking class
+  # The identity is typographic, not a file: the caravan silhouette walking a rule above BANDERA /
+  # WAGON (12-spoke wheel) WHEEL / RV PARK, set in JetBrains Mono and Rye (vault projects/wagonwheel.md,
+  # "Engraved Frontier"). The nav and footer lockup is reproduced inline in every piece from the site's
+  # own <symbol> paths (public/index.html:18-41) and font files, in currentColor so it follows the face
+  # and the black-and-white switch. There is no logo image anywhere in the repo or on the site.
+  primary:     {value: "inline caravan lockup: #caravan + #wheel12 symbols, public/index.html:18-56 (.brand-lockup)", source: "public/index.html:49-56; public/css/style.css:90-100", status: extracted}
+  wordmark:    {value: "inline: BANDERA / WAGON ⊛ WHEEL / RV PARK without the caravan (the hero board, public/index.html:219-223)", source: "public/index.html:219-223", status: extracted}
+  mark:        {value: "public/favicon.svg (12-spoke wheel, cream on rust) and the #wheel12 symbol", source: "public/favicon.svg", status: extracted}
+  mono:        {value: "same lockup in one colour (currentColor)", status: extracted}
+  recolorable: true
+  note: "The road-sign board (photo assets/sign-polly-peak-dr.jpg) is what the lockup reproduces; the scans in public/assets/brand/ are the letterhead originals, not print-clean."
+
+copy:                            # verbatim, each with source; repo wins on conflict
+  tagline:     {value: "Hill Country, without the drive", source: "public/index.html:255 about h2 (content_blocks about_heading)", status: extracted}
+  lede:        {value: "A rustic, family-run stop seven minutes from downtown Bandera — the Cowboy Capital of the World.", source: "public/index.html:226 hero p (content_blocks hero_subtitle)", status: extracted}
+  badge:       {value: "New high-speed WiFi, park-wide", source: "public/index.html hero badge (content_blocks hero_badge)", status: extracted}
+  services:    # the three things the site leads with; each has a photo
+    - {value: "Full hookups, 30/50 amp at every site", detail: "Sites are simple and well kept, with full hookups ready to go when you pull in.", source: "marquee public/index.html:232-234; about paragraph 2", status: extracted}
+    - {value: "New high-speed WiFi, park-wide", detail: "The managers live on site, so there's almost always someone around to help.", source: "hero badge; about paragraph 2", status: extracted}
+    - {value: "Pets part of the family", detail: "Bring the dog — there's a dog park (large and small) right on the property.", source: "marquee public/index.html:236; about paragraph 2", status: extracted}
+  service_includes:
+    - name: "What every site includes"
+      source: "live home amenities grid (show_on_homepage amenities); JSON-LD amenityFeature"
+      status: extracted
+      items: ["Water hookup", "30/50 amp electric", "Wastewater hookup", "Pet friendly", "Management on-site", "Trash service", "New high-speed WiFi", "Laundry on site", "Keyless entry", "Showers", "Dog park — large & small", "10% military discount — active or retired"]
+  process:     # the booking steps, the site's own panel headings
+    - {value: "Choose your dates", detail: "Reservations open 24/7 online.", source: "public/index.html:408; footer", status: extracted}
+    - {value: "Pick a site", detail: "The booking page shows the rates each site is actually offered at.", source: "public/index.html:430; live /hours.html", status: extracted}
+    - {value: "Guest details & payment", detail: "Payments are processed securely by Square.", source: "public/index.html:445; pay-note", status: extracted}
+  headings:
+    about:    {value: "Hill Country, without the drive", eyebrow: "About the park", source: "public/index.html:254-255", status: extracted}
+    gallery:  {value: "A look around the park", eyebrow: "Gallery", source: "public/index.html:284-285", status: extracted}
+    services: {value: "What every site includes", eyebrow: "Amenities", source: "public/index.html:306-307", status: extracted}
+    includes: {value: "What every site includes", eyebrow: "Amenities", source: "public/index.html:306-307", status: extracted}
+    nearby:   {value: "Worth the short drive", eyebrow: "Nearby", source: "public/index.html:327-328", status: extracted}
+    process:  {value: "The Guest Register", eyebrow: "Reservations", source: "public/index.html:402-403", status: extracted}
+    contact:  {value: "Office hours & policies", eyebrow: "Contact", source: "live /hours.html h1; nav link public/index.html:63", status: extracted}
+    rates:    {value: "Rates & cancellations", eyebrow: "Rates", source: "live /hours.html", status: extracted}
+    reviews:  {value: null, status: missing}
+  closers:
+    - {value: "Reservations open 24/7 online", source: "public/index.html footer", status: extracted}
+    - {headline: "Bring the dog", detail: "the park welcomes pets as part of the family, and there's a dog park (large and small) right on the property.", source: "about paragraph 2", status: extracted}
+    - {headline: "On higher ground, on purpose:", detail: "the whole property sits outside the FEMA 100-year floodplain. A hard rain in the Hill Country means a nice view of the Medina River running high — not a 2am scramble to hitch up and move your rig.", source: "about paragraph 3 (content_blocks about_paragraph_3)", status: extracted}
+  offers:      # blocking class
+    - {headline: "10% military discount", detail: "active or retired", amount: "10%", until: null, terms: null, source: "live home amenities grid; db/seed.sql amenity 12", status: extracted}
+  prices:      # blocking class. Live /hours.html renders these server-side from the sites table.
+    - {headline: "Per night", amount: "$45", detail: "Nightly and weekly rates include electric.", source: "live /hours.html Rates & cancellations", status: extracted}
+    - {headline: "Per week", amount: "$210", detail: "Nightly and weekly rates include electric.", source: "live /hours.html", status: extracted}
+    - headline: "Per month"
+      amount: "$300–$350"
+      detail: "Rates vary by site. Electric is not included in the monthly rate."
+      source: "live /hours.html Rates & cancellations (from the sites table: Site 7 $300, Sites 4/5/10 $325, others $350)"
+      status: conflict
+      other: {value: "Rates From 325/mo. Nightly/Weekly Available", source: "live home JSON-LD amenityFeature (an amenity row entered in /admin, shown on the homepage grid)"}
+      decided: {value: "$300–$350", status: provided, why: "user chose the hours-page figure at review 2026-09-25; the amenity row is stale"}
+      note: "Site 7 is bookable at $300/month, so the hours page is arithmetically right and the amenity row is stale. Site 2 ($650, per repo CLAUDE.md) is outside the range because it is not currently listed."
+    - {headline: "Rates vary by site", amount: null, detail: "Pick your dates on the booking page to see what each available site costs for your stay.", source: "live /hours.html", status: extracted}
+  about:       {value: "Hill Country, without the drive", source: "content_blocks about_heading", status: extracted}
+  about_body:  {value: "Bandera Wagon Wheel RV Park sits just outside town in the heart of the Texas Hill Country — close enough that downtown Bandera's shops, honky-tonks, and historic storefronts are a short drive away, far enough that the evenings stay quiet.", source: "content_blocks about_paragraph_1", status: extracted}
+  about_body_2: {value: "It's a small, family-run park: the managers live on site, so there's almost always someone around to help. Sites are simple and well kept, with full hookups ready to go when you pull in. Bring the dog — the park welcomes pets as part of the family, and there's a dog park (large and small) right on the property.", source: "content_blocks about_paragraph_2", status: extracted}
+  about_points: {value: ["12 sites total", "30/50 amp full hookup", "7 min to downtown Bandera", "24/7 on-site management"], source: "public/index.html:260-265 stat list", status: extracted}
+  reviews:     []                # none on the site; the park's review-flyer (admin/review-flyer.html) asks residents for Google reviews
+  reviews_status: {value: null, status: missing}
+  credentials: # the marquee fact strip; "every claim here is stated elsewhere on this page or on /hours"
+    - {value: "Full hookups", source: "public/index.html:232", status: extracted}
+    - {value: "30/50 amp at every site", source: "public/index.html:234", status: extracted}
+    - {value: "Pets part of the family", source: "public/index.html:236", status: extracted}
+    - {value: "Outside the 100-year floodplain", source: "public/index.html:238", status: extracted}
+    - {value: "Reservations open 24/7", source: "public/index.html:240", status: extracted}
+  nearby:      # six numbered stops, public/index.html:378-383
+    - {value: "Downtown Bandera", detail: "Shops, cowboy bars, and honky-tonks in the Cowboy Capital of the World.", status: extracted}
+    - {value: "Medina River", detail: "Tubing, kayaking, and riverside walks close to the park.", status: extracted}
+    - {value: "Bandera Brewery", detail: "Local taproom right on State Hwy 16, a few minutes from the park.", status: extracted}
+    - {value: "The Shindig", detail: "Live music and dance hall on the way into town.", status: extracted}
+    - {value: "Frontier Times Museum", detail: "Local history and frontier-era artifacts in town.", status: extracted}
+    - {value: "Bandera Natural History Museum", detail: "Hill Country wildlife and natural history exhibits.", status: extracted}
+  monthly:
+    lede: {value: "Most of the Wagon Wheel is people staying a while. Seven of the twelve pads are taken by long-term residents, so if you're looking for somewhere to park a rig for a month or several, you'd be joining a small, settled park rather than a holiday campground that empties out on Sunday night.", source: "live /monthly-stays.html", status: extracted}
+  policies:
+    - {value: "1 RV, 2 vehicles, 2 adults per RV — 4 guests max per site.", source: "live /hours.html Good to know", status: extracted}
+    - {value: "Quiet hours: 10:00pm – 6:00am.", source: "live /hours.html", status: extracted}
+    - {value: "RVs 15+ years old need park approval before booking.", source: "live /hours.html", status: extracted}
+    - {value: "Fires limited to fire pits only.", source: "live /hours.html", status: extracted}
+
+photos:                          # downloaded from the live photo store (Postgres BYTEA, not in the repo) into admin/assets, recompressed at q82
+  - {path: "assets/sign-polly-peak-dr.jpg",   url: "https://banderawagonwheelrv.com/photos/18/image", caption: "The sign on Polly Peak Dr",           px: [1271, 1694], max_in: 4.2, print_ok: true,  status: extracted}
+  - {path: "assets/hill-country-sunset.jpg",  url: "https://banderawagonwheelrv.com/photos/10/image", caption: "Hill Country sunset over the park",  px: [1400, 1867], max_in: 4.7, print_ok: true,  status: extracted}
+  - {path: "assets/sites-and-office.jpg",     url: "https://banderawagonwheelrv.com/photos/5/image",  caption: "Sites and the office building",     px: [1400, 1867], max_in: 4.7, print_ok: true,  status: extracted}
+  - {path: "assets/large-dog-park.jpg",       url: "https://banderawagonwheelrv.com/photos/15/image", caption: "Large dog park",                    px: [1353, 1804], max_in: 4.5, print_ok: true,  status: extracted}
+  - {path: "assets/site-hookups-and-table.jpg", url: "https://banderawagonwheelrv.com/photos/13/image", caption: "A site ready to back into, hookups and table", px: [1190, 1587], max_in: 4.0, print_ok: true, status: extracted}
+  - {path: "assets/office-check-in-here.jpg", url: "https://banderawagonwheelrv.com/photos/11/image", caption: "The office - check in here",        px: [1197, 1596], max_in: 4.0, print_ok: true,  status: extracted}
+  # print_ok is for the slots the pieces use (nothing wider than 3.4 in); none is wide enough for a full-width Letter photo (needs 2550 px).

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>End of Summer Special flyer — Wagon Wheel RV Park</title>
+<link rel="stylesheet" href="/css/fonts.css" />
+<link rel="stylesheet" href="/css/style.css" />
+<style>
+  /* Bulletin-board flyer, two per letter sheet -- print, cut along the dashed line, post around
+     town. Standard Letter portrait (unlike admin/brochure.html's 11x8.5in landscape, which taught
+     the lesson: browsers don't reliably honor an unusual @page size, and default back to Letter
+     portrait anyway -- so this uses that default instead of fighting it).
+
+     Flyer craft: one dominant element (the $50), real photo, high contrast, minimal copy -- this
+     is read in passing from a few feet away, not studied like the social post text. */
+  body{background:#e7e2d6; padding:0; margin:0; color:#3c2a1a;}
+  .toolbar{max-width:8.5in; margin:20px auto 0; display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .toolbar .spacer{flex:1;}
+  .toolbar a, .toolbar button{font-family:'JetBrains Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer;}
+  .toolbar .note{font-family:'JetBrains Mono',monospace; font-size:10.5px; color:#6b5844; font-style:italic; width:100%; margin:2px 0 0;}
+
+  .sheet{
+    width:8.5in; min-height:11in; margin:24px auto 60px; background:#fff;
+    box-shadow:0 2px 18px rgba(0,0,0,0.18); padding:0.3in;
+    display:flex; flex-direction:column; gap:0.2in;
+  }
+
+  .flyer{
+    width:100%; height:5.1in; flex:0 0 5.1in; display:flex; overflow:hidden;
+    background:#2b1d10; border-radius:3px; position:relative;
+  }
+  .cut-line{
+    flex:0 0 auto; height:0; border-top:1.5px dashed #b8a98c; position:relative;
+  }
+  .cut-line::after{
+    content:"\2702 cut here"; position:absolute; left:50%; top:-9px; transform:translateX(-50%);
+    background:#e7e2d6; padding:0 10px; font-family:'JetBrains Mono',monospace; font-size:9px;
+    color:#6b5844; text-transform:uppercase; letter-spacing:0.06em;
+  }
+
+  .f-photo{flex:0 0 42%; position:relative; overflow:hidden;}
+  .f-photo img{width:100%; height:100%; object-fit:cover; display:block;}
+  .f-photo .mark{
+    position:absolute; top:14px; left:14px; width:28px; height:28px; color:#f7ecd8; opacity:0.9;
+  }
+
+  .f-body{flex:1; padding:20px 22px; display:flex; flex-direction:column; align-items:center; text-align:center; color:#f7ecd8;}
+
+  .f-badge{
+    display:inline-flex; align-items:center; background:rgba(247,236,216,0.12);
+    border:1px solid rgba(247,236,216,0.4); border-radius:999px; padding:5px 14px;
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:600;
+    letter-spacing:0.1em; text-transform:uppercase; color:#f7ecd8;
+  }
+  .f-amount{
+    font-family:'Rye',serif; font-weight:400; font-size:88px; line-height:0.85; color:#e8a23a;
+    margin:8px 0 0; -webkit-text-stroke:1.5px #2b1d10; text-shadow:0 3px 10px rgba(0,0,0,0.4);
+  }
+  .f-off{font-family:'Zilla Slab',serif; font-weight:700; font-size:24px; margin:2px 0 0;}
+  .f-sub{font-family:'Zilla Slab',serif; font-weight:500; font-size:13px; font-style:italic; color:#e7dcc4; margin:4px 0 0;}
+  .f-cta{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:#e7dcc4; margin:10px 0 0; line-height:1.5;}
+  .f-deadline{font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:#e8a23a; margin:2px 0 0;}
+
+  .f-qr-row{margin-top:auto; padding-top:10px; display:flex; align-items:center; gap:12px;}
+  .f-qr-row .qr-svg{width:64px; height:64px; padding:5px; background:#fff; border-radius:2px; color:#2b1d10; flex:0 0 auto;}
+  .f-qr-row .qr-text{text-align:left;}
+  .f-qr-row .qr-text .l1{font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:#f7ecd8;}
+  .f-qr-row .qr-text .l2{font-family:'JetBrains Mono',monospace; font-size:10px; color:#e8a23a; margin-top:2px;}
+
+  .f-footer{margin-top:8px; font-family:'Rye',serif; font-size:13px; color:#f7ecd8;}
+  .f-footer .phone{display:block; font-family:'JetBrains Mono',monospace; font-size:10px; color:#e7dcc4; margin-top:2px; font-weight:400;}
+  .f-terms{margin-top:5px; font-family:'JetBrains Mono',monospace; font-size:8.5px; font-style:italic; color:#a89878;}
+
+  @media print{
+    body{background:#fff;}
+    .toolbar{display:none;}
+    .sheet{box-shadow:none; margin:0;}
+    @page{size:letter portrait; margin:0.25in;}
+  }
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <a href="/admin" class="btn btn-ghost">&larr; Back to admin</a>
+  <span class="spacer"></span>
+  <button type="button" class="btn btn-primary" id="print-btn">Save as PDF</button>
+  <p class="note">Two flyers per sheet &mdash; print, then cut along the dashed line to post around town.</p>
+</div>
+
+<div class="sheet">
+
+  <div class="flyer">
+    <div class="f-photo">
+      <img src="/photos/12/image?w=640" alt="">
+      <svg class="mark" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="5"/>
+        <circle cx="50" cy="50" r="10" fill="currentColor"/>
+        <g stroke="currentColor" stroke-width="5">
+          <line x1="50" y1="4" x2="50" y2="96"/><line x1="4" y1="50" x2="96" y2="50"/>
+          <line x1="16.6" y1="16.6" x2="83.4" y2="83.4"/><line x1="83.4" y1="16.6" x2="16.6" y2="83.4"/>
+        </g>
+      </svg>
+    </div>
+    <div class="f-body">
+      <div class="f-badge">End of Summer Special</div>
+      <div class="f-amount">$50</div>
+      <div class="f-off">OFF MONTHLY STAYS</div>
+      <div class="f-sub">1 month or more &middot; Bandera, TX</div>
+      <div class="f-cta">Just mention this flyer &amp; tell us where you found us!</div>
+      <div class="f-deadline">Offer runs through the end of October 2026</div>
+      <div class="f-qr-row">
+        <svg class="qr-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 35 35" shape-rendering="crispEdges"><path stroke="currentColor" d="M1 1.5h7m2 0h2m2 0h1m2 0h8m2 0h7M1 2.5h1m5 0h1m5 0h6m2 0h1m5 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m1 0h4m1 0h1m3 0h6m3 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m1 0h1m3 0h1m1 0h3m3 0h1m5 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m1 0h4m1 0h1m1 0h1m1 0h2m2 0h1m1 0h1m2 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m1 0h1m1 0h1m2 0h4m1 0h1m1 0h1m5 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M9 8.5h1m5 0h2m2 0h1m2 0h1m2 0h1M1 9.5h1m1 0h5m2 0h1m1 0h1m1 0h3m1 0h1m2 0h1m1 0h3m1 0h5M2 10.5h3m3 0h3m2 0h1m3 0h1m1 0h3m2 0h1m2 0h2m1 0h2m1 0h1M2 11.5h1m4 0h1m1 0h1m3 0h1m2 0h1m2 0h1m3 0h1m1 0h1m1 0h1m1 0h1m1 0h2M2 12.5h3m1 0h1m2 0h2m1 0h1m2 0h1m1 0h1m2 0h3m3 0h1m2 0h4M1 13.5h3m1 0h1m1 0h1m2 0h1m2 0h1m5 0h2m2 0h1m5 0h2m1 0h2M4 14.5h1m3 0h2m1 0h2m2 0h3m3 0h2m1 0h1m2 0h1m2 0h1m1 0h2M4 15.5h5m3 0h3m5 0h1m1 0h1m3 0h3m1 0h1m1 0h1M1 16.5h2m1 0h3m1 0h2m1 0h1m2 0h2m1 0h1m2 0h4m1 0h3m1 0h3M2 17.5h2m1 0h1m1 0h2m4 0h2m3 0h1m1 0h1m2 0h1m1 0h2m1 0h2m3 0h1M2 18.5h3m1 0h1m3 0h6m2 0h4m1 0h2m2 0h2m1 0h2m1 0h1M1 19.5h4m1 0h2m1 0h8m1 0h1m2 0h2m2 0h5m1 0h2M1 20.5h1m1 0h4m1 0h1m1 0h2m1 0h1m3 0h6m1 0h1m1 0h1m1 0h6M3 21.5h1m2 0h2m1 0h2m5 0h2m2 0h1m2 0h4m1 0h3m1 0h2M1 22.5h2m5 0h1m1 0h3m1 0h3m2 0h1m2 0h3m1 0h2m2 0h1m2 0h1M1 23.5h1m1 0h2m2 0h2m2 0h1m2 0h1m1 0h2m5 0h1m1 0h1m2 0h1m3 0h1M1 24.5h1m2 0h3m3 0h2m1 0h4m4 0h3m3 0h5m1 0h1M1 25.5h1m2 0h1m2 0h2m1 0h1m1 0h1m1 0h5m1 0h1m2 0h1m1 0h6M9 26.5h1m4 0h2m1 0h1m1 0h4m2 0h1m3 0h1m1 0h1m1 0h1M1 27.5h7m2 0h3m3 0h1m2 0h1m1 0h5m1 0h1m1 0h1m1 0h1M1 28.5h1m5 0h1m1 0h2m2 0h3m4 0h3m1 0h2m3 0h4M1 29.5h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h2m2 0h1m3 0h1m1 0h6m1 0h2M1 30.5h1m1 0h3m1 0h1m1 0h2m3 0h1m1 0h3m1 0h3m1 0h3m2 0h5M1 31.5h1m1 0h3m1 0h1m1 0h2m1 0h1m2 0h1m5 0h2m2 0h1m1 0h2m2 0h1M1 32.5h1m5 0h1m4 0h2m3 0h1m1 0h1m1 0h4m4 0h3M1 33.5h7m1 0h3m2 0h2m1 0h2m1 0h1m2 0h6m3 0h1"/></svg>
+        <div class="qr-text">
+          <div class="l1">Scan to book</div>
+          <div class="l2">banderawagonwheelrv.com</div>
+        </div>
+      </div>
+      <div class="f-footer">Bandera Wagon Wheel RV Park<span class="phone">(830) 850-0805</span></div>
+      <div class="f-terms">New and returning customers only</div>
+    </div>
+  </div>
+
+  <div class="cut-line"></div>
+
+  <div class="flyer">
+    <div class="f-photo">
+      <img src="/photos/12/image?w=640" alt="">
+      <svg class="mark" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="5"/>
+        <circle cx="50" cy="50" r="10" fill="currentColor"/>
+        <g stroke="currentColor" stroke-width="5">
+          <line x1="50" y1="4" x2="50" y2="96"/><line x1="4" y1="50" x2="96" y2="50"/>
+          <line x1="16.6" y1="16.6" x2="83.4" y2="83.4"/><line x1="83.4" y1="16.6" x2="16.6" y2="83.4"/>
+        </g>
+      </svg>
+    </div>
+    <div class="f-body">
+      <div class="f-badge">End of Summer Special</div>
+      <div class="f-amount">$50</div>
+      <div class="f-off">OFF MONTHLY STAYS</div>
+      <div class="f-sub">1 month or more &middot; Bandera, TX</div>
+      <div class="f-cta">Just mention this flyer &amp; tell us where you found us!</div>
+      <div class="f-deadline">Offer runs through the end of October 2026</div>
+      <div class="f-qr-row">
+        <svg class="qr-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 35 35" shape-rendering="crispEdges"><path stroke="currentColor" d="M1 1.5h7m2 0h2m2 0h1m2 0h8m2 0h7M1 2.5h1m5 0h1m5 0h6m2 0h1m5 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m1 0h4m1 0h1m3 0h6m3 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m1 0h1m3 0h1m1 0h3m3 0h1m5 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m1 0h4m1 0h1m1 0h1m1 0h2m2 0h1m1 0h1m2 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m1 0h1m1 0h1m2 0h4m1 0h1m1 0h1m5 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M9 8.5h1m5 0h2m2 0h1m2 0h1m2 0h1M1 9.5h1m1 0h5m2 0h1m1 0h1m1 0h3m1 0h1m2 0h1m1 0h3m1 0h5M2 10.5h3m3 0h3m2 0h1m3 0h1m1 0h3m2 0h1m2 0h2m1 0h2m1 0h1M2 11.5h1m4 0h1m1 0h1m3 0h1m2 0h1m2 0h1m3 0h1m1 0h1m1 0h1m1 0h1m1 0h2M2 12.5h3m1 0h1m2 0h2m1 0h1m2 0h1m1 0h1m2 0h3m3 0h1m2 0h4M1 13.5h3m1 0h1m1 0h1m2 0h1m2 0h1m5 0h2m2 0h1m5 0h2m1 0h2M4 14.5h1m3 0h2m1 0h2m2 0h3m3 0h2m1 0h1m2 0h1m2 0h1m1 0h2M4 15.5h5m3 0h3m5 0h1m1 0h1m3 0h3m1 0h1m1 0h1M1 16.5h2m1 0h3m1 0h2m1 0h1m2 0h2m1 0h1m2 0h4m1 0h3m1 0h3M2 17.5h2m1 0h1m1 0h2m4 0h2m3 0h1m1 0h1m2 0h1m1 0h2m1 0h2m3 0h1M2 18.5h3m1 0h1m3 0h6m2 0h4m1 0h2m2 0h2m1 0h2m1 0h1M1 19.5h4m1 0h2m1 0h8m1 0h1m2 0h2m2 0h5m1 0h2M1 20.5h1m1 0h4m1 0h1m1 0h2m1 0h1m3 0h6m1 0h1m1 0h1m1 0h6M3 21.5h1m2 0h2m1 0h2m5 0h2m2 0h1m2 0h4m1 0h3m1 0h2M1 22.5h2m5 0h1m1 0h3m1 0h3m2 0h1m2 0h3m1 0h2m2 0h1m2 0h1M1 23.5h1m1 0h2m2 0h2m2 0h1m2 0h1m1 0h2m5 0h1m1 0h1m2 0h1m3 0h1M1 24.5h1m2 0h3m3 0h2m1 0h4m4 0h3m3 0h5m1 0h1M1 25.5h1m2 0h1m2 0h2m1 0h1m1 0h1m1 0h5m1 0h1m2 0h1m1 0h6M9 26.5h1m4 0h2m1 0h1m1 0h4m2 0h1m3 0h1m1 0h1m1 0h1M1 27.5h7m2 0h3m3 0h1m2 0h1m1 0h5m1 0h1m1 0h1m1 0h1M1 28.5h1m5 0h1m1 0h2m2 0h3m4 0h3m1 0h2m3 0h4M1 29.5h1m1 0h3m1 0h1m1 0h1m1 0h3m1 0h2m2 0h1m3 0h1m1 0h6m1 0h2M1 30.5h1m1 0h3m1 0h1m1 0h2m3 0h1m1 0h3m1 0h3m1 0h3m2 0h5M1 31.5h1m1 0h3m1 0h1m1 0h2m1 0h1m2 0h1m5 0h2m2 0h1m1 0h2m2 0h1M1 32.5h1m5 0h1m4 0h2m3 0h1m1 0h1m1 0h4m4 0h3M1 33.5h7m1 0h3m2 0h2m1 0h2m1 0h1m2 0h6m3 0h1"/></svg>
+        <div class="qr-text">
+          <div class="l1">Scan to book</div>
+          <div class="l2">banderawagonwheelrv.com</div>
+        </div>
+      </div>
+      <div class="f-footer">Bandera Wagon Wheel RV Park<span class="phone">(830) 850-0805</span></div>
+      <div class="f-terms">New and returning customers only</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  document.getElementById("print-btn").addEventListener("click", () => window.print());
+</script>
+</body>
+</html>

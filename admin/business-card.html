@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="printables-piece" content="business-card">
+<title>Business card — Bandera Wagon Wheel RV Park</title>
+<style>
+/* Self-hosted, copied from public/fonts (public/css/fonts.css); relative so the piece works from disk and at /admin/. */
+@font-face { font-family: "Rye"; font-weight: 400; font-style: normal; src: url("assets/fonts/rye-400.0de1abd1.woff2") format("woff2"); }
+@font-face { font-family: "Zilla Slab"; font-weight: 400; font-style: normal; src: url("assets/fonts/zilla-slab-400.b53659a5.woff2") format("woff2"); }
+@font-face { font-family: "Zilla Slab"; font-weight: 400; font-style: italic; src: url("assets/fonts/zilla-slab-400-italic.0deaa241.woff2") format("woff2"); }
+@font-face { font-family: "Zilla Slab"; font-weight: 600; font-style: normal; src: url("assets/fonts/zilla-slab-600.22b28054.woff2") format("woff2"); }
+@font-face { font-family: "JetBrains Mono"; font-weight: 600; font-style: normal; src: url("assets/fonts/jetbrains-mono-600.4f27206c.woff2") format("woff2"); }
+</style>
+<style>
+/* Printables template: business card (prefix bc-). 3.5 × 2 in, two pages, one face per
+   page, 0.2 in safe margin. Seed: sastx-site/admin/brand/business-card.html.
+Brand values are hardcoded below on purpose: a print artifact must never depend on
+   the target site's stylesheet (generic class names leaked wagonwheel's site styles
+   into its brochure). Every rule in this file uses the piece prefix; the pr- rules are
+   the shared screen chrome and print hygiene. Geometry (trim size, pages, safe margin,
+   hint wording) is references/geometry.md; the numbers here restate it, the reasoning
+   does not. Double-brace markers are filled from brand-facts.yaml. */
+@page { size: 3.5in 2in; margin: 0; }
+:root {
+  --brand-paper: #f6ecd8;
+  --brand-ink: #2b1d10;
+  --brand-accent: #8c3a2b;
+  --brand-accent-ink: #8c3a2b;
+  --brand-muted: #6b5844;
+  /* Reverse face. Defaults: paper = ink, ink = paper, accent stays, accent-ink = accent. When the accent
+     fails 3:1 on ink (a dark brand red, say), the facts file sets reverse-paper to the accent, reverse-ink
+     to white, reverse-accent to the secondary colour (graphics only) and reverse-accent-ink to white. */
+  --brand-reverse-paper: #8c3a2b;
+  --brand-reverse-ink: #f7ecd8;
+  --brand-reverse-accent: #f3d9a8;
+  --brand-reverse-accent-ink: #f3d9a8;
+  --font-display: "Rye", serif;
+  --font-body: "Zilla Slab", Georgia, serif;
+}
+/* A face carries the five roles; a reverse face swaps paper and ink and uses raw accent
+   for its small accent text. body.bw is the black-and-white switch: a mono role set,
+   never a grayscale filter, so small accent text keeps its contrast when photocopied. */
+.bc-face { --paper: var(--brand-paper); --ink: var(--brand-ink); --accent: var(--brand-accent);
+            --accent-ink: var(--brand-accent-ink); --muted: var(--brand-muted);
+            background: var(--paper); color: var(--ink); }
+.bc-face--reverse { --paper: var(--brand-reverse-paper); --ink: var(--brand-reverse-ink); --accent: var(--brand-reverse-accent);
+            --accent-ink: var(--brand-reverse-accent-ink);
+            --muted: color-mix(in srgb, var(--brand-reverse-ink) 65%, var(--brand-reverse-paper)); }
+body.bw .bc-face { --paper: #fff; --ink: #000; --accent: #000; --accent-ink: #000; --muted: #444; }
+body.bw .bc-face--reverse { --paper: #000; --ink: #fff; --accent: #fff; --accent-ink: #fff; --muted: #ccc; }
+body.bw .bc-photo img { filter: grayscale(1) contrast(1.08); }
+/* Logo: the site's caravan lockup (public/index.html:49-56, public/css/style.css:93-100) rebuilt inline from the
+   same symbol paths and font files, in currentColor so it follows the face and the black-and-white switch. */
+.bc-logo { display: inline-flex; flex-direction: column; align-items: flex-start; text-align: flex-start; color: var(--ink); line-height: 1; font-size: 11pt; }
+.bc-logo .bc-caravan { width: 3.4em; height: auto; display: block; margin-bottom: -0.04em; }
+.bc-logo .bc-rule { display: block; width: 100%; border-top: 0.09em solid currentColor; box-shadow: 0 0.17em 0 -0.09em var(--accent-ink); margin: 0 0 0.42em; }
+.bc-logo .bc-town { font: 600 0.5em/1 "JetBrains Mono", monospace; letter-spacing: 0.42em; text-indent: 0.42em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.22em; }
+.bc-logo .bc-ww { display: flex; align-items: center; gap: 0.32em; font: 400 1em/1.1 var(--font-display); white-space: nowrap; }
+.bc-logo .bc-ww svg { width: 0.82em; height: 0.82em; color: var(--accent-ink); }
+.bc-logo .bc-rv { font: 400 1em/1.1 var(--font-display); color: var(--accent-ink); letter-spacing: 0.06em; margin-top: 0.16em; }
+/* QR: the SVG from scripts/qr.mjs is inlined verbatim (black on white on disk, so
+   qr.mjs verify reads the shipped bytes); these rules recolor it to the face. */
+.bc-qr svg { display: block; width: 100%; height: 100%; }
+.bc-qr svg path[fill] { fill: var(--paper); }
+.bc-qr svg path[stroke] { stroke: var(--ink); }
+/* Shared screen chrome and print hygiene (pr- prefix). */
+*, *::before, *::after { box-sizing: border-box; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+body { margin: 0; background: #6E6E68; font-family: var(--font-body); }
+body.bw { background: #ddd; }
+.pr-wrap { padding: 24px; }
+.pr-chrome h1 { color: #fff; font: 700 14px system-ui, sans-serif; margin: 0 0 6px; }
+.pr-chrome .hint { color: #ddd; font: 12px/1.5 system-ui, sans-serif; margin: 0 0 4px; max-width: 72ch; }
+.pr-chrome .hint b { color: #fff; }
+.pr-buttons { margin: 10px 0 20px; display: flex; gap: 8px; }
+.pr-buttons button { font: 600 12px system-ui, sans-serif; padding: 6px 12px; border: 1px solid #fff;
+                     border-radius: 3px; background: #fff; color: #222; cursor: pointer; }
+.pr-buttons button[data-print="bw"] { background: transparent; color: #fff; }
+.pr-label { color: #ccc; font: 700 11px system-ui, sans-serif; text-transform: uppercase; letter-spacing: .08em; margin: 0 0 4px; }
+.ph { outline: 1.5px dashed var(--accent); outline-offset: 1px; color: var(--accent); padding: 0 .15em; font-style: italic; }
+[data-invented] { background: rgba(255, 230, 0, .35); outline: 1px dotted #b8860b; }
+@media print {
+  body { background: #fff; }
+  .no-print { display: none !important; }
+  .pr-wrap { padding: 0; }
+  [data-invented] { background: none; outline: none; }
+}
+
+.bc-sheet { width: 3.5in; height: 2in; padding: 0.2in 0.22in; position: relative; overflow: hidden;
+            display: flex; flex-direction: column; margin: 0 0 16px;
+            box-shadow: 0 2px 14px rgba(0,0,0,.4); break-inside: avoid; }
+.bc-sheet--front { break-after: page; }
+.bc-logo { margin-top: -0.02in; }
+.bc-name { margin: 0.08in 0 0; font: 600 7.5pt/1.25 var(--font-body); }
+.bc-area { margin: 3pt 0 0; font: 500 6.5pt/1.3 var(--font-body); color: var(--muted); }
+.bc-trust { margin: 0 0 0.04in; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 0 7pt; }
+.bc-trust li { font: 700 6.5pt/1.3 var(--font-body); letter-spacing: 0.04em; text-transform: uppercase; }
+.bc-trust li::before { content: "✓ "; color: var(--accent-ink); }
+.bc-tagline { margin: 2pt 0 0; font: 500 7.5pt/1.3 var(--font-body); color: var(--accent-ink); }
+.bc-contact { margin-top: auto; padding-top: 0.08in; border-top: 1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+              display: flex; justify-content: space-between; align-items: flex-end; font: 7pt/1.5 var(--font-body); }
+.bc-contact a { color: inherit; text-decoration: none; }
+.bc-site { color: var(--accent-ink); font-weight: 700; letter-spacing: 0.02em; }
+.bc-eyebrow { margin: 0; font: 700 6.5pt/1.2 var(--font-body); letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-ink); }
+.bc-list { list-style: none; margin: 0.05in 0 0; padding: 0; flex: 1; display: flex; flex-direction: column; gap: 0.015in; }
+.bc-list li { font: 400 7.5pt/1.2 var(--font-body); padding-left: 0.14in; position: relative; }
+.bc-list li.bc-rates { font-weight: 600; color: var(--accent-ink); }
+.bc-list li::before { content: ""; position: absolute; left: 0; top: 0.36em; width: 5pt; height: 5pt; background: var(--accent); }
+.bc-back-foot { display: flex; justify-content: space-between; align-items: flex-end; }
+.bc-qr { width: 0.44in; height: 0.44in; }
+.bc-back-site { margin: 0; font: 700 7pt/1.2 var(--font-body); color: var(--accent-ink); letter-spacing: 0.02em; }
+
+@media print { .bc-sheet { box-shadow: none; margin: 0; } }
+</style>
+</head>
+<body>
+<div class="pr-wrap">
+  <header class="no-print pr-chrome">
+    <h1>Business card — Bandera Wagon Wheel RV Park</h1>
+    <p class="hint">3.5 × 2 in, 2 pages, trim size, no bleed. Ctrl/Cmd+P, set <b>Destination</b> to Save as PDF and leave <b>Margins</b> at Default; Chrome then hides the Paper size picker and the PDF comes out 3.5 × 2 in. A visible Paper size reading Letter means the Destination is a printer or the size rule did not take. One face per page.</p>
+    <p class="hint">Safari ignores the page size: set Paper Size to 3.5 × 2 in by hand.</p>
+    <p class="pr-buttons"><button type="button" data-print>Save as PDF</button><button type="button" data-print="bw">Save as PDF (black &amp; white)</button></p>
+  </header>
+
+  <p class="no-print pr-label">Front</p>
+  <section class="bc-sheet bc-sheet--front bc-face bc-face--reverse" data-sheet>
+    <div class="bc-logo" role="img" aria-label="Bandera Wagon Wheel RV Park"><span class="bc-town">Bandera</span><span class="bc-ww">WAGON <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="50" cy="50" r="11" fill="currentColor"/><g stroke="currentColor" stroke-width="5"><line x1="50" y1="10" x2="50" y2="90"/><line x1="10" y1="50" x2="90" y2="50"/><line x1="18.7" y1="30" x2="81.3" y2="70"/><line x1="30" y1="18.7" x2="70" y2="81.3"/><line x1="70" y1="18.7" x2="30" y2="81.3"/><line x1="81.3" y1="30" x2="18.7" y2="70"/></g></svg> WHEEL</span><span class="bc-rv">RV PARK</span></div>
+    <p class="bc-name">Full-hookup RV sites in Bandera, Texas Hill Country</p>
+    <p class="bc-tagline">Hill Country, without the drive</p>
+    <p class="bc-area">325 Polly Peak Dr, Bandera, TX 78003</p>
+    <div class="bc-contact">
+      <div>
+        <div><a href="tel:+18308500805">(830) 850-0805</a></div>
+        <div><a href="mailto:banderawagonwheelrv@gmail.com">banderawagonwheelrv@gmail.com</a></div>
+      </div>
+      <div class="bc-site">banderawagonwheelrv.com</div>
+    </div>
+  </section>
+
+  <p class="no-print pr-label">Back</p>
+  <section class="bc-sheet bc-face" data-sheet>
+    <p class="bc-eyebrow">What every site includes</p>
+    <ul class="bc-list">
+      <li>Full hookups, 30/50 amp at every site</li>
+      <li>New high-speed WiFi, park-wide</li>
+      <li>Pets part of the family</li>
+      <li class="bc-rates">$45 per night · $210 per week · $300–$350 per month</li>
+    </ul>
+    <ul class="bc-trust">
+      <li>Outside the 100-year floodplain</li>
+      <li>Reservations open 24/7</li>
+      <li>10% military discount — active or retired</li>
+    </ul>
+    <div class="bc-back-foot">
+      <div class="bc-qr" data-qr="https://banderawagonwheelrv.com/"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h37v37H0z"/><path stroke="#000000" d="M4 4.5h7m3 0h1m2 0h3m2 0h3m1 0h7M4 5.5h1m5 0h1m2 0h1m3 0h4m5 0h1m5 0h1M4 6.5h1m1 0h3m1 0h1m1 0h1m3 0h2m1 0h1m6 0h1m1 0h3m1 0h1M4 7.5h1m1 0h3m1 0h1m1 0h2m2 0h1m1 0h2m1 0h1m1 0h1m2 0h1m1 0h3m1 0h1M4 8.5h1m1 0h3m1 0h1m1 0h1m2 0h2m2 0h2m1 0h3m1 0h1m1 0h3m1 0h1M4 9.5h1m5 0h1m1 0h1m2 0h2m7 0h1m1 0h1m5 0h1M4 10.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M12 11.5h1m2 0h2m1 0h1m1 0h1m2 0h2M4 12.5h1m1 0h5m2 0h2m1 0h1m3 0h2m2 0h1m1 0h5M4 13.5h2m3 0h1m1 0h1m2 0h1m2 0h3m1 0h8m3 0h1M4 14.5h1m1 0h6m5 0h4m7 0h1M4 15.5h2m1 0h2m3 0h1m1 0h2m1 0h1m1 0h1m2 0h3m2 0h3m1 0h1M4 16.5h2m1 0h2m1 0h1m1 0h1m3 0h1m1 0h2m1 0h1m1 0h1m5 0h2M5 17.5h4m3 0h2m2 0h1m2 0h2m2 0h2m1 0h3m3 0h1M8 18.5h5m1 0h3m4 0h2m1 0h2m3 0h2M4 19.5h2m5 0h1m2 0h1m1 0h1m1 0h1m1 0h1m1 0h6m3 0h1M6 20.5h1m3 0h1m3 0h1m6 0h1m1 0h1m5 0h2M4 21.5h1m1 0h3m3 0h1m3 0h4m3 0h6m1 0h1m1 0h1M4 22.5h1m1 0h1m2 0h13m2 0h2m1 0h2m1 0h1M4 23.5h1m1 0h4m1 0h3m1 0h1m1 0h1m2 0h1m1 0h3m3 0h1m2 0h1M4 24.5h1m2 0h4m1 0h1m2 0h1m2 0h1m2 0h2m1 0h5m1 0h3M12 25.5h5m4 0h2m1 0h1m3 0h5M4 26.5h7m5 0h1m2 0h3m1 0h2m1 0h1m1 0h3M4 27.5h1m5 0h1m1 0h1m5 0h3m1 0h3m3 0h1m2 0h1M4 28.5h1m1 0h3m1 0h1m1 0h1m1 0h3m4 0h1m2 0h5m1 0h2M4 29.5h1m1 0h3m1 0h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m5 0h4M4 30.5h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m1 0h4m3 0h6M4 31.5h1m5 0h1m5 0h3m1 0h1m3 0h1m4 0h1m1 0h1M4 32.5h7m1 0h2m3 0h1m3 0h1m1 0h1m2 0h1m1 0h1m1 0h1"/></svg></div>
+      <p class="bc-back-site">banderawagonwheelrv.com</p>
+    </div>
+  </section>
+</div>
+<script>
+(function () {
+  var hint = document.querySelector(".pr-chrome .hint");
+  function line(t) { var p = document.createElement("p"); p.className = "hint"; p.textContent = t; hint.parentNode.insertBefore(p, hint.nextSibling); }
+  document.querySelectorAll("[data-print]").forEach(function (b) {
+    b.addEventListener("click", function () { if (b.dataset.print === "bw") document.body.classList.add("bw"); window.print(); });
+  });
+  window.addEventListener("afterprint", function () { document.body.classList.remove("bw"); });
+  var inv = document.querySelectorAll("[data-invented]").length;
+  if (inv) line(inv + " invented line" + (inv > 1 ? "s" : "") + ", see README.md.");
+  var miss = document.querySelectorAll("[data-missing]").length;
+  if (miss) line(miss + " missing fact" + (miss > 1 ? "s" : "") + " printed as dashed placeholders.");
+  /* Web font families from brand-facts.yaml (google or self-hosted), e.g. "Rye", "Zilla Slab".
+     document.fonts.check is false only for a declared face that did not load. */
+  var fams = ["Rye", "Zilla Slab", "JetBrains Mono"];
+  if (document.fonts) document.fonts.ready.then(function () {
+    fams.forEach(function (f) { if (!document.fonts.check('12px "' + f + '"')) line('Font "' + f + '" did not load; its fallback stack is printing.'); });
+  });
+})();
+</script>
+</body>
+</html>
