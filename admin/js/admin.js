@@ -126,7 +126,23 @@ async function loadReservations() {
     return;
   }
 
-  const rows = reservations
+  /* The list route returns every pending/confirmed booking with no date filter, so without
+     this split a stay that ended in September sits at the top of the table for good -- the
+     list is sorted by check-in, and the oldest check-ins are the finished ones. There is no
+     "done" status and there should not be one: a stay is over when its check-out date passes,
+     which the calendar knows without anyone pressing a button, and the row has to survive
+     anyway (review-request email, refunds, printing the application). So finished stays go
+     under a collapsed Past stays group, newest first, with the same row actions. A guest is
+     "past" the day AFTER check-out, not on it: check-out is 1pm, and the morning of that day
+     the office still wants the row in the main table. Local date on purpose -- it is the
+     office's phone, in the park's time zone, that decides what "today" is. */
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const isPast = (r) => String(r.checkOut).slice(0, 10) < today;
+  const current = reservations.filter((r) => !isPast(r));
+  const past = reservations.filter(isPast).sort((a, b) => (a.checkOut < b.checkOut ? 1 : -1));
+
+  const renderRows = (list) => list
     .map(
       (r) => `
     <tr>
@@ -148,7 +164,7 @@ async function loadReservations() {
     )
     .join("");
 
-  content.innerHTML = `
+  const renderTable = (list) => `
     <div class="table-scroll">
       <table>
         <thead>
@@ -156,9 +172,18 @@ async function loadReservations() {
             <th>Code</th><th>Status</th><th>Site</th><th>Dates</th><th>Guest</th><th>Guests</th><th>Total</th><th>Notes</th><th></th>
           </tr>
         </thead>
-        <tbody>${rows}</tbody>
+        <tbody>${renderRows(list)}</tbody>
       </table>
     </div>
+  `;
+
+  content.innerHTML = `
+    ${current.length ? renderTable(current) : `<p class="empty-note">No current or upcoming stays.</p>`}
+    ${past.length ? `
+    <details class="past-stays">
+      <summary>Past stays <span class="count">${past.length}</span><span class="hint">checked out before today, newest first</span></summary>
+      ${renderTable(past)}
+    </details>` : ""}
   `;
 
   content.querySelectorAll("[data-application]").forEach((btn) => {

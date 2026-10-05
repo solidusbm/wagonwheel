@@ -115,6 +115,15 @@ and add a card. Thumbnails are not content-hashed (`assetVersion.js` only stamps
 re-rendered thumbnail can take up to four hours to show on a phone that has seen the old one.
 The End of Summer group carries its end date in the heading; pull that group when it lapses.
 
+**Finished stays drop into a collapsed "Past stays" drawer under the Reservations table
+(2026-10-05).** `GET /api/admin/reservations` still returns every pending/confirmed booking with
+no date filter; `loadReservations()` in `admin/js/admin.js` splits the list by check-out date on
+the phone's local calendar. A stay is past from the day *after* check-out (check-out is 1pm, and
+on the morning of that day the office still wants the row up top). **Don't add an archive
+button or a "done" status for this**: the calendar already knows when a stay is over, the only
+other status (`cancelled`) releases dates and drives refunds, and the rows must survive for the
+review-request job, refunds and the printable application. Past rows keep the same actions.
+
 The **site editor lives inside the Sites section**, above the table it edits. It used to sit at
 the bottom of the page, after Photos/Amenities/Content, so pressing Edit scrolled the user away
 from the sites list into what looked like an unrelated part of the admin. `openSiteForm()` also

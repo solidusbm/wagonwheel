@@ -51,6 +51,16 @@
   .status-pill.pending{background:rgba(135,89,15,0.18); color:var(--gold);}
   .status-pill.cancelled{background:rgba(140,58,43,0.18); color:var(--rust);}
   .empty-note, .error-msg{color:var(--parchment-dim); font-style:italic; padding:20px 0;}
+  /* Finished stays, collapsed under the main table. Same chevron treatment as the sections
+     below, deliberately smaller: it is a drawer inside Reservations, not a section of its own. */
+  .past-stays{margin-top:18px; border-top:1px solid rgba(60,42,26,0.11); padding-top:12px;}
+  .past-stays > summary{list-style:none; cursor:pointer; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; font-size:14px; font-weight:600; color:var(--parchment);}
+  .past-stays > summary::-webkit-details-marker{display:none;}
+  .past-stays > summary::before{content:"▸"; color:var(--gold); font-size:12px; transition:transform 0.15s;}
+  .past-stays[open] > summary::before{transform:rotate(90deg);}
+  .past-stays > summary .count{font-family:'JetBrains Mono',monospace; font-size:10.5px; padding:2px 8px; border-radius:999px; background:rgba(60,42,26,0.09); color:var(--parchment-dim);}
+  .past-stays > summary .hint{font-size:12.5px; font-weight:400; font-style:italic; color:var(--parchment-dim);}
+  .past-stays .table-scroll{margin-top:12px;}
   .sync-feeds{margin:32px 0; padding:20px 24px; background:var(--bg-panel); border:1px solid rgba(60,42,26,0.11); border-radius:var(--radius);}
   .sync-feeds summary{list-style:none; cursor:pointer; display:flex; align-items:center; gap:8px;}
   .sync-feeds summary::-webkit-details-marker{display:none;}
@@ -328,7 +338,7 @@
     </form>
   </div>
   <h1>Reservations</h1>
-  <p class="admin-sub">Upcoming and pending bookings, sorted by check-in date.</p>
+  <p class="admin-sub">Current and upcoming stays, sorted by check-in date. Stays that have checked out drop into <b>Past stays</b> under the table.</p>
 
   <div class="admin-toolbar">
     <button type="button" class="btn btn-primary" id="new-booking-btn">+ New booking</button>
