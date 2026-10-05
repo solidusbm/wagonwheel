@@ -4,7 +4,9 @@ Generated 2026-09-28 by the printables skill from `~/projects/wagonwheel` and ht
 Facts: `brand-facts.yaml` (reviewed 2026-09-25). Regenerate by asking for it; hand edits to a piece survive re-runs.
 
 Open any piece from disk (double-click) or at `/admin/<piece>.html` behind the admin login; fonts, photos and the QR
-are all under `assets/` and `qr/` next to the pieces, so nothing depends on the live stylesheet.
+are all under `assets/` and `qr/` next to the pieces, so nothing depends on the live stylesheet. Since 2026-10-05 every
+piece in this folder is linked from the **Materials** section of `/admin`, with a thumbnail from `thumbs/` and the PDF
+from `render/`; a regenerated or new piece needs its thumbnail re-rendered and its card updated there.
 
 ## Pieces
 

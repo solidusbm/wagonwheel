@@ -101,9 +101,19 @@ What replaced it, in `server/middleware/adminAuth.js`:
 attempts on `next=`, password rotation, and that an unconfigured server 503s rather than opening.
 It sets its own credentials, so it never touches the live ones. **Run it after touching that file.**
 
-Every section below Reservations (Sites, Photos, Amenities, Content, Push notifications,
+Every section below Reservations (Materials, Sites, Photos, Amenities, Content, Push notifications,
 RoverPass/Hipcamp sync) is a `<details class="sync-feeds">`, closed by default. Keep
 new admin sections consistent with that pattern rather than adding a plain always-open panel.
+
+**Materials (added 2026-10-05) is the one place the print and social pieces are linked from.**
+They used to be a row of seven unlabelled ghost buttons in the page header; the header now holds
+only the Admin guide, the work summary and Sign out. Each card in Materials points at the piece's
+HTML under `admin/`, its PDF under `admin/render/` where one exists, and a thumbnail under
+`admin/thumbs/` (small JPEGs rendered headless from the pieces themselves, about 40K each, so the
+panel stays light on the office phone). **A new piece needs all three**: add the HTML, render it,
+and add a card. Thumbnails are not content-hashed (`assetVersion.js` only stamps css/js), so a
+re-rendered thumbnail can take up to four hours to show on a phone that has seen the old one.
+The End of Summer group carries its end date in the heading; pull that group when it lapses.
 
 The **site editor lives inside the Sites section**, above the table it edits. It used to sit at
 the bottom of the page, after Photos/Amenities/Content, so pressing Edit scrolled the user away

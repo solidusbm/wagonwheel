@@ -23,7 +23,7 @@
   /* Printable reference docs -- above Reservations so office staff find them without hunting
      through the collapsible sections below. */
   .admin-docs-links{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
-  .admin-docs-links a{font-size:12px; padding:7px 12px;}
+  .admin-docs-links a, .admin-docs-links button{font-size:12px; padding:7px 12px;}
   .admin-sub{color:var(--parchment-dim); font-size:13px; margin:0 0 24px; font-style:italic;}
   .admin-toolbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;}
   /* Reservations/Sites tables have more columns than a phone/tablet is wide. Above 820px this is
@@ -72,6 +72,28 @@
   .push-status{font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--parchment-dim); margin-bottom:12px;}
   .push-status.on{color:var(--cedar-light);}
   .ios-hint{font-size:12px; color:var(--parchment-dim); margin-top:10px; padding:10px 12px; background:rgba(135,89,15,0.09); border:1px solid rgba(135,89,15,0.35); border-radius:var(--radius);}
+  /* Materials: one card per print or social piece. Thumbnails are small JPEGs under /admin/thumbs/
+     (about 40K each, rendered headless from the pieces themselves) so the panel stays light on the
+     office phone; the full-size renders and PDFs are under /admin/render/. Cards are a fixed
+     5:4 window cropped from the top, so a Letter sheet, a tri-fold and a square post line up in
+     one grid; the business card is the one piece small enough to show whole. */
+  .mat-group{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--gold); margin:22px 0 10px;}
+  .mat-group:first-of-type{margin-top:4px;}
+  .mat-group small{font-family:'Zilla Slab',serif; text-transform:none; letter-spacing:0; font-size:12.5px; font-style:italic; color:var(--parchment-dim); margin-left:8px;}
+  .mat-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px;}
+  .mat-card{background:var(--bg); border:1px solid rgba(60,42,26,0.14); border-radius:var(--radius); overflow:hidden; display:flex; flex-direction:column;}
+  .mat-thumb{display:block; aspect-ratio:5/4; background:#e7e2d6; overflow:hidden; border-bottom:1px solid rgba(60,42,26,0.14);}
+  .mat-thumb img{width:100%; height:100%; object-fit:cover; object-position:top; display:block;}
+  .mat-thumb--whole{padding:14px; box-sizing:border-box;}
+  .mat-thumb--whole img{object-fit:contain; object-position:center;}
+  .mat-body{padding:10px 12px 12px; display:flex; flex-direction:column; gap:5px; flex:1;}
+  .mat-name{font-size:14px; font-weight:600; color:var(--parchment); text-decoration:none;}
+  .mat-name:hover{color:var(--rust);}
+  .mat-meta{font-size:12px; line-height:1.45; color:var(--parchment-dim); margin:0;}
+  .mat-links{margin:auto 0 0; padding-top:4px; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.05em; text-transform:uppercase;}
+  .mat-links a{color:var(--gold); text-decoration:none; margin-right:12px;}
+  .mat-links a:hover{text-decoration:underline;}
+  .mat-note{font-size:12.5px; color:var(--parchment-dim); font-style:italic; margin:12px 0 0;}
   /* Deliberately the loudest thing in the panel -- it only ever appears when a booking is sitting
      unacknowledged, which is the one state this section exists to make impossible to walk past. */
   .push-alert{margin:0 0 12px; padding:12px 14px; border-radius:var(--radius); background:rgba(166,42,42,0.10); border:1px solid var(--rust-bright); border-left-width:4px;}
@@ -292,13 +314,12 @@
 <body>
 <div class="admin-wrap">
   <div class="admin-docs-links">
-    <a href="/admin/summary.html" class="btn btn-ghost">Client work-summary</a>
     <a href="/admin/guide.html" class="btn btn-ghost">Admin guide</a>
-    <a href="/admin/brochure.html" class="btn btn-ghost">Park brochure</a>
-    <a href="/admin/review-flyer.html" class="btn btn-ghost">Resident review flyer</a>
-    <a href="/admin/summer-special-post.html" class="btn btn-ghost">End of Summer post</a>
-    <a href="/admin/summer-special-flyer.html" class="btn btn-ghost">End of Summer flyer</a>
-    <a href="/admin/summer-special-ad.html" class="btn btn-ghost">End of Summer Facebook ad</a>
+    <a href="/admin/summary.html" class="btn btn-ghost">Client work-summary</a>
+    <!-- The print and social pieces used to sit here too, as a row of seven ghost buttons with
+         no hint of what each one was. They now live in the Materials section below, with a
+         thumbnail, the size, and the PDF where one exists. Keep this row to the two reference
+         documents and Sign out. -->
     <!-- A real form post, not a link: signing out changes state, and a GET that logs you out gets
          fired by anything that prefetches links. Sits with the other header buttons because the
          old Basic Auth had no sign-out at all -- closing the browser was the only way. -->
@@ -371,6 +392,110 @@
   </div>
 
   <div id="admin-content">Loading…</div>
+
+  <!-- Sits first in the page's own order. If the office has saved a section order, section-order.js
+       leaves a section it has never seen at the bottom instead; the arrows move it up. -->
+  <details class="sync-feeds" data-section="materials">
+    <summary><h2>Materials</h2></summary>
+    <div class="sub">Everything the park hands out or posts, in one place. Tap a piece to open it &mdash; each one carries its own print hint at the top &mdash; or take the PDF, which is already at trim size and goes straight to a print shop. Fonts, photos and the QR are built into every piece, so nothing changes when the site does.</div>
+
+    <h3 class="mat-group">Print</h3>
+    <div class="mat-grid">
+      <article class="mat-card">
+        <a class="mat-thumb" href="/admin/tri-fold.html"><img src="/admin/thumbs/tri-fold.jpg" alt="" loading="lazy"></a>
+        <div class="mat-body">
+          <a class="mat-name" href="/admin/tri-fold.html">Tri-fold brochure</a>
+          <p class="mat-meta">11 &times; 8.5 in, two sides. Print double-sided, flip on the short edge, fold the inner flap in first.</p>
+          <p class="mat-links"><a href="/admin/render/tri-fold.pdf">PDF</a><a href="/admin/tri-fold.html">Open</a></p>
+        </div>
+      </article>
+      <article class="mat-card">
+        <a class="mat-thumb" href="/admin/letter-flyer.html"><img src="/admin/thumbs/letter-flyer.jpg" alt="" loading="lazy"></a>
+        <div class="mat-body">
+          <a class="mat-name" href="/admin/letter-flyer.html">Letter flyer</a>
+          <p class="mat-meta">8.5 &times; 11 in, one side. Hookups, the park and the dog park, the rates box, office hours and the QR.</p>
+          <p class="mat-links"><a href="/admin/render/letter-flyer.pdf">PDF</a><a href="/admin/letter-flyer.html">Open</a></p>
+        </div>
+      </article>
+      <article class="mat-card">
+        <a class="mat-thumb" href="/admin/half-sheet-two-up.html"><img src="/admin/thumbs/half-sheet-two-up.jpg" alt="" loading="lazy"></a>
+        <div class="mat-body">
+          <a class="mat-name" href="/admin/half-sheet-two-up.html">Half-sheet flyer, two up</a>
+          <p class="mat-meta">8.5 &times; 11 in, cut along the dashed line for two 8.5 &times; 5.5 in flyers. Sunset photo, military-discount badge, rates and the QR.</p>
+          <p class="mat-links"><a href="/admin/render/half-sheet-two-up.pdf">PDF</a><a href="/admin/half-sheet-two-up.html">Open</a></p>
+        </div>
+      </article>
+      <article class="mat-card">
+        <a class="mat-thumb mat-thumb--whole" href="/admin/business-card.html"><img src="/admin/thumbs/business-card.jpg" alt="" loading="lazy"></a>
+        <div class="mat-body">
+          <a class="mat-name" href="/admin/business-card.html">Business card</a>
+          <p class="mat-meta">3.5 &times; 2 in, front and back. Front is the wordmark and contact; back is what every site includes, the rates line and the QR.</p>
+          <p class="mat-links"><a href="/admin/render/business-card.pdf">PDF</a><a href="/admin/business-card.html">Open</a></p>
+        </div>
+      </article>
+      <article class="mat-card">
+        <a class="mat-thumb" href="/admin/brochure.html"><img src="/admin/thumbs/brochure.jpg" alt="" loading="lazy"></a>
+        <div class="mat-body">
+          <a class="mat-name" href="/admin/brochure.html">Park brochure, original</a>
+          <p class="mat-meta">11 &times; 8.5 in tri-fold, the earlier hand-made brochure. Kept until the new tri-fold above is approved to replace it.</p>
+          <p class="mat-links"><a href="/admin/brochure.html">Open</a></p>
+        </div>
+      </article>
+    </div>
+
+    <h3 class="mat-group">Office</h3>
+    <div class="mat-grid">
+      <article class="mat-card">
+        <a class="mat-thumb" href="/admin/review-flyer.html"><img src="/admin/thumbs/review-flyer.jpg" alt="" loading="lazy"></a>
+        <div class="mat-body">
+          <a class="mat-name" href="/admin/review-flyer.html">Resident review flyer</a>
+          <p class="mat-meta">8.5 &times; 11 in, one side. Hand to a current resident or pin on the office board. The $10 credit is for a Facebook review only; Google forbids paid reviews, and that split is deliberate.</p>
+          <p class="mat-links"><a href="/admin/review-flyer.html">Open</a></p>
+        </div>
+      </article>
+    </div>
+    <p class="mat-note">The guest application sheet prints per booking, not from here: Reservations &rarr; Application on the booking &rarr; Print this application. A booking with no application still prints a full blank form.</p>
+
+    <h3 class="mat-group">Social</h3>
+    <div class="mat-grid">
+      <article class="mat-card">
+        <a class="mat-thumb" href="/admin/social-square.html"><img src="/admin/thumbs/social-square.jpg" alt="" loading="lazy"></a>
+        <div class="mat-body">
+          <a class="mat-name" href="/admin/social-square.html">Social square</a>
+          <p class="mat-meta">1080 &times; 1080, for Facebook or Instagram. Open it at 100% zoom and save it as an image. Three points, phone and site.</p>
+          <p class="mat-links"><a href="/admin/render/social-square.png">PNG</a><a href="/admin/social-square.html">Open</a></p>
+        </div>
+      </article>
+    </div>
+
+    <h3 class="mat-group">End of Summer special <small>offer runs through the end of October 2026</small></h3>
+    <div class="mat-grid">
+      <article class="mat-card">
+        <a class="mat-thumb" href="/admin/summer-special-flyer.html"><img src="/admin/thumbs/summer-special-flyer.jpg" alt="" loading="lazy"></a>
+        <div class="mat-body">
+          <a class="mat-name" href="/admin/summer-special-flyer.html">End of Summer flyer</a>
+          <p class="mat-meta">8.5 &times; 11 in, two per sheet, cut along the dashed line. $50 off a stay of a month or more.</p>
+          <p class="mat-links"><a href="/admin/summer-special-flyer.html">Open</a></p>
+        </div>
+      </article>
+      <article class="mat-card">
+        <a class="mat-thumb" href="/admin/summer-special-post.html"><img src="/admin/thumbs/summer-special-post.jpg" alt="" loading="lazy"></a>
+        <div class="mat-body">
+          <a class="mat-name" href="/admin/summer-special-post.html">End of Summer post</a>
+          <p class="mat-meta">Draft wording for Facebook and Google, with a plain-text box to copy from.</p>
+          <p class="mat-links"><a href="/admin/summer-special-post.html">Open</a></p>
+        </div>
+      </article>
+      <article class="mat-card">
+        <a class="mat-thumb" href="/admin/summer-special-ad.html"><img src="/admin/thumbs/summer-special-ad.jpg" alt="" loading="lazy"></a>
+        <div class="mat-body">
+          <a class="mat-name" href="/admin/summer-special-ad.html">End of Summer Facebook ad</a>
+          <p class="mat-meta">1080 &times; 1080 image for a boosted post or ad.</p>
+          <p class="mat-links"><a href="/admin/summer-special-ad.png">PNG</a><a href="/admin/summer-special-ad.html">Open</a></p>
+        </div>
+      </article>
+    </div>
+  </details>
 
   <details class="sync-feeds" data-section="sites">
     <summary><h2>Sites</h2></summary>
