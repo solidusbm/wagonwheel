@@ -151,7 +151,7 @@ export async function draftPosts() {
     const range =
       snap.monthLow === snap.monthHigh
         ? `${dollars(snap.monthLow)} a month`
-        : `${dollars(snap.monthLow)} to ${dollars(snap.monthHigh)} a month depending on the site`;
+        : `from ${dollars(snap.monthLow)} a month depending on the site`;
     drafts.push({
       id: "monthly",
       label: "Monthly stays",

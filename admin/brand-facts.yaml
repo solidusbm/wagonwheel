@@ -158,12 +158,12 @@ copy:                            # verbatim, each with source; repo wins on conf
     - {headline: "Per night", amount: "$45", detail: "Nightly and weekly rates include electric.", source: "live /hours.html Rates & cancellations", status: extracted}
     - {headline: "Per week", amount: "$210", detail: "Nightly and weekly rates include electric.", source: "live /hours.html", status: extracted}
     - headline: "Per month"
-      amount: "$300–$350"
+      amount: "From $325"
       detail: "Rates vary by site. Electric is not included in the monthly rate."
       source: "live /hours.html Rates & cancellations (from the sites table: Site 7 $300, Sites 4/5/10 $325, others $350)"
       status: conflict
       other: {value: "Rates From 325/mo. Nightly/Weekly Available", source: "live home JSON-LD amenityFeature (an amenity row entered in /admin, shown on the homepage grid)"}
-      decided: {value: "$300–$350", status: provided, why: "user chose the hours-page figure at review 2026-09-25; the amenity row is stale"}
+      decided: {value: "From $325", status: provided, why: "user, 2026-11-02: only Site 7 is $300 and it is occupied, so a $300 floor is near false advertising; the amenity row was right. Supersedes the 2026-09-25 choice of the hours-page range."}
       note: "Site 7 is bookable at $300/month, so the hours page is arithmetically right and the amenity row is stale. Site 2 ($650, per repo CLAUDE.md) is outside the range because it is not currently listed."
     - {headline: "Rates vary by site", amount: null, detail: "Pick your dates on the booking page to see what each available site costs for your stay.", source: "live /hours.html", status: extracted}
   about:       {value: "Hill Country, without the drive", source: "content_blocks about_heading", status: extracted}

@@ -162,7 +162,7 @@ function ratesHtml(snap) {
     .map(
       (t) => `
         <div class="stat">
-          <div class="n">${t.lo === t.hi ? money(t.lo) : `${money(t.lo)}–${money(t.hi)}`}</div>
+          <div class="n">${t.lo === t.hi ? money(t.lo) : `From ${money(t.lo)}`}</div>
           <div class="l">${t.label}</div>
         </div>`
     )
@@ -179,7 +179,7 @@ function ratesHtml(snap) {
  * /hours.html -- a page about monthly stays that quoted a nightly rate would just be noise. */
 function monthlyRatesHtml(snap) {
   if (!snap?.monthLow) return null;
-  const range = snap.monthLow === snap.monthHigh ? money(snap.monthLow) : `${money(snap.monthLow)}–${money(snap.monthHigh)}`;
+  const range = snap.monthLow === snap.monthHigh ? money(snap.monthLow) : `From ${money(snap.monthLow)}`;
   return `
       <div class="stat-list" style="grid-template-columns:1fr; margin-bottom:18px;">
         <div class="stat">
