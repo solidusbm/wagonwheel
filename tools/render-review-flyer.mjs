@@ -1,0 +1,13 @@
+import { chromium } from "playwright";
+const out = process.argv[2];
+const browser = await chromium.launch({ headless: true, args: ["--disable-dev-shm-usage"] });
+const page = await browser.newPage({ viewport: { width: 1100, height: 1400 } });
+const errors = [];
+page.on("pageerror", e => errors.push(String(e)));
+page.on("requestfailed", r => errors.push("FAILED " + r.url()));
+await page.goto("http://127.0.0.1:8765/admin/review-flyer.html", { waitUntil: "networkidle" });
+await page.evaluate(() => document.fonts.ready);
+await page.emulateMedia({ media: "print" });
+await page.pdf({ path: out, preferCSSPageSize: true, printBackground: true });
+console.log(JSON.stringify({ errors, fonts: await page.evaluate(() => [...document.fonts].filter(f => f.status === "loaded").map(f => f.family)) }));
+await browser.close();
