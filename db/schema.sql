@@ -303,3 +303,35 @@ UPDATE styles
 UPDATE amenities
    SET name = 'Rates from $300/mo. Nightly/Weekly Available'
  WHERE name = 'Rates From 325/mo. Nightly/Weekly Available';
+
+-- Facebook posting (server/lib/facebook.js, 2026-11-03). One row per connected channel; the token
+-- is a Page access token derived from a long-lived user token, which Meta does not expire. It is
+-- its own table rather than an app_settings key so the SEO panel's settings dump never carries it.
+CREATE TABLE IF NOT EXISTS social_accounts (
+  channel      TEXT PRIMARY KEY,
+  page_id      TEXT NOT NULL,
+  page_name    TEXT NOT NULL,
+  access_token TEXT NOT NULL,
+  connected_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  connected_by TEXT
+);
+
+-- Posts a person queued. draft_id with NULL text means "render that draft at post time" so the
+-- rates line is current; repeat_days re-queues the next turn after a successful post. status:
+-- queued -> posting -> posted | failed; cancelled is the office withdrawing a queued row.
+CREATE TABLE IF NOT EXISTS social_queue (
+  id          SERIAL PRIMARY KEY,
+  channel     TEXT NOT NULL,
+  draft_id    TEXT,
+  text        TEXT,
+  image       TEXT,
+  link        TEXT,
+  publish_at  TIMESTAMPTZ NOT NULL,
+  repeat_days INTEGER,
+  status      TEXT NOT NULL DEFAULT 'queued',
+  fb_post_id  TEXT,
+  error       TEXT,
+  posted_at   TIMESTAMPTZ,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS social_queue_due ON social_queue (channel, publish_at) WHERE status = 'queued';

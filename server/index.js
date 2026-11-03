@@ -13,6 +13,7 @@ import { applyHead, snapshot } from "./lib/seo.js";
 import { applyBody } from "./lib/ssr.js";
 import { startReviewRequestJob } from "./lib/reviewRequest.js";
 import { startBookingAlertJob } from "./lib/push.js";
+import { startSocialQueueJob } from "./lib/facebook.js";
 import {
   adminAuth,
   hasSession,
@@ -262,3 +263,7 @@ startReviewRequestJob();
    until it has something to do -- with no VAPID keys or no pending alert it is a query that
    returns nothing. */
 startBookingAlertJob();
+
+/* The Facebook queue. Inert without FB_APP_ID/FB_APP_SECRET and a connected Page; with them it
+   posts whatever the office queued, once a minute -- see lib/facebook.js. */
+startSocialQueueJob();

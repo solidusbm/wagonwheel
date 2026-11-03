@@ -2,22 +2,20 @@ import { pool } from "../db.js";
 import { snapshot, ORIGIN } from "./seo.js";
 
 /* Draft posts for Facebook and the Google Business Profile, written from live data and handed to
- * a person to publish.
+ * a person to publish -- and, since 2026-11-03, queued for the Facebook Page through
+ * lib/facebook.js once a person has put them there.
  *
- * WHY THIS IS NOT AN API INTEGRATION. Posting straight to both platforms was the original plan and
- * was deliberately dropped:
- *   - Google gates the Business Profile API behind an access request tied to a Cloud project. It
- *     is an application with a review, and a single-location park is exactly the case that gets
- *     declined. Not something to build a feature on top of.
- *   - Facebook page tokens expire, and a token derived slightly wrong stops working after about
- *     sixty days. The failure is silent: posts simply stop, and nobody notices for a month.
- *   - Automatic availability posts are worse than either. "Three sites open this weekend" can be
- *     false thirty seconds after it publishes, because someone booked one -- and with cancellations
- *     it would post several times a week to an audience of twenty-two, which reads as spam.
- *
- * So the office gets the numbers, already written up, and two clicks. The human in the loop is the
- * feature, not a limitation of it: every word is read by someone before it is public, and a draft
- * that has gone stale while the tab sat open is visibly stale to the person about to post it.
+ * The 2025 version of this note ruled out posting by API on two claims that turned out to be
+ * wrong against Meta's current docs (a Page token derived from a LONG-lived user token does not
+ * expire; posting to your own Page needs no App Review) -- the corrected facts are at the top of
+ * lib/facebook.js. Two things from it still stand:
+ *   - Google gates the Business Profile API behind a manual access review (profile verified 60+
+ *     days, a website on the listing, applied for by an owner). Until that is approved, Google
+ *     is copy, open, paste.
+ *   - Nothing posts from live availability. "Three sites open this weekend" can be false thirty
+ *     seconds after it publishes, and with cancellations it would post several times a week to
+ *     an audience of twenty-two. The weekend draft below exists to be read and posted by hand.
+ * The queue only ever holds posts a person chose, and every draft is read by someone first.
  */
 
 /* Where the office goes to publish. Held in app_settings rather than hardcoded because Meta and

@@ -207,6 +207,17 @@
   .social-draft h3{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); margin:0 0 4px; font-weight:400;}
   .social-note{font-size:12.5px; color:var(--parchment-dim); font-style:italic; margin:0 0 8px;}
   .social-draft textarea{width:100%; font-family:'Zilla Slab',serif; font-size:14px; line-height:1.6; padding:10px 12px; border:1px solid var(--line); border-radius:var(--radius); background:var(--bg); color:var(--parchment); resize:vertical;}
+  .social-fb{background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px; margin-bottom:16px;}
+  .social-fb h3{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--gold); margin:0 0 8px; font-weight:400;}
+  .social-fb p{margin:0 0 10px;}
+  .social-queue{width:100%; border-collapse:collapse; font-size:13px; margin-top:8px;}
+  .social-queue th{font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--parchment-dim); font-weight:400; text-align:left; padding:4px 8px 4px 0;}
+  .social-queue td{padding:6px 8px 6px 0; border-top:1px solid rgba(60,42,26,0.11); vertical-align:top;}
+  .social-queue tr.q-posted td, .social-queue tr.q-cancelled td{color:var(--parchment-dim);}
+  .social-fail{color:var(--rust);}
+  .social-queue-row{display:flex; flex-wrap:wrap; gap:10px 14px; align-items:center; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line); font-size:13px;}
+  .social-queue-row label{display:inline-flex; align-items:center; gap:6px;}
+  .social-queue-row input[type=datetime-local], .social-queue-row select{font-family:'JetBrains Mono',monospace; font-size:12px; padding:5px 7px; border:1px solid var(--line); border-radius:var(--radius); background:var(--bg-panel); color:var(--parchment);}
   .social-photo{margin-top:10px;}
   .social-photo select{width:100%; max-width:320px; font-family:'JetBrains Mono',monospace; font-size:12px; padding:6px 8px; border:1px solid var(--line); border-radius:var(--radius); background:var(--bg-panel); color:var(--parchment);}
   .social-photo-preview{display:flex; align-items:flex-end; gap:10px; margin-top:8px;}
@@ -659,7 +670,7 @@
 
   <details class="sync-feeds" data-section="social">
     <summary><h2>Social posts</h2></summary>
-    <div class="sub">Drafts written from the park's own data &mdash; this weekend's actual free sites, the real monthly rates, the current amenity list. Edit a draft, press Copy, then Open Facebook or Open Google and paste. <b>Nothing is posted for you.</b> That's on purpose: an automatic "three sites open this weekend" can be wrong a minute after it publishes, and a person reading the words first is the whole safeguard.</div>
+    <div class="sub">Drafts written from the park's own data &mdash; this weekend's actual free sites, the real monthly rates, the current amenity list. Facebook: queue a draft with a date (and a repeat, for the standing ad) and the server posts it to the Page. Google: edit, Copy, Open Google, paste, until its API access comes through.</div>
     <div id="social-panel"><p class="empty-note">Loading&hellip;</p></div>
   </details>
 

@@ -795,3 +795,32 @@ add `data-label="..."` to every `<td>` (skip it on action-button cells) and wrap
 `.table-scroll`** — both pieces are needed: the CSS media query keys off `[data-label]`, and
 `.table-scroll` stays as a fallback safety net above 820px in case a row ever doesn't fit even as a
 normal table.
+
+## Facebook posting (2026-11-03)
+
+`server/lib/facebook.js` posts to the park's Page from a queue the office fills in /admin → Social
+posts. It replaced the "never post by API" stance in `lib/socialPosts.js` after both of its
+reasons failed against Meta's current docs: a Page token derived from a **long-lived** user token
+does not expire (the 60-day life belongs to the user token), and posting to a Page you administer
+needs **no App Review** (Standard Access, for people with a role on the Meta app). What still
+holds: nothing posts from live availability, and Google is copy-and-paste until the park's
+Business Profile API access is approved (manual review; profile verified 60+ days, website on the
+listing, applied for by an owner; expect weeks).
+
+- Env: `FB_APP_ID`, `FB_APP_SECRET` from a Meta app the park owns, product Facebook Login, valid
+  OAuth redirect `https://banderawagonwheelrv.com/api/admin/social/facebook/callback`, and the
+  app switched to **Live** (needs the privacy-policy URL, `/privacy.html`) or image posts are
+  visible only to the person who connected.
+- Connect is `/api/admin/social/facebook/connect` (behind adminAuth, cookie is SameSite=Lax so
+  the callback carries it). The Page token lands in `social_accounts`, its own table so the SEO
+  panel's `app_settings` dump never includes it. Disconnect deletes the row.
+- The queue (`social_queue`) is ticked every minute; rows are claimed with `FOR UPDATE SKIP
+  LOCKED`, failures stay failed for a person (Retry in the panel). A row with a `draft_id` and
+  no text is re-rendered from `draftPosts()` at post time so the rates line is current; an edited
+  draft is posted as written. `repeat_days` re-queues the next turn after a successful post,
+  rotating `evergreen-1 → 2 → 3`, which is also what keeps Facebook's duplicate-post rejection
+  (error 506) away. Images: the ad renders in `admin/` are uploaded as files; a gallery photo
+  goes by its public `/photos/:id/image` URL.
+- Boosting is by hand in Ads Manager, once a month on the standing ad. The Marketing API's
+  default tier is for development and not worth wiring for one boost a month.
+

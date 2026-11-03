@@ -18,6 +18,7 @@ import { shrinkImage } from "../lib/imageResize.js";
 import { readLayout, writeLayout, FEATURE_KINDS } from "../lib/parkLayout.js";
 import { readSectionOrder, writeSectionOrder } from "../lib/sectionOrder.js";
 import { draftPosts, KEY_FB_COMPOSE, KEY_GBP_COMPOSE } from "../lib/socialPosts.js";
+import * as fb from "../lib/facebook.js";
 import {
   reviewSettings,
   blockedReason,
@@ -1546,10 +1547,11 @@ router.put("/section-order", async (req, res, next) => {
 });
 
 /* ---------- social posts ----------
-   Drafts written from live data for a person to publish. Deliberately not an API integration --
-   the reasoning is in lib/socialPosts.js and is worth reading before anyone "finishes" this by
-   wiring it to Meta and Google. The PUT only stores where the office goes to publish, because
-   both platforms move those pages and a broken link shouldn't need a deploy. */
+   Drafts written from live data for a person to publish, plus (since 2026-11-03) a Facebook queue
+   those drafts can be put on -- see lib/facebook.js for what posts and why that is now safe.
+   Google stays copy-and-paste until the park's Business Profile API access is approved. The PUT
+   only stores where the office goes to publish, because both platforms move those pages and a
+   broken link shouldn't need a deploy. */
 router.get("/social-posts", async (req, res, next) => {
   try {
     res.json(await draftPosts());
@@ -1587,6 +1589,101 @@ router.put("/social-posts/links", async (req, res, next) => {
       }
     }
     res.json(await draftPosts());
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* ---------- Facebook posting (lib/facebook.js) ---------- */
+router.get("/social/queue", async (req, res, next) => {
+  try {
+    res.json({
+      configured: fb.configured(),
+      redirectUri: fb.redirectUri(),
+      account: await fb.account(),
+      queue: await fb.listQueue(),
+      imageChoices: fb.IMAGE_CHOICES,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get("/social/facebook/connect", (req, res) => {
+  if (!fb.configured()) {
+    return res.status(503).send("Facebook posting is not set up: FB_APP_ID and FB_APP_SECRET are missing on the server.");
+  }
+  res.redirect(fb.loginUrl());
+});
+
+/* Facebook sends the person back here. One Page is connected outright; with several, the one
+   whose name mentions the park wins, else the first -- the panel shows which, and Disconnect is a
+   click, so a wrong pick costs nothing. */
+router.get("/social/facebook/callback", async (req, res) => {
+  const { code, state, error_description: denied } = req.query;
+  if (!fb.configured()) return res.redirect("/admin/?social=unconfigured");
+  if (denied || !code) return res.redirect("/admin/?social=denied");
+  if (!fb.checkState(state)) return res.redirect("/admin/?social=expired");
+  try {
+    const { user, pages } = await fb.pagesForCode(String(code));
+    if (!pages.length) return res.redirect("/admin/?social=nopages");
+    const page = pages.find((p) => /wagon\s*wheel/i.test(p.name)) ?? pages[0];
+    await fb.connectPage({ pageId: page.id, pageName: page.name, token: page.access_token, by: user?.name ?? null });
+    res.redirect("/admin/?social=connected");
+  } catch (err) {
+    console.error("[social] connect failed:", err.message);
+    res.redirect(`/admin/?social=failed&why=${encodeURIComponent(err.message.slice(0, 160))}`);
+  }
+});
+
+router.delete("/social/facebook", async (req, res, next) => {
+  try {
+    await fb.disconnect();
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/social/queue", async (req, res, next) => {
+  const { draftId, text, image, link, publishAt, repeatDays } = req.body ?? {};
+  const when = new Date(publishAt ?? "");
+  if (Number.isNaN(when.getTime())) return res.status(400).json({ error: "Pick a date and time." });
+  if (when.getTime() > Date.now() + 366 * 86400000) return res.status(400).json({ error: "That is more than a year out." });
+  const body = typeof text === "string" && text.trim() ? text.trim() : null;
+  const draft = typeof draftId === "string" && draftId ? draftId : null;
+  if (!body && !draft) return res.status(400).json({ error: "Nothing to post." });
+  if (body && body.length > 5000) return res.status(400).json({ error: "Facebook posts top out well under 5,000 characters." });
+  const img = image ? String(image) : null;
+  if (img && !fb.IMAGE_CHOICES.includes(img) && !/^photo:\d+$/.test(img)) return res.status(400).json({ error: "Unknown image." });
+  const rep = repeatDays == null || repeatDays === "" ? null : Number(repeatDays);
+  if (rep !== null && (!Number.isInteger(rep) || rep < 1 || rep > 90)) return res.status(400).json({ error: "Repeat must be 1 to 90 days." });
+  const href = typeof link === "string" && link.trim() ? link.trim() : null;
+  if (href && !/^https:\/\/[^\s]+$/.test(href)) return res.status(400).json({ error: "Links must start with https://" });
+  try {
+    const id = await fb.enqueue({ draftId: draft, text: body, image: img, link: href, publishAt: when, repeatDays: rep });
+    res.status(201).json({ id, queue: await fb.listQueue() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete("/social/queue/:id", async (req, res, next) => {
+  try {
+    const ok = await fb.cancel(Number(req.params.id));
+    if (!ok) return res.status(404).json({ error: "That post is not waiting to go out." });
+    res.json({ queue: await fb.listQueue() });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/* "Post now" and "Retry" are the same thing: due immediately, picked up by the next tick. */
+router.post("/social/queue/:id/now", async (req, res, next) => {
+  try {
+    const ok = await fb.requeue(Number(req.params.id));
+    if (!ok) return res.status(404).json({ error: "That post can't be re-queued." });
+    res.json({ queue: await fb.listQueue() });
   } catch (err) {
     next(err);
   }
