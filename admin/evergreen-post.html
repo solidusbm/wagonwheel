@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evergreen post — Wagon Wheel RV Park</title>
+<link rel="stylesheet" href="/css/fonts.css">
+<style>
+  /* The park's standing ad for Facebook and Google Business Profile: one post that runs on repeat
+     with a rotating first line. Same pattern as summer-special-post.html: copy the text, open the
+     composer, attach the image from evergreen-ad.html by hand. Nothing here posts anything; see the
+     note at the top of server/lib/socialPosts.js for why that is deliberate. */
+  body{background:#e7e2d6; padding:0; margin:0; color:#3c2a1a; font-family:'Zilla Slab',Georgia,serif;}
+  .toolbar{max-width:7.6in; margin:20px auto 0; padding:0 12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .toolbar .spacer{flex:1;}
+  .btn{font-family:'JetBrains Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer; text-decoration:none; padding:8px 12px; border-radius:3px; border:1px solid #87590f; color:#87590f; background:transparent;}
+  .btn-primary{background:#8c3a2b; border-color:#8c3a2b; color:#f7ecd8;}
+  .status{font-family:'JetBrains Mono',monospace; font-size:11px; color:#55643f; margin-left:4px;}
+  .sheet{max-width:7.6in; margin:24px auto 60px; background:#fff; padding:0.65in 0.7in; box-shadow:0 2px 18px rgba(0,0,0,0.18); border-radius:3px;}
+  .brand-row{display:flex; align-items:center; gap:11px; margin-bottom:22px;}
+  .brand-row svg{width:26px; height:26px; color:#3c2a1a;}
+  .brand-row span{font-family:'Rye',serif; font-size:15px; color:#6b5844;}
+  .eyebrow{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:#87590f;}
+  h1{font-family:'Rye',serif; font-weight:400; font-size:30px; line-height:1.15; margin:8px 0 10px; color:#2b1d10;}
+  h2{font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.1em; color:#6b5844; font-weight:400; margin:30px 0 8px; display:flex; align-items:center; gap:12px;}
+  h2 .btn{font-size:10.5px; padding:5px 9px;}
+  p{font-size:14.5px; line-height:1.6; margin:0 0 12px;}
+  .art{display:flex; gap:14px; margin:0 0 6px;}
+  .art a{display:block; flex:1;}
+  .art img{width:100%; height:auto; display:block; border:1px solid #d8c39d; border-radius:3px;}
+  .art small{display:block; font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:#6b5844; margin-top:6px;}
+  textarea{width:100%; font-family:'JetBrains Mono',monospace; font-size:12px; line-height:1.6; color:#3c2a1a; background:#f6ecd8; border:1px solid #d8c39d; border-radius:3px; padding:14px; resize:vertical; box-sizing:border-box;}
+  ol,ul{font-size:14px; line-height:1.6; padding-left:22px; margin:0 0 12px;}
+  li{margin-bottom:6px;}
+  .hooks li{font-family:'Zilla Slab',Georgia,serif; font-weight:600;}
+  .hooks li span{font-weight:400; color:#6b5844;}
+  .note{font-size:13px; color:#6b5844; border-left:3px solid #d8c39d; padding-left:12px;}
+  table{border-collapse:collapse; font-size:13.5px; margin:0 0 14px; width:100%;}
+  th,td{text-align:left; padding:6px 10px 6px 0; border-bottom:1px solid #efdfc0; vertical-align:top;}
+  th{font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:#87590f; font-weight:400;}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <a href="/admin" class="btn">&larr; Back to admin</a>
+  <span class="spacer"></span>
+  <button type="button" class="btn btn-primary" data-copy="fb-text">Copy Facebook text</button>
+  <button type="button" class="btn btn-primary" data-copy="gbp-text">Copy Google text</button>
+  <a href="https://business.facebook.com/latest/composer" target="_blank" rel="noopener" class="btn">Open Facebook</a>
+  <a href="https://business.google.com/posts" target="_blank" rel="noopener" class="btn">Open Google</a>
+  <span class="status" id="copy-status"></span>
+</div>
+
+<div class="sheet">
+  <div class="brand-row">
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="50" cy="50" r="11" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="5"><line x1="50" y1="10" x2="50" y2="90"/><line x1="10" y1="50" x2="90" y2="50"/><line x1="18.7" y1="30" x2="81.3" y2="70"/><line x1="30" y1="18.7" x2="70" y2="81.3"/><line x1="70" y1="18.7" x2="30" y2="81.3"/><line x1="81.3" y1="30" x2="18.7" y2="70"/></g>
+    </svg>
+    <span>Bandera Wagon Wheel RV Park</span>
+  </div>
+
+  <div class="eyebrow">Standing ad &middot; Facebook and Google</div>
+  <h1>Hill Country, without the drive.</h1>
+  <p>One ad that runs on repeat. The image is the site's own hero, the copy is the site's own claims, and the rates are the hours page's floors as of November 2026. Post it every two weeks, swap the first line each time (three below), and swap the photo every other run so the feed doesn't look like a loop.</p>
+
+  <h2>The image</h2>
+  <div class="art">
+    <a href="/admin/evergreen-ad-square.png" download><img src="/admin/evergreen-ad-square.png" alt="Square ad, 1080 by 1080"><small>Facebook &amp; Instagram &middot; 1080 &times; 1080</small></a>
+    <a href="/admin/evergreen-ad-4x3.png" download><img src="/admin/evergreen-ad-4x3.png" alt="4:3 ad, 1200 by 900"><small>Google Business Profile &middot; 1200 &times; 900</small></a>
+  </div>
+  <p class="note">Click either to save it, then attach it in the composer. The live page behind them is <a href="/admin/evergreen-ad.html">evergreen-ad.html</a>; if a rate changes, change it there and re-save the images. Every other run, attach a real photo instead: the sites and office, the sunset, or the dog park (Photos on the admin page), with the ad image second.</p>
+
+  <h2>First line &middot; rotate these</h2>
+  <ol class="hooks">
+    <li>Seven minutes from downtown Bandera. A world away from the traffic. <span>(default, in the text below)</span></li>
+    <li>Your rig, a full hookup, and the Hill Country out the window.</li>
+    <li>Bring the dog. Bring the big rig. We've got the pad.</li>
+  </ol>
+
+  <h2>Facebook <button type="button" class="btn" data-copy="fb-text">Copy</button></h2>
+  <textarea id="fb-text" rows="26" readonly>Seven minutes from downtown Bandera. A world away from the traffic.
+
+Bandera Wagon Wheel RV Park is a small, family-run park just outside the Cowboy Capital of the World. Close enough that downtown's shops, honky-tonks and the Medina River are a short drive away. Far enough that the evenings stay quiet.
+
+What every site includes:
+✔ Full hookups, 30/50 amp
+✔ New high-speed WiFi, park-wide
+✔ Laundry, showers and keyless entry
+✔ Dog park on the property, large and small
+✔ Managers on site, so there's almost always someone around
+
+Rates from $45 a night, $210 a week, and from $300 a month. 10% off for active or retired military.
+
+On higher ground, on purpose: the whole park sits outside the 100-year floodplain. A hard rain means a nice view of the Medina running high, not a 2am scramble to hitch up.
+
+Reservations open 24/7 at banderawagonwheelrv.com, or call (830) 850-0805.
+325 Polly Peak Dr, Bandera, TX 78003
+
+#BanderaTX #TexasHillCountry #RVPark #RVLife #FullHookups #CowboyCapital #MonthlyRVSites #HillCountryCamping</textarea>
+
+  <h2>Google Business Profile <button type="button" class="btn" data-copy="gbp-text">Copy</button></h2>
+  <p class="note">Post type <b>Update</b>. Button <b>Book</b>, link <b>https://banderawagonwheelrv.com/#booking</b>. No hashtags on Google; it reads them as plain text.</p>
+  <textarea id="gbp-text" rows="14" readonly>Hill Country, without the drive.
+
+Bandera Wagon Wheel RV Park is a small, family-run park seven minutes from downtown Bandera, the Cowboy Capital of the World. Twelve sites, full hookups with 30/50 amp at every one, new high-speed WiFi park-wide, laundry and showers on site, and a dog park (large and small) right on the property. The managers live here, so there's almost always someone around to help.
+
+Rates from $45 a night, $210 a week, and from $300 a month. 10% military discount, active or retired. The whole park sits outside the 100-year floodplain.
+
+Reservations open 24/7 at banderawagonwheelrv.com, or call (830) 850-0805.</textarea>
+
+  <h2>Running it on a schedule</h2>
+  <table>
+    <tr><th>Where</th><th>How often</th><th>When</th><th>How</th></tr>
+    <tr><td>Facebook</td><td>Every two weeks</td><td>Thursday, 6:30 pm</td><td>Meta Business Suite &rarr; Planner. It can't repeat a post by itself, so schedule the next six in one sitting (three months) and rotate the first line and the photo as you go.</td></tr>
+    <tr><td>Google</td><td>Every two weeks</td><td>Monday, 9:00 am</td><td>Google has no scheduler. Post it by hand from the Open Google button, or let a scheduler do both channels (below). Older updates sink out of the profile, so the repeat is what keeps it visible.</td></tr>
+    <tr><td>Boost</td><td>Once a month</td><td>The first Thursday's post</td><td>Boost that post for 7 days at about $5 a day. Goal: website visits. Audience: 25 miles around Bandera plus San Antonio, Kerrville and Austin, ages 35 and up, interests RVing and camping.</td></tr>
+  </table>
+  <p class="note">A free scheduler that connects both a Facebook Page and a Google Business Profile and can repeat a post on a schedule (Publer, Buffer or Metricool all do this; check the free plan's limits before signing up) turns this into a set-and-forget. Whatever runs it: re-read the rates line every quarter against banderawagonwheelrv.com/hours.html, because that line is the one thing here that drifts.</p>
+</div>
+
+<script>
+  const status = document.getElementById("copy-status");
+  document.querySelectorAll("[data-copy]").forEach((b) => b.addEventListener("click", async () => {
+    const ta = document.getElementById(b.dataset.copy);
+    try { await navigator.clipboard.writeText(ta.value); status.textContent = "Copied. Paste it into the post."; }
+    catch { ta.focus(); ta.select(); status.textContent = "Select-all and copy by hand."; }
+  }));
+</script>
+</body>
+</html>

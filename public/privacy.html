@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Privacy — Bandera Wagon Wheel RV Park</title>
+<!-- The description for this page now lives with every other page's, in PAGES in server/lib/seo.js,
+     and is injected server-side. Two copies would drift. -->
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#f6ecd8">
+<link rel="stylesheet" href="/css/fonts.css" />
+<link rel="stylesheet" href="/css/style.css" />
+<style>
+  /* Long-form reading, so the measure is tighter than the booking pages and the rhythm is looser. */
+  .policy{max-width:660px; margin:0 auto; padding:0 24px 90px;}
+  .policy .updated{font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--parchment-dim); margin:0 0 26px;}
+  .policy h2{font-size:23px; margin:40px 0 10px;}
+  .policy h3{font-family:'Zilla Slab',serif; font-size:16px; font-weight:600; margin:22px 0 6px;}
+  .policy p{line-height:1.72; margin:0 0 14px;}
+  .policy ul{line-height:1.72; padding-left:20px; margin:0 0 14px;}
+  .policy li{margin-bottom:7px;}
+  .policy .lead{font-size:17.5px; line-height:1.65; color:var(--parchment);}
+  .policy .callout{background:var(--bg-panel-2); border:1px solid var(--line);
+    border-radius:var(--radius); padding:16px 20px; margin:0 0 20px;}
+  .policy .callout p:last-child{margin:0;}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="wheel12" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="7"/>
+      <circle cx="50" cy="50" r="11" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="5">
+        <line x1="50" y1="10" x2="50" y2="90"/><line x1="10" y1="50" x2="90" y2="50"/>
+        <line x1="18.7" y1="30" x2="81.3" y2="70"/><line x1="30" y1="18.7" x2="70" y2="81.3"/>
+        <line x1="70" y1="18.7" x2="30" y2="81.3"/><line x1="81.3" y1="30" x2="18.7" y2="70"/>
+      </g>
+    </symbol>
+    <!-- The letterhead caravan, traced from the park's own scan: teardrop wagon, trotting horse,
+         spiky mane and tail. The hero draws its own animated copy; this one is for chrome. -->
+    <symbol id="caravan" viewBox="0 0 250 100">
+      <path d="M14,74 Q4,74 4,56 Q4,26 40,18 Q76,10 94,30 Q102,40 102,60 Q102,74 90,74 L70,74 A14,14 0 0 0 42,74 Z" fill="currentColor"/>
+      <circle cx="56" cy="74" r="11" fill="none" stroke="currentColor" stroke-width="3"/>
+      <circle cx="56" cy="74" r="3.5" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="1.5"><line x1="56" y1="66" x2="56" y2="82"/><line x1="48" y1="74" x2="64" y2="74"/><line x1="50.5" y1="68.5" x2="61.5" y2="79.5"/><line x1="61.5" y1="68.5" x2="50.5" y2="79.5"/></g>
+      <circle cx="72" cy="40" r="7" fill="var(--cutout, #f6ecd8)"/>
+      <rect x="34" y="34" width="18" height="12" rx="2" fill="var(--cutout, #f6ecd8)"/>
+      <path d="M102,58 L143,56" stroke="currentColor" stroke-width="3" fill="none"/>
+      <path d="M148,52 L144,62 L133,74 L128,86 L132,87 L139,75 L151,62 L154,54 Z" fill="currentColor"/>
+      <path d="M152,54 L151,72 L149,86 L154,86 L157,72 L159,55 Z" fill="currentColor"/>
+      <path d="M179,52 C180,62 179,67 174,72 L171,78 L175,80 L181,72 C186,66 187,58 187,52 Z" fill="currentColor"/>
+      <path d="M189,49 L201,67 L211,85 L215,84 L206,63 L196,47 Z" fill="currentColor"/>
+      <path d="M242,24 C236,17 231,12 226,8 L227,1 L222,7 L218,1 L216,8 C208,14 201,25 196,33 C188,36 180,37 172,36 C162,35 155,34 150,35 C146,36 144,39 144,43 L133,39 L139,46 L127,49 L136,53 L128,61 L137,57 C140,56 142,53 143,49 C146,53 147,58 150,60 C158,62 170,60 180,58 C186,57 190,55 195,51 C198,47 201,44 203,41 L218,27 C226,26 235,25 242,24 Z" fill="currentColor"/>
+      <path d="M213,9 L206,4 L206,11 L200,9 L201,16 L194,15 L196,22 L190,22 L193,31 C198,24 205,16 213,9 Z" fill="currentColor"/>
+    </symbol>
+  </defs>
+</svg>
+
+
+<nav class="nav">
+  <a class="brand" href="/">
+    <svg class="brand-caravan" viewBox="0 0 250 100" aria-hidden="true"><use href="#caravan"/></svg>
+    <span class="brand-rule"></span>
+    <span class="brand-lockup">
+      <span class="word">
+        <span class="town">Bandera</span>
+        <span class="wagonwheel">WAGON <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#wheel12"/></svg> WHEEL</span>
+      </span>
+      <span class="rv">RV PARK</span>
+    </span>
+  </a>
+  <div class="links">
+    <a href="/#about">About</a>
+    <a href="/#gallery">Gallery</a>
+    <a href="/hours.html">Hours</a>
+    <a href="/#contact">Contact</a>
+  </div>
+  <a href="/#booking" class="cta">Book now</a>
+</nav>
+
+<div class="wrap">
+  <section class="section-pad">
+    <div class="section-head">
+      <div class="eyebrow">Privacy</div>
+      <h1>What we collect, and what we do with it</h1>
+    </div>
+
+    <div class="policy">
+      <p class="updated">Last updated 16 August 2026</p>
+
+      <p class="lead">We're a twelve-site, family-run RV park. We ask for what we need to hold your
+      site and to run the park, and nothing else. We don't track you, we don't advertise to you, and
+      we don't sell anything about you to anyone.</p>
+
+      <h2>What we ask for</h2>
+
+      <h3>To hold your reservation</h3>
+      <p>Your name, email address, phone number, the number of people in your party, and your dates.
+      We need these to know who's arriving, when, and how to reach you if something changes.</p>
+
+      <h3>The park's guest application</h3>
+      <p>Below the basics, the booking form carries the park's own guest application &mdash; the same
+      questions we've always asked on paper at the office:</p>
+      <ul>
+        <li>Your date of birth, and your driver's licence number and issuing state</li>
+        <li>The same for a spouse or co-applicant, if you're travelling with one</li>
+        <li>Anyone else staying with you: name, age, and how they're related to you</li>
+        <li>Your vehicles and your RV &mdash; make, model, year, plate, size</li>
+        <li>Your pets &mdash; type and breed, name, size, and whether their rabies shot is current</li>
+      </ul>
+      <p>Filling this in online is <strong>pre-filling, not paperwork</strong>. Every one of these
+      questions is optional &mdash; you can leave them all blank, finish your booking, and complete
+      them with us at check-in exactly as you always would. Doing it in advance just means less time
+      at the office when you pull in. We ask for licence details
+      because we need to know who is staying on the property; we ask about pets because Texas
+      requires a current rabies vaccination and because we want to put you near the right dog park.</p>
+
+      <h3>Your card</h3>
+      <div class="callout">
+        <p><strong>We never see your card number.</strong> Payments run through Square. The card
+        fields on our booking page belong to Square, not to us &mdash; your card details go straight
+        to them and never reach our server or our database.</p>
+        <p>What we keep is the amount you paid and Square's reference number for the transaction, so
+        we can match a booking to a payment and issue a refund if you cancel.</p>
+      </div>
+
+      <h2>What we don't do</h2>
+      <ul>
+        <li><strong>No tracking that identifies you.</strong> This site sets no cookies of its own,
+          and carries no advertising or social media trackers. It does run one cookieless,
+          aggregate page-load measurement &mdash; Cloudflare Web Analytics, from the company that
+          secures this site's connection &mdash; which reports how fast pages load without a
+          cookie and without identifying individual visitors. We can't tell you apart from any
+          other visitor until you book.</li>
+        <li><strong>Almost nothing loads from anywhere else.</strong> The typefaces, the
+          photographs and this site's own code are all served from here &mdash; the typefaces used
+          to come from Google's servers and no longer do. Two exceptions: Square's payment
+          library, which loads from Square on the booking page so that your card details go
+          straight to them and never reach us; and the Cloudflare page-load measurement described
+          above. Nothing else on the site contacts another company.</li>
+        <li><strong>No selling or sharing.</strong> We don't sell, rent, or trade your details, and
+          we don't hand them to marketing companies.</li>
+        <li><strong>No marketing email</strong> unless you ask us for it. The emails we send are
+          about your own booking &mdash; your confirmation, and anything we need to tell you about
+          your stay.</li>
+      </ul>
+
+      <h2>The one email we send after your stay</h2>
+      <p>A day or two after you check out, we may send a single short email asking whether you'd
+      leave the park a review. It's the only thing we send that isn't about your own booking, so
+      it's worth being plain about how it works:</p>
+      <ul>
+        <li>It goes to <strong>everyone</strong> who completed a stay &mdash; not only to guests we
+          think enjoyed it. We don't screen for happy customers.</li>
+        <li>There's <strong>nothing offered in exchange</strong> for writing one. No discount, no
+          free night, no prize draw.</li>
+        <li>We ask <strong>once</strong> per stay, and never again about that stay.</li>
+        <li>It carries no tracking of any kind &mdash; we can't tell whether you opened it.</li>
+      </ul>
+      <p>If you'd rather not get it, tell us and we won't send it.</p>
+
+      <h2>Who else is involved</h2>
+      <p>Two companies see something in the course of running this site:</p>
+      <ul>
+        <li><strong>Square</strong> processes the payment and handles your card details directly.
+          Square's own privacy terms cover what they do with them. Their payment library loads on
+          the booking page, so Square's servers see your IP address when that page opens, whether or
+          not you go on to book.</li>
+        <li><strong>Our email provider</strong> carries your confirmation email, and the note asking
+          for a review, to you &mdash; and the booking alert to the office.</li>
+      </ul>
+      <p>The park also publishes a calendar feed for each site so listing sites like RoverPass don't
+      offer a site that's already booked. Those feeds contain <strong>dates only</strong> &mdash; no
+      names, no contact details, nothing about who is staying.</p>
+
+      <h2>Who can see your details</h2>
+      <p>The park's own staff, through a password-protected admin page. Nobody else has an account,
+      and there's nothing public that shows a guest's name, email, phone, or application details.</p>
+
+      <h2>How long we keep it</h2>
+      <p>We keep your booking and payment record for as long as we need it for the park's accounts
+      and tax records. We keep the application details for as long as you're a returning guest, so
+      you don't have to fill the same form in twice.</p>
+      <p>If you'd rather we didn't &mdash; ask, and we'll delete them. See below.</p>
+
+      <h2>Asking to see, correct, or delete your details</h2>
+      <p>Email <a href="mailto:banderawagonwheelrv@gmail.com">banderawagonwheelrv@gmail.com</a> or
+      call <a href="tel:+18308500805">(830) 850-0805</a> and tell us what you'd like. We'll send you
+      a copy of what we hold, fix anything that's wrong, or delete it.</p>
+      <p>We may need to keep a minimal payment record even after deleting the rest, because our
+      accounts have to balance. We'll tell you if that applies to you.</p>
+
+      <h2>Cancelling</h2>
+      <p>Your confirmation email carries a link that cancels your own booking. That link is what
+      proves it's you &mdash; your reservation code on its own isn't enough to cancel a booking or
+      move money, on purpose. Don't forward the link to anyone you don't want cancelling your stay.</p>
+
+      <h2>Keeping it safe</h2>
+      <p>The site runs over HTTPS, the admin is behind a password, and card numbers never touch our
+      systems at all. We're a small park, not a bank &mdash; but the most sensitive thing anyone
+      could take from us is the one thing we never hold.</p>
+
+      <h2>Changes</h2>
+      <p>If we change what we collect or what we do with it, we'll update this page and change the
+      date at the top.</p>
+
+      <h2>Questions</h2>
+      <p>Ask a person. <a href="mailto:banderawagonwheelrv@gmail.com">banderawagonwheelrv@gmail.com</a>
+      &middot; <a href="tel:+18308500805">(830) 850-0805</a> &middot; 325 Polly Peak Dr, Bandera, TX 78003.</p>
+    </div>
+  </section>
+</div>
+
+<footer id="contact">
+  <div class="footer-caravan-row"><svg viewBox="0 0 250 100" aria-hidden="true"><use href="#caravan"/></svg></div>
+  <div class="footer-lockup">
+    <span class="word">
+      <span class="town">Bandera</span>
+      <span class="wagonwheel">WAGON <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#wheel12"/></svg> WHEEL</span>
+    </span>
+    <span class="rv">RV PARK</span>
+  </div>
+  325 Polly Peak Dr, Bandera, TX 78003<br>
+  (830) 850-0805 &middot; banderawagonwheelrv@gmail.com<br>
+  <a href="/monthly-stays.html">Monthly stays</a> &middot; <a href="/hours.html">Office hours &amp; policies</a> &middot; <a href="/privacy.html">Privacy</a>
+</footer>
+
+<div class="page-grain" aria-hidden="true"></div>
+<script src="/js/content.js"></script>
+</body>
+</html>

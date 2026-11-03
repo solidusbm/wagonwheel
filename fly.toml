@@ -1,0 +1,23 @@
+app = "wagonwheel-rv-park"
+primary_region = "iad"
+
+[build]
+
+[env]
+  PORT = "3000"
+  BOOKING_FEE_CENTS = "500"
+  SQUARE_ENVIRONMENT = "sandbox"
+  SMTP_PORT = "587"
+  SMTP_FROM = "bookings@wagonwheelrv.example"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

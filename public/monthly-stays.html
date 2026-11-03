@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Monthly RV Sites in Bandera — Bandera Wagon Wheel RV Park</title>
+<!-- Description, canonical and og: tags are injected server-side from PAGES in
+     server/lib/seo.js, same as every other page. -->
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#f6ecd8">
+<link rel="stylesheet" href="/css/fonts.css" />
+<link rel="stylesheet" href="/css/style.css" />
+<style>
+  /* Long-form, same measure as the privacy page -- this is something a person reads end to end
+     before deciding to move their home onto a pad for a month. */
+  .longform{max-width:680px; margin:0 auto; padding:0 24px 90px;}
+  .longform h2{font-size:23px; margin:38px 0 10px;}
+  .longform p{line-height:1.72; margin:0 0 14px;}
+  .longform ul{line-height:1.72; padding-left:20px; margin:0 0 14px;}
+  .longform li{margin-bottom:7px;}
+  .longform .lead{font-size:17.5px; line-height:1.65; color:var(--parchment);}
+  .longform .callout{background:var(--bg-panel-2); border:1px solid var(--line);
+    border-radius:var(--radius); padding:16px 20px; margin:0 0 20px;}
+  .longform .callout p:last-child{margin:0;}
+  .longform .btn-row{margin-top:26px;}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="wheel12" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="7"/>
+      <circle cx="50" cy="50" r="11" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="5">
+        <line x1="50" y1="10" x2="50" y2="90"/><line x1="10" y1="50" x2="90" y2="50"/>
+        <line x1="18.7" y1="30" x2="81.3" y2="70"/><line x1="30" y1="18.7" x2="70" y2="81.3"/>
+        <line x1="70" y1="18.7" x2="30" y2="81.3"/><line x1="81.3" y1="30" x2="18.7" y2="70"/>
+      </g>
+    </symbol>
+    <!-- The letterhead caravan, traced from the park's own scan: teardrop wagon, trotting horse,
+         spiky mane and tail. The hero draws its own animated copy; this one is for chrome. -->
+    <symbol id="caravan" viewBox="0 0 250 100">
+      <path d="M14,74 Q4,74 4,56 Q4,26 40,18 Q76,10 94,30 Q102,40 102,60 Q102,74 90,74 L70,74 A14,14 0 0 0 42,74 Z" fill="currentColor"/>
+      <circle cx="56" cy="74" r="11" fill="none" stroke="currentColor" stroke-width="3"/>
+      <circle cx="56" cy="74" r="3.5" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="1.5"><line x1="56" y1="66" x2="56" y2="82"/><line x1="48" y1="74" x2="64" y2="74"/><line x1="50.5" y1="68.5" x2="61.5" y2="79.5"/><line x1="61.5" y1="68.5" x2="50.5" y2="79.5"/></g>
+      <circle cx="72" cy="40" r="7" fill="var(--cutout, #f6ecd8)"/>
+      <rect x="34" y="34" width="18" height="12" rx="2" fill="var(--cutout, #f6ecd8)"/>
+      <path d="M102,58 L143,56" stroke="currentColor" stroke-width="3" fill="none"/>
+      <path d="M148,52 L144,62 L133,74 L128,86 L132,87 L139,75 L151,62 L154,54 Z" fill="currentColor"/>
+      <path d="M152,54 L151,72 L149,86 L154,86 L157,72 L159,55 Z" fill="currentColor"/>
+      <path d="M179,52 C180,62 179,67 174,72 L171,78 L175,80 L181,72 C186,66 187,58 187,52 Z" fill="currentColor"/>
+      <path d="M189,49 L201,67 L211,85 L215,84 L206,63 L196,47 Z" fill="currentColor"/>
+      <path d="M242,24 C236,17 231,12 226,8 L227,1 L222,7 L218,1 L216,8 C208,14 201,25 196,33 C188,36 180,37 172,36 C162,35 155,34 150,35 C146,36 144,39 144,43 L133,39 L139,46 L127,49 L136,53 L128,61 L137,57 C140,56 142,53 143,49 C146,53 147,58 150,60 C158,62 170,60 180,58 C186,57 190,55 195,51 C198,47 201,44 203,41 L218,27 C226,26 235,25 242,24 Z" fill="currentColor"/>
+      <path d="M213,9 L206,4 L206,11 L200,9 L201,16 L194,15 L196,22 L190,22 L193,31 C198,24 205,16 213,9 Z" fill="currentColor"/>
+    </symbol>
+  </defs>
+</svg>
+
+
+<nav class="nav">
+  <a class="brand" href="/">
+    <svg class="brand-caravan" viewBox="0 0 250 100" aria-hidden="true"><use href="#caravan"/></svg>
+    <span class="brand-rule"></span>
+    <span class="brand-lockup">
+      <span class="word">
+        <span class="town">Bandera</span>
+        <span class="wagonwheel">WAGON <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#wheel12"/></svg> WHEEL</span>
+      </span>
+      <span class="rv">RV PARK</span>
+    </span>
+  </a>
+  <div class="links">
+    <a href="/#about">About</a>
+    <a href="/#gallery">Gallery</a>
+    <a href="/hours.html">Hours</a>
+    <a href="/#contact">Contact</a>
+  </div>
+  <a href="/#booking" class="cta">Book now</a>
+</nav>
+
+<div class="wrap">
+  <section class="section-pad">
+    <div class="section-head">
+      <div class="eyebrow">Monthly stays</div>
+      <h1>Monthly RV sites in Bandera, Texas</h1>
+    </div>
+
+    <div class="longform">
+      <p class="lead">Most of the Wagon Wheel is people staying a while. Seven of the twelve pads
+      are taken by long-term residents, so if you're looking for somewhere to park a rig for a month
+      or several, you'd be joining a small, settled park rather than a holiday campground that
+      empties out on Sunday night.</p>
+
+      <h2>What a month costs</h2>
+      <!-- Rendered from the sites table -- see server/lib/ssr.js. The office edits rates in /admin
+           and this follows; a figure typed in here would be wrong within a season. -->
+      <div data-ssr="monthly-rates"></div>
+      <p>Rates vary by site because the sites do. The higher end is Site 2, which comes with a
+      cover, a carport, a concrete slab and private storage. Some sites are let by the month only.
+      Pick your dates on the <a href="/#booking">booking page</a> and you'll see exactly what each
+      available site costs for your stay, with no estimate and no fee added at the end.</p>
+
+      <div class="callout">
+        <!-- Rendered from the same constants the guest confirmation email uses, so the two can
+             never drift apart. -->
+        <div data-ssr="electric-terms"></div>
+      </div>
+
+      <h2>How the monthly rate actually works</h2>
+      <p>No stay costs more than the site's monthly rate, per month. If you book a stretch that
+      would otherwise add up to more than a month's rent, you're charged the month instead &mdash;
+      so a long fortnight and a full month can cost the same thing. Stays longer than a month are
+      billed by the month, with the remainder charged the normal way.</p>
+      <p>One consequence worth knowing before you book: because the cap can be reached by a shorter
+      stay, a booking that hits it is on monthly terms for everything else too, including how
+      electric is settled and what cancelling costs. The full terms are on the
+      <a href="/hours.html">office hours and policies page</a>.</p>
+
+      <h2>What's on the site</h2>
+      <!-- Counted from the sites table -- see server/lib/ssr.js. This sentence was hand-written
+           and was wrong on the day it shipped: it claimed there were no pull-throughs while two
+           bookable sites were set to pull-through in /admin. -->
+      <div data-ssr="site-shape"></div>
+      <!-- The amenity list, from the same rows the homepage grid is built from. -->
+      <div class="amenities-grid" data-ssr="amenities"></div>
+
+      <h2>On higher ground</h2>
+      <p>The whole property sits outside the FEMA 100-year floodplain. In the Hill Country that is
+      not a small thing, and it matters more the longer you stay: a hard rain means a view of the
+      Medina River running high rather than a 2am scramble to hitch up and move your rig.</p>
+
+      <h2>The paperwork</h2>
+      <p>The booking form doubles as the park's own guest application &mdash; the same questions the
+      office has always asked on paper. Filling it in online is pre-filling, not paperwork: every
+      question below your contact details is optional, and you can finish it with us at check-in
+      exactly as you always would. Doing it in advance just means less time at the desk when you
+      arrive. What we do with any of it is set out on the <a href="/privacy.html">privacy page</a>.</p>
+
+      <h2>Where you'd be</h2>
+      <p>325 Polly Peak Dr, seven minutes from downtown Bandera &mdash; close enough that the shops,
+      the honky-tonks and the Frontier Times Museum are a short drive, far enough out that the
+      evenings stay quiet. The managers live on site, so there's almost always someone about.</p>
+
+      <h2>Availability</h2>
+      <p>With most pads on long-term residents, there are usually only a handful of sites open at
+      any one time, and monthly availability moves slowly. The booking page shows exactly what's
+      free for your dates &mdash; if nothing is, it's worth a phone call to
+      <a href="tel:+18308500805">(830) 850-0805</a>, because the office knows what's coming up
+      before the calendar does.</p>
+
+      <div class="btn-row">
+        <a href="/#booking" class="btn btn-primary">Check availability</a>
+        <a href="/hours.html" class="btn btn-ghost">Rates &amp; policies</a>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer id="contact">
+  <div class="footer-caravan-row"><svg viewBox="0 0 250 100" aria-hidden="true"><use href="#caravan"/></svg></div>
+  <div class="footer-lockup">
+    <span class="word">
+      <span class="town">Bandera</span>
+      <span class="wagonwheel">WAGON <svg viewBox="0 0 100 100" aria-hidden="true"><use href="#wheel12"/></svg> WHEEL</span>
+    </span>
+    <span class="rv">RV PARK</span>
+  </div>
+  325 Polly Peak Dr, Bandera, TX 78003<br>
+  (830) 850-0805 &middot; banderawagonwheelrv@gmail.com<br>
+  <a href="/monthly-stays.html">Monthly stays</a> &middot; <a href="/hours.html">Office hours &amp; policies</a> &middot; <a href="/privacy.html">Privacy</a>
+</footer>
+
+<div class="page-grain" aria-hidden="true"></div>
+
+<script src="/js/content.js"></script>
+</body>
+</html>
