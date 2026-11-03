@@ -292,3 +292,14 @@ UPDATE styles
    SET css_vars = css_vars || '{"gold":"#87590f","gold-bright":"#a9721f"}'::jsonb
  WHERE css_vars->>'gold' = '#a9721f'
    AND css_vars->>'gold-bright' = '#c98a2b';
+
+-- The homepage "every site includes" grid and the JSON-LD amenityFeature list both carry an
+-- amenity row the office keyed in by hand, "Rates From 325/mo. Nightly/Weekly Available". It went
+-- stale on 2026-11-02 when the monthly floor was confirmed as $300 (Site 7 is bookable at $300; an
+-- earlier belief that it was occupied was withdrawn the same day) and every print piece and the
+-- rates pages moved to "From $300". The row is the one place still saying 325. Same shape as the
+-- styles correction above: matches only the stale text, no-op once it is gone, never touches a
+-- row the office has since edited in /admin -> Amenities.
+UPDATE amenities
+   SET name = 'Rates from $300/mo. Nightly/Weekly Available'
+ WHERE name = 'Rates From 325/mo. Nightly/Weekly Available';

@@ -162,7 +162,7 @@ copy:                            # verbatim, each with source; repo wins on conf
       detail: "Rates vary by site. Electric is not included in the monthly rate."
       source: "live /hours.html Rates & cancellations (from the sites table: Site 7 $300, Sites 4/5/10 $325, others $350)"
       status: conflict
-      other: {value: "Rates From 325/mo. Nightly/Weekly Available", source: "live home JSON-LD amenityFeature (an amenity row entered in /admin, shown on the homepage grid)"}
+      other: {value: "Rates from $300/mo. Nightly/Weekly Available", source: "amenity row entered in /admin, shown on the homepage grid and JSON-LD amenityFeature; corrected from 325 by a guarded one-shot UPDATE at the end of db/schema.sql, 2026-11-03"}
       decided: {value: "From $300", status: provided, why: "user, 2026-11-02: a floor rather than a range; Site 7 is bookable at $300 (an earlier belief that it was occupied was withdrawn the same day), so the floor is $300 and the amenity row's From 325 is stale again."}
       note: "Site 7 is bookable at $300/month, so the hours page is arithmetically right and the amenity row is stale. Site 2 ($650, per repo CLAUDE.md) is outside the range because it is not currently listed."
     - {headline: "Rates vary by site", amount: null, detail: "Pick your dates on the booking page to see what each available site costs for your stay.", source: "live /hours.html", status: extracted}
