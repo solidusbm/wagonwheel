@@ -178,6 +178,48 @@ export async function draftPosts() {
     });
   }
 
+  /* The standing ad (admin/evergreen-post.html): one post that runs every two weeks with a
+     different first line each time. Three drafts, one per first line, so the office can take the
+     next one in turn. Rates come from the snapshot, like the monthly draft, so they can't drift
+     from the booking page; the ad image itself (admin/evergreen-ad-*.png) is a saved render and is
+     the one place a rate is typed. */
+  if (snap?.nightLow && snap?.weekLow && snap?.monthLow) {
+    const rates =
+      `Rates from ${dollars(snap.nightLow)} a night, ${dollars(snap.weekLow)} a week, and ` +
+      `from ${dollars(snap.monthLow)} a month. 10% off for active or retired military.`;
+    const body =
+      `Bandera Wagon Wheel RV Park is a small, family-run park just outside the Cowboy Capital of ` +
+      `the World. Close enough that downtown's shops, honky-tonks and the Medina River are a short ` +
+      `drive away. Far enough that the evenings stay quiet.\n\n` +
+      `What every site includes:\n` +
+      `\u2714 Full hookups, 30/50 amp\n` +
+      `\u2714 New high-speed WiFi, park-wide\n` +
+      `\u2714 Laundry, showers and keyless entry\n` +
+      `\u2714 Dog park on the property, large and small\n` +
+      `\u2714 Managers on site, so there's almost always someone around\n\n` +
+      `${rates}\n\n` +
+      `On higher ground, on purpose: the whole park sits outside the 100-year floodplain.\n\n` +
+      `Reservations open 24/7 at ${site}, or call (830) 850-0805.\n` +
+      `325 Polly Peak Dr, Bandera, TX 78003\n\n` +
+      `#BanderaTX #TexasHillCountry #RVPark #RVLife #FullHookups #CowboyCapital #MonthlyRVSites`;
+    const hooks = [
+      ["Seven minutes from downtown Bandera. A world away from the traffic.", ["site", "office"]],
+      ["Your rig, a full hookup, and the Hill Country out the window.", ["sunset", "site"]],
+      ["Bring the dog. Bring the big rig. We've got the pad.", ["dog park", "site"]],
+    ];
+    hooks.forEach(([hook, photoWords], i) => {
+      drafts.push({
+        id: `evergreen-${i + 1}`,
+        label: `Standing ad ${i + 1} of 3`,
+        note:
+          "The every-two-weeks post. Take these in turn so the first line changes each time; the " +
+          "ad image and the Google version are at Materials \u2192 Evergreen post.",
+        text: `${hook}\n\n${body}`,
+        photoId: pickPhoto(snap, photoWords),
+      });
+    });
+  }
+
   drafts.push({
     id: "blank",
     label: "Something else",
