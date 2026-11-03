@@ -25,12 +25,13 @@ container `cloudflared-bwrv`. `www` 301s to the apex, and `http://` 301s to `htt
 
 ## Before you push
 
-**Don't push to `origin/claude/rv-booking-project-6pigax` until the user explicitly asks.** Coolify
-auto-deploys on every push to this branch (GitHub webhook, wired 2026-08-11 — builds land in about
-40 seconds), so a push goes live immediately. Batch changes locally
-(commit freely — commits are cheap and don't deploy anything), and push only when told to. If the
-user's message *is* the go-ahead ("push it", "deploy this", "yes" in response to "should I push?"),
-that counts — you don't need to ask a second time in the same turn.
+Coolify auto-deploys every push to `claude/rv-booking-project-6pigax` (GitHub webhook, wired
+2026-08-11; builds land in about 40 seconds), so a push goes live immediately. **Since 2026-11-03
+the user's standing rule is: commit and push on your own judgment, don't ask each time** (the
+global `~/.claude/CLAUDE.md` carries it). What that means here: push finished, verified work, so
+live never drifts from git; batch half-done changes as local commits until they are whole; and a
+change that touches schema or payments still gets a note in the reply saying it is now live. The
+older rule, "never push this branch until asked", is withdrawn.
 
 ## Database bootstrapping — read this before touching `db/schema.sql` or `db/seed.sql`
 
