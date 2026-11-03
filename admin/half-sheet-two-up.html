@@ -6,12 +6,11 @@
 <meta name="printables-piece" content="half-sheet-two-up">
 <title>Half-sheet flyer, two up — Bandera Wagon Wheel RV Park</title>
 <style>
-/* Self-hosted, copied from public/fonts (public/css/fonts.css); relative so the piece works from disk and at /admin/. */
-@font-face { font-family: "Rye"; font-weight: 400; font-style: normal; src: url("assets/fonts/rye-400.0de1abd1.woff2") format("woff2"); }
-@font-face { font-family: "Zilla Slab"; font-weight: 400; font-style: normal; src: url("assets/fonts/zilla-slab-400.b53659a5.woff2") format("woff2"); }
-@font-face { font-family: "Zilla Slab"; font-weight: 400; font-style: italic; src: url("assets/fonts/zilla-slab-400-italic.0deaa241.woff2") format("woff2"); }
-@font-face { font-family: "Zilla Slab"; font-weight: 600; font-style: normal; src: url("assets/fonts/zilla-slab-600.22b28054.woff2") format("woff2"); }
-@font-face { font-family: "JetBrains Mono"; font-weight: 600; font-style: normal; src: url("assets/fonts/jetbrains-mono-600.4f27206c.woff2") format("woff2"); }
+@font-face { font-family: "Rye"; src: url("assets/fonts/rye-400.0de1abd1.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Zilla Slab"; src: url("assets/fonts/zilla-slab-400.b53659a5.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Zilla Slab"; src: url("assets/fonts/zilla-slab-400-italic.0deaa241.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Zilla Slab"; src: url("assets/fonts/zilla-slab-600.22b28054.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "JetBrains Mono"; src: url("assets/fonts/jetbrains-mono-600.4f27206c.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
 </style>
 <style>
 /* Printables template: half-sheet two-up (prefix tu-). 8.5 × 11 in, one page holding two
@@ -25,13 +24,16 @@ Brand values are hardcoded below on purpose: a print artifact must never depend 
    into its brochure). Every rule in this file uses the piece prefix; the pr- rules are
    the shared screen chrome and print hygiene. Geometry (trim size, pages, safe margin,
    hint wording) is references/geometry.md; the numbers here restate it, the reasoning
-   does not. Double-brace markers are filled from brand-facts.yaml. */
+   does not. Double-brace markers are filled from brand-facts.yaml. A missing non-blocking
+   fact becomes a span.ph carrying a data-missing attribute that names the fact (the
+   literal forms are kept out of this comment so the marker grep and the placeholder
+   inventory read clean on a finished piece). */
 @page { size: 8.5in 11in; margin: 0; }
 :root {
   --brand-paper: #f6ecd8;
   --brand-ink: #2b1d10;
   --brand-accent: #8c3a2b;
-  --brand-accent-ink: #8c3a2b;
+  --brand-accent-ink: #8c3a2b;  /* when accent-ink is missing, put the ink value here */
   --brand-muted: #6b5844;
   /* Reverse face. Defaults: paper = ink, ink = paper, accent stays, accent-ink = accent. When the accent
      fails 3:1 on ink (a dark brand red, say), the facts file sets reverse-paper to the accent, reverse-ink
@@ -40,7 +42,7 @@ Brand values are hardcoded below on purpose: a print artifact must never depend 
   --brand-reverse-ink: #f7ecd8;
   --brand-reverse-accent: #f3d9a8;
   --brand-reverse-accent-ink: #f3d9a8;
-  --font-display: "Rye", serif;
+  --font-display: "Rye", serif;                /* family plus fallback stack, quoted as CSS */
   --font-body: "Zilla Slab", Georgia, serif;
 }
 /* A face carries the five roles; a reverse face swaps paper and ink and uses raw accent
@@ -55,15 +57,11 @@ Brand values are hardcoded below on purpose: a print artifact must never depend 
 body.bw .tu-face { --paper: #fff; --ink: #000; --accent: #000; --accent-ink: #000; --muted: #444; }
 body.bw .tu-face--reverse { --paper: #000; --ink: #fff; --accent: #fff; --accent-ink: #fff; --muted: #ccc; }
 body.bw .tu-photo img { filter: grayscale(1) contrast(1.08); }
-/* Logo: the site's caravan lockup (public/index.html:49-56, public/css/style.css:93-100) rebuilt inline from the
-   same symbol paths and font files, in currentColor so it follows the face and the black-and-white switch. */
-.tu-logo { display: inline-flex; flex-direction: column; align-items: center; text-align: center; color: var(--ink); line-height: 1; font-size: 13pt; }
-.tu-logo .tu-caravan { width: 3.4em; height: auto; display: block; margin-bottom: -0.04em; }
-.tu-logo .tu-rule { display: block; width: 100%; border-top: 0.09em solid currentColor; box-shadow: 0 0.17em 0 -0.09em var(--accent-ink); margin: 0 0 0.42em; }
-.tu-logo .tu-town { font: 600 0.5em/1 "JetBrains Mono", monospace; letter-spacing: 0.42em; text-indent: 0.42em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.22em; }
-.tu-logo .tu-ww { display: flex; align-items: center; gap: 0.32em; font: 400 1em/1.1 var(--font-display); white-space: nowrap; }
-.tu-logo .tu-ww svg { width: 0.82em; height: 0.82em; color: var(--accent-ink); }
-.tu-logo .tu-rv { font: 400 1em/1.1 var(--font-display); color: var(--accent-ink); letter-spacing: 0.06em; margin-top: 0.16em; }
+.tu-logo.tu-logo--type { display: inline-flex; flex-direction: column; align-items: center; width: auto; height: auto; background: none; -webkit-mask: none; mask: none; color: var(--ink); line-height: 1; font-size: 13pt; }
+.tu-logo--type .tu-logo-top  { font: 600 0.5em/1 var(--font-body); letter-spacing: 0.42em; text-indent: 0.42em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.22em; font-family: "JetBrains Mono", monospace; }
+.tu-logo--type .tu-logo-name { display: flex; align-items: center; gap: 0.32em; font: 400 1em/1.1 var(--font-display); white-space: nowrap; }
+.tu-logo--type .tu-logo-name svg { width: 0.82em; height: 0.82em; color: var(--accent-ink); }
+.tu-logo--type .tu-logo-sub  { font: 400 1em/1.1 var(--font-display); color: var(--accent-ink); letter-spacing: 0.06em; margin-top: 0.16em; }
 /* QR: the SVG from scripts/qr.mjs is inlined verbatim (black on white on disk, so
    qr.mjs verify reads the shipped bytes); these rules recolor it to the face. */
 .tu-qr svg { display: block; width: 100%; height: 100%; }
@@ -106,29 +104,26 @@ body.bw { background: #ddd; }
 .tu-body { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .tu-badge { display: inline-block; border: 1px solid var(--accent); border-radius: 999px; padding: 3pt 10pt;
             font: 600 9pt/1.2 var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-ink); }
-.tu-headline { margin: 4pt 0 0; font: 400 18pt/1.1 var(--font-display); }
+.tu-headline { margin: 4pt 0 0; font: 700 18pt/1.1 var(--font-display); }
 .tu-detail { margin: 4pt 0 0; font: italic 500 11pt/1.3 var(--font-body); color: var(--muted); }
 .tu-until { margin: 8pt 0 0; font: 700 9pt/1.2 var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-ink); }
 .tu-qr-row { margin-top: auto; padding-top: 8pt; display: flex; align-items: center; gap: 10pt; }
 .tu-qr { width: 0.65in; height: 0.65in; }
 .tu-qr-text { text-align: left; font: 9pt/1.3 var(--font-body); }
 .tu-qr-text b { display: block; color: var(--accent-ink); }
-.tu-footer { margin: 6pt 0 0; font: 400 11pt/1.3 var(--font-display); }
+.tu-footer { margin: 6pt 0 0; font: 700 11pt/1.3 var(--font-display); }
 .tu-footer span { display: block; font: 9pt/1.3 var(--font-body); }
-.tu-logo { margin: 0 0 5pt; }
+.tu-logo { width: 2.6in; height: 0.52in; margin: 0 0 10pt; -webkit-mask-position: center; mask-position: center; }
 .tu-services { margin: 6pt 0 0; font: 700 10pt/1.3 var(--font-body); }
 .tu-review { margin: 8pt 0 0; }
 .tu-review .tu-stars { margin: 0; font: 10pt/1 var(--font-body); color: var(--accent-ink); letter-spacing: 0.12em; }
 .tu-review blockquote { margin: 3pt 0 0; font: italic 500 9.5pt/1.3 var(--font-body); }
 .tu-review cite { display: block; margin-top: 2pt; font: 8pt/1.2 var(--font-body); font-style: normal; color: var(--muted); }
-.tu-trust { margin: 4pt 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 1pt 10pt; }
+.tu-trust { margin: 6pt 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 1pt 10pt; }
 .tu-trust li { font: 700 7.5pt/1.3 var(--font-body); letter-spacing: 0.05em; text-transform: uppercase; }
 .tu-trust li::before { content: "✓ "; color: var(--accent-ink); }
 
 @media print { .tu-sheet { box-shadow: none; } }
-.tu-rates { margin: 6pt 0 0; }
-.tu-rates b { display: block; font: 400 12pt/1.3 var(--font-display); color: var(--accent-ink); }
-.tu-rates span { display: block; margin-top: 2pt; font: italic 400 8.5pt/1.3 var(--font-body); color: var(--muted); }
 </style>
 </head>
 <body>
@@ -143,21 +138,19 @@ body.bw { background: #ddd; }
   <p class="no-print pr-label">Sheet</p>
   <section class="tu-sheet" data-sheet>
     <div class="tu-flyer tu-face">
-      <div class="tu-photo"><img src="assets/hill-country-sunset.jpg" alt=""></div>
+      <div class="tu-photo"><img src="assets/sign-polly-peak-dr.jpg" alt=""></div>
       <div class="tu-body">
-        <div class="tu-logo" role="img" aria-label="Bandera Wagon Wheel RV Park"><svg class="tu-caravan" viewBox="0 0 250 100" aria-hidden="true"><path d="M14,74 Q4,74 4,56 Q4,26 40,18 Q76,10 94,30 Q102,40 102,60 Q102,74 90,74 L70,74 A14,14 0 0 0 42,74 Z" fill="currentColor"/><circle cx="56" cy="74" r="11" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="56" cy="74" r="3.5" fill="currentColor"/><g stroke="currentColor" stroke-width="1.5"><line x1="56" y1="66" x2="56" y2="82"/><line x1="48" y1="74" x2="64" y2="74"/><line x1="50.5" y1="68.5" x2="61.5" y2="79.5"/><line x1="61.5" y1="68.5" x2="50.5" y2="79.5"/></g><circle cx="72" cy="40" r="7" fill="var(--paper)"/><rect x="34" y="34" width="18" height="12" rx="2" fill="var(--paper)"/><path d="M102,58 L143,56" stroke="currentColor" stroke-width="3" fill="none"/><path d="M148,52 L144,62 L133,74 L128,86 L132,87 L139,75 L151,62 L154,54 Z" fill="currentColor"/><path d="M152,54 L151,72 L149,86 L154,86 L157,72 L159,55 Z" fill="currentColor"/><path d="M179,52 C180,62 179,67 174,72 L171,78 L175,80 L181,72 C186,66 187,58 187,52 Z" fill="currentColor"/><path d="M189,49 L201,67 L211,85 L215,84 L206,63 L196,47 Z" fill="currentColor"/><path d="M242,24 C236,17 231,12 226,8 L227,1 L222,7 L218,1 L216,8 C208,14 201,25 196,33 C188,36 180,37 172,36 C162,35 155,34 150,35 C146,36 144,39 144,43 L133,39 L139,46 L127,49 L136,53 L128,61 L137,57 C140,56 142,53 143,49 C146,53 147,58 150,60 C158,62 170,60 180,58 C186,57 190,55 195,51 C198,47 201,44 203,41 L218,27 C226,26 235,25 242,24 Z" fill="currentColor"/><path d="M213,9 L206,4 L206,11 L200,9 L201,16 L194,15 L196,22 L190,22 L193,31 C198,24 205,16 213,9 Z" fill="currentColor"/></svg><span class="tu-rule"></span><span class="tu-town">Bandera</span><span class="tu-ww">WAGON <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="50" cy="50" r="11" fill="currentColor"/><g stroke="currentColor" stroke-width="5"><line x1="50" y1="10" x2="50" y2="90"/><line x1="10" y1="50" x2="90" y2="50"/><line x1="18.7" y1="30" x2="81.3" y2="70"/><line x1="30" y1="18.7" x2="70" y2="81.3"/><line x1="70" y1="18.7" x2="30" y2="81.3"/><line x1="81.3" y1="30" x2="18.7" y2="70"/></g></svg> WHEEL</span><span class="tu-rv">RV PARK</span></div>
-        <div class="tu-badge">10% military discount — active or retired</div>
+        <div class="tu-logo tu-logo--type" role="img" aria-label="Bandera Wagon Wheel RV Park"><span class="tu-logo-top">Bandera</span><span class="tu-logo-name">WAGON <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="50" cy="50" r="11" fill="currentColor"/><g stroke="currentColor" stroke-width="5"><line x1="50" y1="10" x2="50" y2="90"/><line x1="10" y1="50" x2="90" y2="50"/><line x1="18.7" y1="30" x2="81.3" y2="70"/><line x1="30" y1="18.7" x2="70" y2="81.3"/><line x1="70" y1="18.7" x2="30" y2="81.3"/><line x1="81.3" y1="30" x2="18.7" y2="70"/></g></svg> WHEEL</span><span class="tu-logo-sub">RV Park</span></div>
+        <div class="tu-badge">Full hookups</div>
         <div class="tu-headline">Hill Country, without the drive</div>
-        <div class="tu-detail">A rustic, family-run stop seven minutes from downtown Bandera — the Cowboy Capital of the World.</div>
-        <div class="tu-rates"><b>$45 per night · $210 per week · From $300 per month</b><span>Rates vary by site. Nightly and weekly rates include electric. Electric is not included in the monthly rate.</span></div>
+        <div class="tu-services">Full hookups, 30/50 amp at every site &middot; New high-speed WiFi, park-wide &middot; Pets part of the family</div>
         <ul class="tu-trust">
           <li>Full hookups</li>
           <li>30/50 amp at every site</li>
           <li>Pets part of the family</li>
           <li>Outside the 100-year floodplain</li>
-          <li>Reservations open 24/7</li>
         </ul>
-        <div class="tu-until">325 Polly Peak Dr, Bandera, TX 78003</div>
+        <div class="tu-until">325 Polly Peak Dr, Bandera, TX 78003<br>Office hours: Monday–Friday 8–5, Saturday 9–3, Sunday 1–5. Check-in 3:00pm, check-out 1:00pm.</div>
         <div class="tu-qr-row">
           <div class="tu-qr" data-qr="https://banderawagonwheelrv.com/"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h37v37H0z"/><path stroke="#000000" d="M4 4.5h7m3 0h1m2 0h3m2 0h3m1 0h7M4 5.5h1m5 0h1m2 0h1m3 0h4m5 0h1m5 0h1M4 6.5h1m1 0h3m1 0h1m1 0h1m3 0h2m1 0h1m6 0h1m1 0h3m1 0h1M4 7.5h1m1 0h3m1 0h1m1 0h2m2 0h1m1 0h2m1 0h1m1 0h1m2 0h1m1 0h3m1 0h1M4 8.5h1m1 0h3m1 0h1m1 0h1m2 0h2m2 0h2m1 0h3m1 0h1m1 0h3m1 0h1M4 9.5h1m5 0h1m1 0h1m2 0h2m7 0h1m1 0h1m5 0h1M4 10.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M12 11.5h1m2 0h2m1 0h1m1 0h1m2 0h2M4 12.5h1m1 0h5m2 0h2m1 0h1m3 0h2m2 0h1m1 0h5M4 13.5h2m3 0h1m1 0h1m2 0h1m2 0h3m1 0h8m3 0h1M4 14.5h1m1 0h6m5 0h4m7 0h1M4 15.5h2m1 0h2m3 0h1m1 0h2m1 0h1m1 0h1m2 0h3m2 0h3m1 0h1M4 16.5h2m1 0h2m1 0h1m1 0h1m3 0h1m1 0h2m1 0h1m1 0h1m5 0h2M5 17.5h4m3 0h2m2 0h1m2 0h2m2 0h2m1 0h3m3 0h1M8 18.5h5m1 0h3m4 0h2m1 0h2m3 0h2M4 19.5h2m5 0h1m2 0h1m1 0h1m1 0h1m1 0h1m1 0h6m3 0h1M6 20.5h1m3 0h1m3 0h1m6 0h1m1 0h1m5 0h2M4 21.5h1m1 0h3m3 0h1m3 0h4m3 0h6m1 0h1m1 0h1M4 22.5h1m1 0h1m2 0h13m2 0h2m1 0h2m1 0h1M4 23.5h1m1 0h4m1 0h3m1 0h1m1 0h1m2 0h1m1 0h3m3 0h1m2 0h1M4 24.5h1m2 0h4m1 0h1m2 0h1m2 0h1m2 0h2m1 0h5m1 0h3M12 25.5h5m4 0h2m1 0h1m3 0h5M4 26.5h7m5 0h1m2 0h3m1 0h2m1 0h1m1 0h3M4 27.5h1m5 0h1m1 0h1m5 0h3m1 0h3m3 0h1m2 0h1M4 28.5h1m1 0h3m1 0h1m1 0h1m1 0h3m4 0h1m2 0h5m1 0h2M4 29.5h1m1 0h3m1 0h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m5 0h4M4 30.5h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m1 0h4m3 0h6M4 31.5h1m5 0h1m5 0h3m1 0h1m3 0h1m4 0h1m1 0h1M4 32.5h7m1 0h2m3 0h1m3 0h1m1 0h1m2 0h1m1 0h1m1 0h1"/></svg></div>
           <div class="tu-qr-text">Scan for details<b>banderawagonwheelrv.com</b></div>
@@ -167,21 +160,19 @@ body.bw { background: #ddd; }
     </div>
     <div class="tu-cut"><span class="tu-cut-label">✂ cut here</span></div>
     <div class="tu-flyer tu-face">
-      <div class="tu-photo"><img src="assets/hill-country-sunset.jpg" alt=""></div>
+      <div class="tu-photo"><img src="assets/sign-polly-peak-dr.jpg" alt=""></div>
       <div class="tu-body">
-        <div class="tu-logo" role="img" aria-label="Bandera Wagon Wheel RV Park"><svg class="tu-caravan" viewBox="0 0 250 100" aria-hidden="true"><path d="M14,74 Q4,74 4,56 Q4,26 40,18 Q76,10 94,30 Q102,40 102,60 Q102,74 90,74 L70,74 A14,14 0 0 0 42,74 Z" fill="currentColor"/><circle cx="56" cy="74" r="11" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="56" cy="74" r="3.5" fill="currentColor"/><g stroke="currentColor" stroke-width="1.5"><line x1="56" y1="66" x2="56" y2="82"/><line x1="48" y1="74" x2="64" y2="74"/><line x1="50.5" y1="68.5" x2="61.5" y2="79.5"/><line x1="61.5" y1="68.5" x2="50.5" y2="79.5"/></g><circle cx="72" cy="40" r="7" fill="var(--paper)"/><rect x="34" y="34" width="18" height="12" rx="2" fill="var(--paper)"/><path d="M102,58 L143,56" stroke="currentColor" stroke-width="3" fill="none"/><path d="M148,52 L144,62 L133,74 L128,86 L132,87 L139,75 L151,62 L154,54 Z" fill="currentColor"/><path d="M152,54 L151,72 L149,86 L154,86 L157,72 L159,55 Z" fill="currentColor"/><path d="M179,52 C180,62 179,67 174,72 L171,78 L175,80 L181,72 C186,66 187,58 187,52 Z" fill="currentColor"/><path d="M189,49 L201,67 L211,85 L215,84 L206,63 L196,47 Z" fill="currentColor"/><path d="M242,24 C236,17 231,12 226,8 L227,1 L222,7 L218,1 L216,8 C208,14 201,25 196,33 C188,36 180,37 172,36 C162,35 155,34 150,35 C146,36 144,39 144,43 L133,39 L139,46 L127,49 L136,53 L128,61 L137,57 C140,56 142,53 143,49 C146,53 147,58 150,60 C158,62 170,60 180,58 C186,57 190,55 195,51 C198,47 201,44 203,41 L218,27 C226,26 235,25 242,24 Z" fill="currentColor"/><path d="M213,9 L206,4 L206,11 L200,9 L201,16 L194,15 L196,22 L190,22 L193,31 C198,24 205,16 213,9 Z" fill="currentColor"/></svg><span class="tu-rule"></span><span class="tu-town">Bandera</span><span class="tu-ww">WAGON <svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="7"/><circle cx="50" cy="50" r="11" fill="currentColor"/><g stroke="currentColor" stroke-width="5"><line x1="50" y1="10" x2="50" y2="90"/><line x1="10" y1="50" x2="90" y2="50"/><line x1="18.7" y1="30" x2="81.3" y2="70"/><line x1="30" y1="18.7" x2="70" y2="81.3"/><line x1="70" y1="18.7" x2="30" y2="81.3"/><line x1="81.3" y1="30" x2="18.7" y2="70"/></g></svg> WHEEL</span><span class="tu-rv">RV PARK</span></div>
-        <div class="tu-badge">10% military discount — active or retired</div>
+        <div class="tu-logo" role="img" aria-label="Bandera Wagon Wheel RV Park"></div>
+        <div class="tu-badge">Full hookups</div>
         <div class="tu-headline">Hill Country, without the drive</div>
-        <div class="tu-detail">A rustic, family-run stop seven minutes from downtown Bandera — the Cowboy Capital of the World.</div>
-        <div class="tu-rates"><b>$45 per night · $210 per week · From $300 per month</b><span>Rates vary by site. Nightly and weekly rates include electric. Electric is not included in the monthly rate.</span></div>
+        <div class="tu-services">Full hookups, 30/50 amp at every site &middot; New high-speed WiFi, park-wide &middot; Pets part of the family</div>
         <ul class="tu-trust">
           <li>Full hookups</li>
           <li>30/50 amp at every site</li>
           <li>Pets part of the family</li>
           <li>Outside the 100-year floodplain</li>
-          <li>Reservations open 24/7</li>
         </ul>
-        <div class="tu-until">325 Polly Peak Dr, Bandera, TX 78003</div>
+        <div class="tu-until">325 Polly Peak Dr, Bandera, TX 78003<br>Office hours: Monday–Friday 8–5, Saturday 9–3, Sunday 1–5. Check-in 3:00pm, check-out 1:00pm.</div>
         <div class="tu-qr-row">
           <div class="tu-qr" data-qr="https://banderawagonwheelrv.com/"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 37 37" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h37v37H0z"/><path stroke="#000000" d="M4 4.5h7m3 0h1m2 0h3m2 0h3m1 0h7M4 5.5h1m5 0h1m2 0h1m3 0h4m5 0h1m5 0h1M4 6.5h1m1 0h3m1 0h1m1 0h1m3 0h2m1 0h1m6 0h1m1 0h3m1 0h1M4 7.5h1m1 0h3m1 0h1m1 0h2m2 0h1m1 0h2m1 0h1m1 0h1m2 0h1m1 0h3m1 0h1M4 8.5h1m1 0h3m1 0h1m1 0h1m2 0h2m2 0h2m1 0h3m1 0h1m1 0h3m1 0h1M4 9.5h1m5 0h1m1 0h1m2 0h2m7 0h1m1 0h1m5 0h1M4 10.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M12 11.5h1m2 0h2m1 0h1m1 0h1m2 0h2M4 12.5h1m1 0h5m2 0h2m1 0h1m3 0h2m2 0h1m1 0h5M4 13.5h2m3 0h1m1 0h1m2 0h1m2 0h3m1 0h8m3 0h1M4 14.5h1m1 0h6m5 0h4m7 0h1M4 15.5h2m1 0h2m3 0h1m1 0h2m1 0h1m1 0h1m2 0h3m2 0h3m1 0h1M4 16.5h2m1 0h2m1 0h1m1 0h1m3 0h1m1 0h2m1 0h1m1 0h1m5 0h2M5 17.5h4m3 0h2m2 0h1m2 0h2m2 0h2m1 0h3m3 0h1M8 18.5h5m1 0h3m4 0h2m1 0h2m3 0h2M4 19.5h2m5 0h1m2 0h1m1 0h1m1 0h1m1 0h1m1 0h6m3 0h1M6 20.5h1m3 0h1m3 0h1m6 0h1m1 0h1m5 0h2M4 21.5h1m1 0h3m3 0h1m3 0h4m3 0h6m1 0h1m1 0h1M4 22.5h1m1 0h1m2 0h13m2 0h2m1 0h2m1 0h1M4 23.5h1m1 0h4m1 0h3m1 0h1m1 0h1m2 0h1m1 0h3m3 0h1m2 0h1M4 24.5h1m2 0h4m1 0h1m2 0h1m2 0h1m2 0h2m1 0h5m1 0h3M12 25.5h5m4 0h2m1 0h1m3 0h5M4 26.5h7m5 0h1m2 0h3m1 0h2m1 0h1m1 0h3M4 27.5h1m5 0h1m1 0h1m5 0h3m1 0h3m3 0h1m2 0h1M4 28.5h1m1 0h3m1 0h1m1 0h1m1 0h3m4 0h1m2 0h5m1 0h2M4 29.5h1m1 0h3m1 0h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m5 0h4M4 30.5h1m1 0h3m1 0h1m1 0h1m1 0h1m1 0h2m1 0h4m3 0h6M4 31.5h1m5 0h1m5 0h3m1 0h1m3 0h1m4 0h1m1 0h1M4 32.5h7m1 0h2m3 0h1m3 0h1m1 0h1m2 0h1m1 0h1m1 0h1"/></svg></div>
           <div class="tu-qr-text">Scan for details<b>banderawagonwheelrv.com</b></div>

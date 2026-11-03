@@ -1,0 +1,19 @@
+# Hand tuning captured by learn.mjs (printables skill). generate.mjs applies it after every fill.
+# css: "selector": {prop: value}; inline: ".class attr#n": {style, src}; html: [{find, replace}] by hand.
+# learned 2026-11-03
+business-card:
+  html:
+    - find: "Office hours: Monday–Friday 8–5, Saturday 9–3, Sunday 1–5. Check-in 3:00pm, check-out 1:00pm."
+      replace: Office 8–5 Monday–Friday · 9–3 Saturday · 1–5 Sunday
+  css:
+    .bc-sheet:
+      padding: 0.17in 0.22in
+    .bc-name:
+      font: 700 10pt/1.1 var(--font-display)
+    .bc-contact:
+      padding-top: 0.06in
+    .bc-list:
+      margin: 0.07in 0 0.04in
+      gap: 0.02in
+    .bc-list li:
+      font: 500 8pt/1.2 var(--font-body)

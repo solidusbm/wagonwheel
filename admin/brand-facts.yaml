@@ -96,6 +96,10 @@ fonts:
     kind: self-hosted
     source: "public/css/fonts.css:31-64; public/css/style.css:74 body"
     path: "assets/fonts/zilla-slab-400.b53659a5.woff2"
+    files:
+      - {path: "assets/fonts/zilla-slab-400.b53659a5.woff2", weight: 400}
+      - {path: "assets/fonts/zilla-slab-400-italic.0deaa241.woff2", weight: 400, style: italic}
+      - {path: "assets/fonts/zilla-slab-600.22b28054.woff2", weight: 600}
     weights: [400, 400 italic, 600]
     fallback: "Georgia, serif"
     status: extracted
@@ -104,6 +108,7 @@ fonts:
     kind: self-hosted
     source: "public/css/fonts.css:13; public/css/style.css:96 .brand-lockup .town"
     path: "assets/fonts/jetbrains-mono-600.4f27206c.woff2"
+    files: [{path: "assets/fonts/jetbrains-mono-600.4f27206c.woff2", weight: 600}]
     weights: [600]
     fallback: "monospace"
     status: extracted
@@ -114,8 +119,16 @@ logo:                            # blocking class
   # "Engraved Frontier"). The nav and footer lockup is reproduced inline in every piece from the site's
   # own <symbol> paths (public/index.html:18-41) and font files, in currentColor so it follows the face
   # and the black-and-white switch. There is no logo image anywhere in the repo or on the site.
-  primary:     {value: "inline caravan lockup: #caravan + #wheel12 symbols, public/index.html:18-56 (.brand-lockup)", source: "public/index.html:49-56; public/css/style.css:90-100", status: extracted}
-  wordmark:    {value: "inline: BANDERA / WAGON ⊛ WHEEL / RV PARK without the caravan (the hero board, public/index.html:219-223)", source: "public/index.html:219-223", status: extracted}
+  primary:     {value: null, status: missing, note: "no logo image in the repo or on the site; the header sets type (the caravan + #wheel12 lockup, public/index.html:18-56 .brand-lockup)"}
+  wordmark:                      # typographic identity (brand-facts.md): generate.mjs sets it inline from these lines; ⊛ is the mark_svg
+    inline: true
+    lines: ["Bandera", "WAGON ⊛ WHEEL", "RV Park"]
+    mark_svg: "assets/wheel12.svg"   # the 12-spoke wheel from public/index.html:18-41, currentColor
+    css:                           # applied to the template's --type rules per piece (PFX = the piece prefix)
+      ".PFX-logo--type .PFX-logo-top": {font-family: '"JetBrains Mono", monospace'}
+    treatment: "line 1 JetBrains Mono 600 at 0.5em, tracking 0.42em, uppercase, muted; line 2 Rye 400 at 1em, uppercase, the wheel between the words; line 3 Rye 400 at 1em, accent-ink, tracking 0.06em"
+    source: "public/index.html:219-223 hero board; public/css/style.css:90-100 .brand-lockup"
+    status: extracted
   mark:        {value: "public/favicon.svg (12-spoke wheel, cream on rust) and the #wheel12 symbol", source: "public/favicon.svg", status: extracted}
   mono:        {value: "same lockup in one colour (currentColor)", status: extracted}
   recolorable: true
@@ -130,10 +143,22 @@ copy:                            # verbatim, each with source; repo wins on conf
     - {value: "New high-speed WiFi, park-wide", detail: "The managers live on site, so there's almost always someone around to help.", source: "hero badge; about paragraph 2", status: extracted}
     - {value: "Pets part of the family", detail: "Bring the dog — there's a dog park (large and small) right on the property.", source: "marquee public/index.html:236; about paragraph 2", status: extracted}
   service_includes:
-    - name: "What every site includes"
+    # Split into three lists on 2026-11-03 (user: hookups / on site / nearby) so the brochure's three include
+    # columns stop repeating one list; the items are the amenities grid verbatim, the group names are provided.
+    - name: "Hookups at every site"
+      name_status: provided          # user, 2026-11-03
       source: "live home amenities grid (show_on_homepage amenities); JSON-LD amenityFeature"
       status: extracted
-      items: ["Water hookup", "30/50 amp electric", "Wastewater hookup", "Pet friendly", "Management on-site", "Trash service", "New high-speed WiFi", "Laundry on site", "Keyless entry", "Showers", "Dog park — large & small", "10% military discount — active or retired"]
+      items: ["Water hookup", "30/50 amp electric", "Wastewater hookup", "Trash service", "Keyless entry", "New high-speed WiFi"]
+    - name: "On site"
+      name_status: provided          # user, 2026-11-03
+      source: "live home amenities grid (show_on_homepage amenities); JSON-LD amenityFeature"
+      status: extracted
+      items: ["Pet friendly", "Dog park — large & small", "Management on-site", "Laundry on site", "Showers", "10% military discount — active or retired"]
+    - name: "Worth the short drive"   # copy.headings.nearby; items are copy.nearby names, public/index.html:378-383
+      source: "public/index.html:327-328 heading; :378-383 stops"
+      status: extracted
+      items: ["Downtown Bandera", "Medina River", "Bandera Brewery", "The Shindig", "Frontier Times Museum", "Bandera Natural History Museum"]
   process:     # the booking steps, the site's own panel headings
     - {value: "Choose your dates", detail: "Reservations open 24/7 online.", source: "public/index.html:408; footer", status: extracted}
     - {value: "Pick a site", detail: "The booking page shows the rates each site is actually offered at.", source: "public/index.html:430; live /hours.html", status: extracted}
