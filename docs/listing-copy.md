@@ -135,25 +135,31 @@ $25 with Passport America.
 
 ## 5. TACO: e-mail asking for the dues
 
-The e-mail is sent from shaunchiaffa@gmail.com.
+The e-mail is sent from shaunchiaffa@gmail.com. Background and the reasons behind each question
+are in `taco-research.md` (deeper run, 2026-11-03). Short version: a 0–25 site park paid a flat
+$490 in 2016, so expect roughly $620–$720 now; the Sept 1 copy deadline for the January guide
+has passed, so a November signup likely means web listing now and the printed guide in 2028;
+and the site's Extended Stay page is a curated section, not something every member gets.
 
 **To:** rhodes@texascampgrounds.com
 **Subject:** Membership dues for a 12-site park in Bandera
 
-> Hello,
+> Hi Lisa,
 >
 > I work for Bandera Wagon Wheel RV Park, a 12-site, family-run park at 325 Polly Peak Dr in
-> Bandera. We're considering joining TACO, mainly to reach more long-term and full-time RVers,
-> and I couldn't find the membership dues on the website.
+> Bandera. We're considering joining TACO, mainly to reach more long-term and full-time RVers
+> and for the legal handbook and site-agreement forms, and I couldn't find the dues on the
+> website.
 >
 > Could you tell me:
 >
-> 1. What annual membership would cost a park our size?
-> 2. What does membership include? In particular, are members listed in the printed Texas guide,
->    on texascampgrounds.com, and on the Extended Stay page?
-> 3. What is the deadline to be included in the next printed guide, and are dues prorated if we
->    join partway through the year?
-> 4. Is a basic guide listing included in the dues, separate from the paid display ads?
+> 1. What annual dues are for a park in the 0–25 site band, for 2026 and for 2027?
+> 2. If we join now, in November: does the web listing go up right away, and would we make the
+>    2027 printed guide or wait for 2028? Are dues prorated for a late-year start?
+> 3. Is a basic guide listing and finder-map spot included in the dues, and do the Direct Link
+>    and first-time setup fees still apply?
+> 4. How does a park get onto the Extended Stay page on texascampgrounds.com and the matching
+>    section in the guide, and what does that cost?
 >
 > Our website is https://banderawagonwheelrv.com/, and the office number is (830) 850-0805 if a
 > call is easier.
