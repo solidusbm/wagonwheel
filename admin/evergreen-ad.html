@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evergreen ad — Bandera Wagon Wheel RV Park</title>
+<style>
+/* The park's evergreen social ad, in two faces: 1080 × 1080 (Facebook / Instagram square) and
+   1200 × 900 (Google Business Profile's 4:3). Not a print piece. Built from the site's own
+   Engraved Frontier parts: the hero sky, the wagon-wheel sun with its engraved ray rings, the
+   hatch ground, the letterhead caravan on a rule, and the road-sign lockup. Colours are the
+   public/css/style.css :root tokens (Light Rustic + hero), copied here so the file works from disk.
+   admin/evergreen-ad-square.png and admin/evergreen-ad-4x3.png are renders of these two faces. */
+@font-face{font-family:"Rye";src:url(assets/fonts/rye-400.0de1abd1.woff2) format("woff2");font-weight:400;}
+@font-face{font-family:"Zilla Slab";src:url(assets/fonts/zilla-slab-400.b53659a5.woff2) format("woff2");font-weight:400;}
+@font-face{font-family:"Zilla Slab";src:url(assets/fonts/zilla-slab-600.22b28054.woff2) format("woff2");font-weight:600;}
+@font-face{font-family:"JetBrains Mono";src:url(assets/fonts/jetbrains-mono-600.4f27206c.woff2) format("woff2");font-weight:600;}
+:root{
+  --bg:#f6ecd8; --line:#d8c39d; --gold:#87590f; --gold-bright:#a9721f; --rust:#8c3a2b; --rust-bright:#a8462f;
+  --cedar:#55643f; --parchment:#3c2a1a; --parchment-dim:#6b5844; --ink:#2b1d10; --btn-text:#f7ecd8;
+  --hero-sky:#f3d9a8; --hero-sun:#e8a23a; --hero-sun-ring:#c9761d;
+  --hero-ground-1:#c9a876; --hero-ground-2:#b08e5c; --hero-ground-3:#8f7248; --hero-cacti:#6b7a4a;
+}
+body{margin:0; background:#e7e2d6; color:var(--parchment); font-family:"Zilla Slab",Georgia,serif;}
+.chrome{max-width:1200px; margin:20px auto 0; padding:0 16px; font-size:14px; color:var(--parchment-dim);}
+.chrome h1{font-family:"Rye",serif; font-weight:400; font-size:22px; color:var(--ink); margin:0 0 6px;}
+.chrome p{margin:0 0 6px; line-height:1.5;}
+.label{font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); max-width:1200px; margin:28px auto 8px; padding:0 16px;}
+.stage{overflow:auto; padding:0 16px 40px;}
+
+/* ---- the face ---- */
+.face{position:relative; overflow:hidden; background:var(--hero-sky); color:var(--ink); box-shadow:0 2px 18px rgba(0,0,0,.18); flex:none;}
+.face--square{width:1080px; height:1080px;}
+.face--wide{width:1200px; height:900px;}
+.face svg.art{position:absolute; inset:0; width:100%; height:100%;}
+.face .text{position:absolute; inset:0;}
+
+/* lockup: the road-sign board, top left */
+.board{position:absolute; left:72px; top:64px; display:flex; flex-direction:column; align-items:flex-start; line-height:1;}
+.board .town{font-family:"JetBrains Mono",monospace; font-size:17px; letter-spacing:.42em; text-transform:uppercase; color:var(--parchment-dim); margin-bottom:10px; margin-left:2px;}
+.board .ww{font-family:"Rye",serif; font-size:40px; letter-spacing:.02em; text-transform:uppercase; color:var(--ink); display:flex; align-items:center; gap:12px;}
+.board .ww svg{width:34px; height:34px; color:var(--rust);}
+.board .rv{font-family:"Rye",serif; font-size:19px; letter-spacing:.3em; text-transform:uppercase; color:var(--rust); margin-top:10px; margin-left:3px;}
+
+/* headline */
+.head{position:absolute; left:72px; font-family:"Rye",serif; font-weight:400; text-transform:uppercase; color:var(--ink); line-height:.98; letter-spacing:.005em; margin:0;}
+.face--square .head{top:330px; font-size:96px; width:900px;}
+.face--wide .head{top:286px; font-size:90px; width:900px;}
+.head em{font-style:normal; color:var(--rust);}
+.sub{position:absolute; left:76px; font-family:"JetBrains Mono",monospace; font-weight:600; font-size:15.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--parchment); margin:0;}
+.face--square .sub{top:622px;}
+.face--wide .sub{top:560px;}
+
+/* rust band */
+.band{position:absolute; left:0; right:0; bottom:0; background:var(--rust); color:var(--btn-text); padding:30px 72px 0;}
+.face--square .band{height:300px;}
+.face--wide .band{height:250px;}
+.band::before{content:""; position:absolute; left:72px; right:72px; top:0; height:2px; background:var(--hero-sky); opacity:.55;}
+.facts{list-style:none; margin:0; padding:0; display:flex; gap:0; justify-content:space-between;}
+.facts li{flex:1; padding-right:16px; font-size:23px; font-weight:600; line-height:1.18;}
+.facts li small{display:block; font-family:"JetBrains Mono",monospace; font-weight:600; font-size:12.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--hero-sky); margin-bottom:8px;}
+.face--wide .facts li{font-size:21px;}
+.rates{display:flex; align-items:baseline; gap:26px; font-family:"Rye",serif; font-size:27px; color:#fff; margin:22px 0 0; white-space:nowrap;}
+.rates span{display:inline-block;}
+.rates b{font-weight:400; font-size:40px; color:var(--hero-sky);}
+.rates small{font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--hero-sky); opacity:.9; margin-left:6px; vertical-align:middle;}
+.face--wide .rates{font-size:24px; margin-top:16px;}
+.face--wide .rates b{font-size:34px;}
+.cta{position:absolute; left:72px; right:72px; display:flex; justify-content:space-between; align-items:flex-end; border-top:1px solid rgba(247,236,216,.38); padding-top:16px;}
+.face--square .cta{bottom:28px;}
+.face--wide .cta{bottom:24px;}
+.cta .site{font-family:"Rye",serif; font-size:30px; color:#fff; letter-spacing:.01em;}
+.cta .site small{display:block; font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--hero-sky); margin-bottom:8px;}
+.cta .phone{font-family:"JetBrains Mono",monospace; font-weight:600; font-size:22px; letter-spacing:.06em; color:#fff; text-align:right;}
+.cta .phone small{display:block; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--hero-sky); margin-bottom:8px;}
+.face--wide .cta .site{font-size:26px;}
+.face--wide .cta .phone{font-size:19px;}
+
+</style>
+</head>
+<body>
+<div class="chrome">
+  <h1>Evergreen ad — Bandera Wagon Wheel RV Park</h1>
+  <p>Two faces of the same ad: the 1080 × 1080 square for Facebook and Instagram, and the 1200 × 900 (4:3) for Google Business Profile. The copy to go with them is in <a href="/admin/evergreen-post.html">Evergreen post</a>. Saved renders: <a href="/admin/evergreen-ad-square.png">square PNG</a>, <a href="/admin/evergreen-ad-4x3.png">4:3 PNG</a>. The rates are the hours page's floors as of November 2026; if a rate changes, change it here and re-save the PNGs.</p>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="wheel12" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="7"/>
+      <circle cx="50" cy="50" r="11" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="5">
+        <line x1="50" y1="10" x2="50" y2="90"/><line x1="10" y1="50" x2="90" y2="50"/>
+        <line x1="18.7" y1="30" x2="81.3" y2="70"/><line x1="30" y1="18.7" x2="70" y2="81.3"/>
+        <line x1="70" y1="18.7" x2="30" y2="81.3"/><line x1="81.3" y1="30" x2="18.7" y2="70"/>
+      </g>
+    </symbol>
+    <symbol id="caravan" viewBox="0 0 250 100">
+      <path d="M14,74 Q4,74 4,56 Q4,26 40,18 Q76,10 94,30 Q102,40 102,60 Q102,74 90,74 L70,74 A14,14 0 0 0 42,74 Z" fill="currentColor"/>
+      <circle cx="56" cy="74" r="11" fill="none" stroke="currentColor" stroke-width="3"/>
+      <circle cx="56" cy="74" r="3.5" fill="currentColor"/>
+      <g stroke="currentColor" stroke-width="1.5"><line x1="56" y1="66" x2="56" y2="82"/><line x1="48" y1="74" x2="64" y2="74"/><line x1="50.5" y1="68.5" x2="61.5" y2="79.5"/><line x1="61.5" y1="68.5" x2="50.5" y2="79.5"/></g>
+      <circle cx="72" cy="40" r="7" fill="var(--cutout, #f3d9a8)"/>
+      <rect x="34" y="34" width="18" height="12" rx="2" fill="var(--cutout, #f3d9a8)"/>
+      <path d="M102,58 L143,56" stroke="currentColor" stroke-width="3" fill="none"/>
+      <path d="M148,52 L144,62 L133,74 L128,86 L132,87 L139,75 L151,62 L154,54 Z" fill="currentColor"/>
+      <path d="M152,54 L151,72 L149,86 L154,86 L157,72 L159,55 Z" fill="currentColor"/>
+      <path d="M179,52 C180,62 179,67 174,72 L171,78 L175,80 L181,72 C186,66 187,58 187,52 Z" fill="currentColor"/>
+      <path d="M189,49 L201,67 L211,85 L215,84 L206,63 L196,47 Z" fill="currentColor"/>
+      <path d="M242,24 C236,17 231,12 226,8 L227,1 L222,7 L218,1 L216,8 C208,14 201,25 196,33 C188,36 180,37 172,36 C162,35 155,34 150,35 C146,36 144,39 144,43 L133,39 L139,46 L127,49 L136,53 L128,61 L137,57 C140,56 142,53 143,49 C146,53 147,58 150,60 C158,62 170,60 180,58 C186,57 190,55 195,51 C198,47 201,44 203,41 L218,27 C226,26 235,25 242,24 Z" fill="currentColor"/>
+      <path d="M213,9 L206,4 L206,11 L200,9 L201,16 L194,15 L196,22 L190,22 L193,31 C198,24 205,16 213,9 Z" fill="currentColor"/>
+    </symbol>
+    <symbol id="cactus" viewBox="-20 -58 40 58" overflow="visible">
+      <g stroke="var(--hero-ground-3)" stroke-width="1.6" stroke-linejoin="round" fill="var(--hero-cacti)" fill-opacity=".35">
+        <ellipse cx="0" cy="-11" rx="11" ry="15"/>
+        <ellipse cx="-13" cy="-32" rx="8" ry="13" transform="rotate(-28 -13 -32)"/>
+        <ellipse cx="12" cy="-36" rx="7.5" ry="12" transform="rotate(24 12 -36)"/>
+        <ellipse cx="-2" cy="-52" rx="6" ry="10" transform="rotate(-8 -2 -52)"/>
+      </g>
+    </symbol>
+    <symbol id="windmill" viewBox="0 0 60 100">
+      <g stroke="currentColor" stroke-width="2.5" fill="none">
+        <line x1="22" y1="98" x2="30" y2="28"/><line x1="38" y1="98" x2="30" y2="28"/>
+        <line x1="24.5" y1="76" x2="35.5" y2="76"/><line x1="26.5" y1="56" x2="33.5" y2="56"/>
+        <line x1="24.5" y1="76" x2="33.5" y2="56"/><line x1="35.5" y1="76" x2="26.5" y2="56"/>
+      </g>
+      <g fill="currentColor">
+        <path d="M30,26 L30,6 L34,10 Z"/><path d="M30,26 L47,16 L47,22 Z"/><path d="M30,26 L50,32 L46,36 Z"/>
+        <path d="M30,26 L40,43 L34,43 Z"/><path d="M30,26 L13,36 L13,30 Z"/><path d="M30,26 L10,20 L14,16 Z"/>
+        <path d="M30,26 L20,9 L26,9 Z"/>
+      </g>
+      <circle cx="30" cy="26" r="3.5" fill="currentColor"/>
+    </symbol>
+    <!-- the hero's sun, drawn as a rolling wagon wheel inside engraved ray rings -->
+    <g id="sun">
+      <circle r="130" fill="var(--hero-sun)" opacity="0.55"/>
+      <circle r="130" fill="none" stroke="var(--hero-sun-ring)" stroke-width="3" opacity="0.55"/>
+      <circle r="148" fill="none" stroke="var(--hero-sun-ring)" stroke-width="1.2" opacity="0.45"/>
+      <circle r="166" fill="none" stroke="var(--hero-sun-ring)" stroke-width="0.8" opacity="0.35"/>
+      <circle r="184" fill="none" stroke="var(--hero-sun-ring)" stroke-width="0.6" opacity="0.25"/>
+      <circle r="105" fill="none" stroke="var(--hero-sun-ring)" stroke-width="1" opacity="0.5"/>
+      <circle r="18" fill="var(--hero-sun-ring)" opacity="0.5"/>
+      <circle r="26" fill="none" stroke="var(--hero-sun-ring)" stroke-width="2.5" opacity="0.55"/>
+      <g stroke="var(--hero-sun-ring)" stroke-width="5" opacity="0.5" stroke-linecap="round">
+        <line x1="26.0" y1="0.0" x2="103.0" y2="0.0"/><line x1="22.5" y1="13.0" x2="89.2" y2="51.5"/>
+        <line x1="13.0" y1="22.5" x2="51.5" y2="89.2"/><line x1="0.0" y1="26.0" x2="0.0" y2="103.0"/>
+        <line x1="-13.0" y1="22.5" x2="-51.5" y2="89.2"/><line x1="-22.5" y1="13.0" x2="-89.2" y2="51.5"/>
+        <line x1="-26.0" y1="0.0" x2="-103.0" y2="0.0"/><line x1="-22.5" y1="-13.0" x2="-89.2" y2="-51.5"/>
+        <line x1="-13.0" y1="-22.5" x2="-51.5" y2="-89.2"/><line x1="-0.0" y1="-26.0" x2="-0.0" y2="-103.0"/>
+        <line x1="13.0" y1="-22.5" x2="51.5" y2="-89.2"/><line x1="22.5" y1="-13.0" x2="89.2" y2="-51.5"/>
+      </g>
+      <g stroke="var(--hero-sun-ring)" stroke-width="2" opacity="0.5">
+        <line y1="-196" y2="-150"/><line y1="196" y2="150"/><line x1="-196" x2="-150"/><line x1="196" x2="150"/>
+        <line x1="-139" y1="-139" x2="-106" y2="-106"/><line x1="139" y1="-139" x2="106" y2="-106"/>
+        <line x1="-139" y1="139" x2="-106" y2="106"/><line x1="139" y1="139" x2="106" y2="106"/>
+      </g>
+    </g>
+    <pattern id="hatch" width="7" height="7" patternTransform="rotate(35)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="7" stroke="var(--hero-ground-3)" stroke-width="0.8" opacity="0.35"/>
+    </pattern>
+    <pattern id="hatch2" width="5" height="5" patternTransform="rotate(-25)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="5" stroke="var(--hero-ground-3)" stroke-width="0.7" opacity="0.25"/>
+    </pattern>
+  </defs>
+</svg>
+
+<p class="label">Square · 1080 × 1080 · Facebook / Instagram</p>
+<div class="stage">
+<section class="face face--square" id="square">
+  <svg class="art" viewBox="0 0 1080 1080" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect width="1080" height="1080" fill="var(--hero-sky)"/>
+    <!-- far hills -->
+    <path d="M0,560 C140,500 260,520 400,470 C560,410 700,470 860,430 C960,405 1020,420 1080,400 L1080,780 L0,780 Z" fill="var(--hero-ground-1)" opacity=".55"/>
+    <path d="M0,560 C140,500 260,520 400,470 C560,410 700,470 860,430 C960,405 1020,420 1080,400 L1080,780 L0,780 Z" fill="url(#hatch2)"/>
+    <!-- the sun, top right, bleeding off the edge -->
+    <use href="#sun" transform="translate(930,170) scale(1.15)"/>
+    <!-- near ground -->
+    <path d="M0,672 C180,640 330,668 520,650 C700,634 860,660 1080,640 L1080,780 L0,780 Z" fill="var(--hero-ground-2)" opacity=".75"/>
+    <path d="M0,672 C180,640 330,668 520,650 C700,634 860,660 1080,640 L1080,780 L0,780 Z" fill="url(#hatch)"/>
+    <!-- the road: a rule the caravan walks -->
+    <line x1="0" y1="741" x2="1080" y2="741" stroke="var(--hero-ground-3)" stroke-width="2.5" opacity=".8"/>
+    <line x1="0" y1="751" x2="1080" y2="751" stroke="var(--hero-ground-3)" stroke-width="1" opacity=".45"/>
+    <g color="var(--hero-ground-3)"><svg x="940" y="596" width="54" height="92" viewBox="0 0 60 100"><use href="#windmill"/></svg></g>
+    <svg x="676" y="700" width="34" height="48" viewBox="-20 -58 40 58"><use href="#cactus"/></svg>
+    <svg x="84" y="706" width="26" height="38" viewBox="-20 -58 40 58"><use href="#cactus"/></svg>
+    <g color="var(--ink)" style="--cutout:#f3d9a8"><svg x="790" y="636" width="290" height="116" viewBox="0 0 250 100"><use href="#caravan"/></svg></g>
+  </svg>
+  <div class="text">
+    <div class="board" role="img" aria-label="Bandera Wagon Wheel RV Park">
+      <span class="town">Bandera</span>
+      <span class="ww">Wagon <svg viewBox="0 0 100 100"><use href="#wheel12"/></svg> Wheel</span>
+      <span class="rv">RV Park</span>
+    </div>
+    <h2 class="head">Hill Country, <em>without the drive.</em></h2>
+    <p class="sub">7 minutes from downtown Bandera · Cowboy Capital of the World</p>
+    <div class="band">
+      <ul class="facts">
+        <li><small>Every site</small>Full hookups, 30/50 amp</li>
+        <li><small>Park-wide</small>New high-speed WiFi</li>
+        <li><small>Bring the dog</small>Dog park on the property</li>
+      </ul>
+      <p class="rates"><span><b>$45</b> a night</span><span><b>$210</b> a week</span><span>from <b>$300</b> a month</span><small>· 10% military discount</small></p>
+      <div class="cta">
+        <div class="site"><small>Reservations open 24/7</small>banderawagonwheelrv.com</div>
+        <div class="phone"><small>Or call</small>(830) 850-0805</div>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<p class="label">4:3 · 1200 × 900 · Google Business Profile</p>
+<div class="stage">
+<section class="face face--wide" id="wide">
+  <svg class="art" viewBox="0 0 1200 900" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect width="1200" height="900" fill="var(--hero-sky)"/>
+    <use href="#sun" transform="translate(1040,150) scale(1.1)"/>
+    <g transform="translate(0,-50)">
+<path d="M0,500 C160,440 300,460 450,410 C620,350 780,410 950,370 C1060,345 1130,360 1200,340 L1200,700 L0,700 Z" fill="var(--hero-ground-1)" opacity=".55"/>
+    <path d="M0,500 C160,440 300,460 450,410 C620,350 780,410 950,370 C1060,345 1130,360 1200,340 L1200,700 L0,700 Z" fill="url(#hatch2)"/>
+    <path d="M0,592 C200,560 360,588 580,570 C780,554 960,580 1200,560 L1200,700 L0,700 Z" fill="var(--hero-ground-2)" opacity=".75"/>
+    <path d="M0,592 C200,560 360,588 580,570 C780,554 960,580 1200,560 L1200,700 L0,700 Z" fill="url(#hatch)"/>
+    <line x1="0" y1="656" x2="1200" y2="656" stroke="var(--hero-ground-3)" stroke-width="2.5" opacity=".8"/>
+    <line x1="0" y1="666" x2="1200" y2="666" stroke="var(--hero-ground-3)" stroke-width="1" opacity=".45"/>
+    <g color="var(--hero-ground-3)"><svg x="1070" y="512" width="54" height="92" viewBox="0 0 60 100"><use href="#windmill"/></svg></g>
+    <svg x="806" y="616" width="32" height="46" viewBox="-20 -58 40 58"><use href="#cactus"/></svg>
+    <svg x="96" y="622" width="26" height="38" viewBox="-20 -58 40 58"><use href="#cactus"/></svg>
+    <g color="var(--ink)" style="--cutout:#f3d9a8"><svg x="868" y="544" width="290" height="116" viewBox="0 0 250 100"><use href="#caravan"/></svg></g>
+      </g>
+  </svg>
+  <div class="text">
+    <div class="board" role="img" aria-label="Bandera Wagon Wheel RV Park">
+      <span class="town">Bandera</span>
+      <span class="ww">Wagon <svg viewBox="0 0 100 100"><use href="#wheel12"/></svg> Wheel</span>
+      <span class="rv">RV Park</span>
+    </div>
+    <h2 class="head">Hill Country, <em>without the drive.</em></h2>
+    <p class="sub">7 minutes from downtown Bandera · Cowboy Capital of the World</p>
+    <div class="band">
+      <ul class="facts">
+        <li><small>Every site</small>Full hookups, 30/50 amp</li>
+        <li><small>Park-wide</small>New high-speed WiFi</li>
+        <li><small>Bring the dog</small>Dog park on the property</li>
+      </ul>
+      <p class="rates"><span><b>$45</b> a night</span><span><b>$210</b> a week</span><span>from <b>$300</b> a month</span></p>
+      <div class="cta">
+        <div class="site"><small>Reservations open 24/7</small>banderawagonwheelrv.com</div>
+        <div class="phone"><small>Or call</small>(830) 850-0805</div>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+</body>
+</html>
