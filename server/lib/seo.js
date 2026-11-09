@@ -131,6 +131,21 @@ const SNAPSHOT_TTL_MS = 60 * 1000;
 const FAILURE_TTL_MS = 30 * 1000;
 let snapshotCache = { at: 0, value: null };
 
+/* The office keyed a price into the amenities catalog -- "Rates from $300/mo. Nightly/Weekly
+ * Available" -- and it has been wrong twice: "From 325" when the floor was $300, and "$300" once
+ * Site 7 was marked permanently occupied and the floor went back to $325. The typed figure is the
+ * only price on the site that does not come from the sites table, so this swaps it for the live
+ * monthly floor wherever the amenity names are read (homepage grid, JSON-LD amenityFeature, the
+ * social-post drafts). The rest of the row -- the office's own wording, the Homepage tick, the sort
+ * order -- is untouched, and a row with no "from <number>/mo" in it passes through as typed. With no
+ * bookable monthly site at all there is no floor to print, so the typed number stays rather than
+ * the line going blank. */
+const RATE_LINE = /(\bfrom\s+)\$?\d[\d,]*(?=\s*\/\s*mo\b)/i;
+export function withLiveMonthlyRate(name, monthLowCents) {
+  if (!monthLowCents || typeof name !== "string") return name;
+  return name.replace(RATE_LINE, (m, from) => `${from}$${Math.round(monthLowCents / 100)}`);
+}
+
 export async function snapshot() {
   const ttl = snapshotCache.value ? SNAPSHOT_TTL_MS : FAILURE_TTL_MS;
   if (snapshotCache.at && Date.now() - snapshotCache.at < ttl) return snapshotCache.value;
@@ -184,7 +199,7 @@ export async function snapshot() {
       pullThroughCount: Number(r.pull_through_count) || 0,
       rigMin: num(r.rig_min),
       rigMax: num(r.rig_max),
-      amenities: amenities.rows.map((a) => a.name),
+      amenities: amenities.rows.map((a) => withLiveMonthlyRate(a.name, num(r.month_low))),
       allPhotos: photos.rows.map((p) => ({ id: p.id, caption: p.caption })),
       photos: photos.rows
         .filter((p) => p.show_on_homepage)

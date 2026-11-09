@@ -2,6 +2,7 @@ import { Router } from "express";
 import { pool } from "../db.js";
 import { quote, isPriceable } from "../lib/pricing.js";
 import { readLayout } from "../lib/parkLayout.js";
+import { snapshot, withLiveMonthlyRate } from "../lib/seo.js";
 
 const router = Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -143,7 +144,9 @@ router.get("/homepage-amenities", async (req, res, next) => {
     const { rows } = await pool.query(
       "SELECT id, name FROM amenities WHERE active = true AND show_on_homepage = true ORDER BY sort_order, name"
     );
-    res.json(rows);
+    // Same substitution the server-rendered grid makes, so this feed cannot quote a stale price.
+    const monthLow = (await snapshot())?.monthLow;
+    res.json(rows.map((a) => ({ ...a, name: withLiveMonthlyRate(a.name, monthLow) })));
   } catch (err) {
     next(err);
   }

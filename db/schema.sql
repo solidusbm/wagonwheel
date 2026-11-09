@@ -303,6 +303,9 @@ UPDATE styles
 UPDATE amenities
    SET name = 'Rates from $300/mo. Nightly/Weekly Available'
  WHERE name = 'Rates From 325/mo. Nightly/Weekly Available';
+-- Since 2026-11-09 the figure in that row is a placeholder: withLiveMonthlyRate() in
+-- server/lib/seo.js rewrites "from $<n>/mo" with the live monthly floor wherever amenity names are
+-- read, so the row cannot go stale again whatever number is typed in it.
 
 -- Facebook posting (server/lib/facebook.js, 2026-11-03). One row per connected channel; the token
 -- is a Page access token derived from a long-lived user token, which Meta does not expire. It is

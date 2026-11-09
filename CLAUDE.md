@@ -328,6 +328,12 @@ and shouldn't try to; if you need to test a real checkout, that step needs a hum
   (toggleable per individual site, like "Wired Ethernet"). An amenity can be either, both, or
   (while inactive) neither. Don't reintroduce the old split `park_amenities` table — it was
   deliberately merged away.
+- The amenity row "Rates from $…/mo. Nightly/Weekly Available" is the one price the office types by
+  hand, and it went stale twice (325 vs 300, then 300 vs 325 once Site 7 was marked permanently
+  occupied). Since 2026-11-09 `withLiveMonthlyRate()` in `server/lib/seo.js` replaces the figure
+  with the live monthly floor (`MIN(price_per_month_cents)` over active, not-permanently-occupied
+  sites) wherever amenity names are read: the snapshot (homepage grid, JSON-LD, social drafts) and
+  `/api/homepage-amenities`. Don't hand-correct the number in the row or in `db/schema.sql` again.
 - Photos are stored as `BYTEA` in Postgres (`photos` table), not on local disk — Render's
   free-tier web service filesystem is wiped on every deploy/restart, so anything written to disk
   at runtime doesn't survive. All gallery management happens through `/admin` → Photos; there is
